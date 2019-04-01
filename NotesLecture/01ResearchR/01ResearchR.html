@@ -1,0 +1,491 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <title>Research and .mono[R]</title>
+    <meta charset="utf-8">
+    <meta name="author" content="Edward Rubin" />
+    <meta name="date" content="2019-04-01" />
+    <link href="01ResearchR_files/remark-css-0.0.1/default.css" rel="stylesheet" />
+    <link href="01ResearchR_files/remark-css-0.0.1/metropolis.css" rel="stylesheet" />
+    <link href="01ResearchR_files/remark-css-0.0.1/metropolis-fonts.css" rel="stylesheet" />
+    <link rel="stylesheet" href="my-css.css" type="text/css" />
+  </head>
+  <body>
+    <textarea id="source">
+class: center, middle, inverse, title-slide
+
+# Research and .mono[R]
+## EC 425/525, Set 1
+### Edward Rubin
+### 01 April 2019
+
+---
+
+class: inverse, middle
+
+
+
+# Prologue
+
+---
+name: schedule
+
+# Schedule
+
+## Today
+
+- Research basics: *Why are we here?* .grey-vlight[*MHE*: Preface &amp; Ch. 1]
+- Our class: *What are we doing?*
+- .mono[R]: Part of our *how* in this class: Install and basics.
+
+## Upcoming
+
+- Learn more .mono[R].
+- Review metrics and building intution for causality and inference.
+- Build momentum.
+
+## Long run
+
+.hi[Goal:] Deepen understandings/intuitions for causality and inference.
+---
+layout: true
+# Research
+---
+name: why
+
+## Why are we here?
+
+--
+
+- .hi[Econ. research]
+--
+.hi[:] Understand human, social, and/or economic behaviors.
+
+--
+
+- .hi[PhD]
+--
+.hi[:] Learn methods, tools, skills, and intution required for research.
+
+--
+
+- .hi[(Applied) econometrics]
+--
+.hi[:] Build a toolbox of .pink[*empirical* methods, tools, and skills] to that combine data and statistical insights to test and/or measure theories and policies.
+
+--
+
+- .hi[You]
+--
+.hi[:] You should be thinking about this question throughout your program/work/life.
+--
+ .hi-purple[Self awareness and mental health are important.]
+---
+
+## This class
+
+For many of people, .hi[this course marks a big shift] in how school works.
+
+- You don't have a metrics qualifying exam.
+- Grades are not super important.
+
+--
+
+The material and tools are pivotal for **a lot** of what you will do in the future.
+
+--
+
+.hi[Take responsibility for your education and career.]
+
+- Commit to spending the necessary time.
+- Be proactive and curious.
+- Go down rabbit holes.
+- Ask questions.
+- Learn.
+
+
+
+---
+
+## What are we doing?
+
+.hi[Q] What is the difference between *econometrics* and *data science*?
+--
+&lt;br&gt;.hi[Q].sub[.pink[v2]] Is there anything special about *econometrics*?
+
+--
+
+.hi[A].pink[.sub[1/∞]] Causality.&lt;sup&gt;.smallest[😸]&lt;/sup&gt;
+
+.footnote[
+😸 Sources for this Q and A: [Dan Hammer](https://www.danham.me/r/about.html) and [Max Auffhammer](https://www.auffhammer.com/).
+]
+
+--
+
+***Note:*** There are large parts of econometrics that focus on *prediction* rather than *causality* (*e.g.*, forecasting—see [Jeremy Piger](https://pages.uoregon.edu/jpiger/)). However, causality plays a *huge* role in modern applied econometrics (esp. in micro).
+
+---
+layout: false
+class: clear
+
+Toward this end—causality—we will use two books (favoring *MHE*).
+
+.pull-left[
+.hi-pink[Mostly Harmless Econometrics]
+&lt;br&gt;*Angrist and Pischke, 2008*
+&lt;img src="cover_mhe.jpg" width="50%" style="display: block; margin: auto;" /&gt;
+]
+.pull-right[
+.hi-slate[Econometric Analysis]
+&lt;br&gt;*Greene, 2018*
+&lt;img src="cover_greene.jpg" width="60%" style="display: block; margin: auto;" /&gt;
+]
+
+--
+
+.pull-left[Buy now. .hi[Read this book.]&lt;br&gt;The standard for causal metrics.&lt;br&gt;.pink[*MHE*]]
+--
+.pull-right[More of an reference/encyclopedia.&lt;br&gt;Classic metrics theory.&lt;br&gt;.slate[*Greene*]]
+---
+layout: true
+
+# Causal research
+---
+
+## Motivation
+
+&gt; First, we believe that .pink[empirical research is most valuable when it uses data to answer specific causal questions, *as if* in a randomized clinical trial.] This view shapes our approach to most research questions. In the absence of a real experiment, we look for well-controlled comparisons and/or natural quasi-experiments. Of course, some quasi-experimental research designs are more convincing than others, but .purple[the econometric methods used in these studies are almost always fairly simple].
+
+*Mostly Harmless Econometrics*, p. xii (color added)
+
+--
+
+.pink[1\. This ideology inherently compares research to "gold-standard" RCTs.]
+--
+&lt;br&gt;.purple[2\. The methods are usually (relatively) straightforward (after training).]
+---
+name: faqs
+
+## Angrist and Pischke's FAQs&lt;sup&gt;.pink[†]&lt;/sup&gt;
+
+.footnote[
+.pink[†] See *MHE*, chapter 1.
+.pink[††] Credit for these questions goes to [Reed Walker](https://w-reed-walker.com/).
+]
+
+1. What is the .hi[causal relationship of interest]?
+
+2. How would an .hi[ideal experiment] capture this causal effect of interest?
+
+3. What is your .hi[identification strategy]?
+
+4. What is your .hi[mode of inference]?
+
+--
+
+***Note:*** Other questions also matter for developing quality research, *e.g.*,&lt;sup&gt;.pink[††]&lt;/sup&gt;
+
+- Why is your question .hi[important/interesting]?
+- Why is the .hi[current literature] lacking or nonexistant?
+- How do you propose to .hi[advance the literature]?
+---
+name: faq1
+
+## FAQ.sub[1]: What is the causal relationship of interest?
+
+Descriptive exercises can be [very interesting and important](https://www.opportunityatlas.org/), but in modern applied econometrics, .hi-purple[causality is king].
+
+**Why?**
+
+--
+
+- Causal relationships directly .hi-purple[test theories] of how the world works.
+
+- Causal relationships provide us with .hi-purple[*counterfactuals*]—how the world would have looked with different sets of policies/circumstances.
+
+--
+
+🚧 If you can't clearly and succinctly name the causal relationship of interest, then you may not actually have a research project.
+---
+
+## FAQ.sub[1]: What is the causal relationship of interest?
+
+*Some classic examples...*
+
+**Labor and Education**&lt;br&gt;How does an additional year of schooling affect wages?
+
+**Political economy and Development**&lt;br&gt;How do democratic institutions affect economic development?
+
+**Environment and Urban**&lt;br&gt;Do the poor receive substantive benefits from environmental clean ups?
+
+**Health, Crime, and Law**&lt;br&gt;Do gun-control laws actually reduce gun violence?
+
+---
+name: faq2
+
+## FAQ.sub[2]: What is the ideal experiment for this setting?
+
+Describing the *ideal experiment* helps us formulate
+
+- the .pink[exact causal question(s)]
+
+- the dimensions we want to .pink[manipulate]
+
+- the factors we need to .pink[hold constant]
+
+--
+
+🚧 These *ideal experiments* are generally hypothetical, but if you can't describe the ideal, it will probably be hard to come up with data and plausible research designs in real life.
+
+--
+
+Angrist and Pischke call questions without ideal experiments *fundamentally unanswerable questions* (FUQs).
+---
+
+## FAQ.sub[2]: What is the ideal experiment for this setting?
+
+*Examples of potentially answerable questions...*
+
+- **The effect of education on wages:** Randomize scholarships or incentives to remain in school.
+- **Democracy and development:** Arbitrarily assign institutional types to countries as they receive independence.
+- **Environmental cleanups:** Ask EPA to randomly clean toxic sites.
+- **Gun laws:** Randomly assign gun restrictions to jurisdictions.
+
+--
+
+*Examples of challenging questions to answer (potentially unanswerable?)...*
+
+- How does gender affect eventual career paths?
+- What role does race play in one's wages?
+
+---
+
+## FAQ.sub[2]: What is the ideal experiment for this setting?
+
+Sometimes even simple-sounding policy questions turn out to be fundamentally unanswerable.
+
+--
+
+*Example of a fundamentally unanswerable question*:
+&gt; Do children perform better by starting school at an older age?
+
+--
+
+**Proposed ideal experiment**
+
+1. Randomize kids to start 1.super[st] grade at age 6 or 7.
+2. Compare 2.super[nd] grade test scores.
+
+--
+
+.hi[Problem]
+--
+ Kids who started later are older in 2.super[nd] grade. Older kids do better. Do we want the effect of starting later or just being older?
+
+---
+count: false
+
+## FAQ.sub[2]: What is the ideal experiment for this setting?
+
+Sometimes even simple-sounding policy questions turn out to be fundamentally unanswerable.
+
+*Example of a fundamentally unanswerable question*:
+&gt; Do children perform better by starting school at an older age?
+
+**Proposed ideal experiment.sub[2.0]**
+
+1. Randomize kids to start 1.super[st] grade at age 6 or 7.
+2. .purple[Control for age.] Compare test scores when kids are age 8.
+
+--
+
+.hi[Problem.sub[2.0]]
+--
+ The two groups will have been in school for different numbers of years (1 vs. 2). More school should mean better scores.
+---
+count: false
+
+## FAQ.sub[2]: What is the ideal experiment for this setting?
+
+Sometimes even simple-sounding policy questions turn out to be fundamentally unanswerable.
+
+*Example of a fundamentally unanswerable question*:
+&gt; Do children perform better by starting school at an older age?
+
+.hi[Central problem:] Mechanical links between ages and time in school.
+
+.center[(Start Age) = (Current Age) – (Time in School)]
+
+No experiment can separate these effects (for school-age children).
+---
+name: faq3
+
+## FAQ.sub[3]: What's your identification strategy?
+
+This question&lt;sup&gt;✋&lt;/sup&gt; describes how you plan to recover/observe *as good as random* assignment of your variable of interest (approximating your ideal experiment) .hi-pink[in real life].
+
+.footnote[✋ You will hear this question asked *a lot*.]
+
+***Examples***
+- Compulsory school-attendance laws *interacted with* quarter of birth
+- Vietnam War draft
+- Thresholds for the Clean Air Act violations
+- Notches in income-tax policies
+- Judge assignments
+- Randomly assigned characteristics on résumés
+
+---
+
+## FAQ.sub[3]: What's your identification strategy?
+
+*A brief history*
+
+The term "identification strategy" goes back to Angrist and Krueger (1991).
+
+However, the comparison of *ideal* and *natural* experiments goes back much farther to Haavelmo (1944)...
+
+---
+
+&gt; A design of experiments... is an essential appendix to any quantitative theory. And .orange[we usually have some such experiment in mind when we construct the theories], although-unfortunately-most economists do not describe their design of experiments explicitly. If they did, they would see that the experiments they have in mind may be grouped into two different classes, namely, (1) .pink[experiments that we should like to make to see if certain real economic phenomena—when artificially isolated from "other influences"]—would verify certain hypotheses, and (2) .purple[the stream of experiments that Nature is steadily turning out from her own enormous laboratory], and which we merely watch as passive observers. In both cases the aim of the theory is the same, to become master of the happenings of real life.
+
+*Haavelmo, 1944* (color added)
+---
+name: faq4
+
+## FAQ.sub[4]: What is your mode of inference?
+
+Historically, inference—standard errors, confidence intervals, hypothesis tests, *etc.*—has received much less attention than point estimates. It's becoming more important (more than an afterthought).
+
+- Which .hi[population] does your sample represent?
+
+- How much .hi[noise] (error) exists in your estimator (and estimates)?
+
+- How much .hi[variation] do you actually have in your variable of interest?
+
+--
+
+Without careful inference, we don't know the difference between
+- 21% ± 2.3%
+- 21% ± 20.3%
+---
+layout: false
+class: middle, inverse
+
+# Our class
+---
+name: syllabus
+
+# Our class
+## Mini-syllabus
+
+.hi[Class] Attend/participate. Read assigned readings—especially discussion papers.
+
+.hi[Lab] Practice applying our in-class content in .mono[R] with Jenni Putz. Attend.
+
+.hi[Problem sets] 2–4 problem sets mixing theory and applications in .mono[R].
+
+.hi[Other grades] The current plan: Two take-home exams.
+
+---
+layout: false
+class: middle, inverse
+
+# .mono[R]
+---
+layout: true
+
+# .mono[R] basics
+---
+name: basics
+
+## What is it?
+
+TODO
+
+---
+name: install
+
+## Installing
+
+---
+
+## Working
+
+---
+layout: false
+# Table of contents
+
+.pull-left[
+### Admin
+.smallest[
+
+1. [Schedule](#schedule)
+1. [Mini-syllabus](#syllabus)
+1. [.mono[R] basics](#basics)
+1. [.mono[R] install](#install)
+]
+]
+
+.pull-right[
+### Research
+.smallest[
+
+1. [Why are we here?](#why)
+1. [*MHE*'s FAQs](#faqs)
+  1. [Question](#faq1)
+  1. [Experiment](#faq2)
+  1. [Identification](#faq3)
+  1. [Inference](#faq4)
+]
+]
+---
+exclude: true
+    </textarea>
+<script src="https://remarkjs.com/downloads/remark-latest.min.js"></script>
+<script>var slideshow = remark.create({
+"highlightStyle": "github",
+"highlightLines": true,
+"countIncrementalSlides": false
+});
+if (window.HTMLWidgets) slideshow.on('afterShowSlide', function (slide) {
+  window.dispatchEvent(new Event('resize'));
+});
+(function() {
+  var d = document, s = d.createElement("style"), r = d.querySelector(".remark-slide-scaler");
+  if (!r) return;
+  s.type = "text/css"; s.innerHTML = "@page {size: " + r.style.width + " " + r.style.height +"; }";
+  d.head.appendChild(s);
+})();</script>
+
+<script>
+(function() {
+  var i, text, code, codes = document.getElementsByTagName('code');
+  for (i = 0; i < codes.length;) {
+    code = codes[i];
+    if (code.parentNode.tagName !== 'PRE' && code.childElementCount === 0) {
+      text = code.textContent;
+      if (/^\\\((.|\s)+\\\)$/.test(text) || /^\\\[(.|\s)+\\\]$/.test(text) ||
+          /^\$\$(.|\s)+\$\$$/.test(text) ||
+          /^\\begin\{([^}]+)\}(.|\s)+\\end\{[^}]+\}$/.test(text)) {
+        code.outerHTML = code.innerHTML;  // remove <code></code>
+        continue;
+      }
+    }
+    i++;
+  }
+})();
+</script>
+<!-- dynamically load mathjax for compatibility with self-contained -->
+<script>
+(function () {
+  var script = document.createElement('script');
+  script.type = 'text/javascript';
+  script.src  = 'https://mathjax.rstudio.com/latest/MathJax.js?config=TeX-MML-AM_CHTML';
+  if (location.protocol !== 'file:' && /^https?:/.test(script.src))
+    script.src  = script.src.replace(/^https?:/, '');
+  document.getElementsByTagName('head')[0].appendChild(script);
+})();
+</script>
+  </body>
+</html>

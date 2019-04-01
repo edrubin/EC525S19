@@ -1,0 +1,239 @@
+
+/* Create a highlighted class called 'hi'  */
+.hi {
+  font-weight: 600;
+  color: #e64173 !important;
+}
+.hi-pink {
+  font-weight: 600;
+  color: #e64173 !important;
+}
+.hi-slate {
+  font-weight: 600;
+  color: #314f4f !important;
+}
+.hi-turquoise {
+  font-weight: 600;
+  color: #44C1C4 !important;
+}
+.hi-purple {
+  font-weight: 600;
+  color: #6A5ACD !important;
+}
+.hi-orange {
+  font-weight: 600;
+  color: #FFA500 !important;
+}
+.hi-yellow{
+  font-weight: 600;
+  color: #D8BD44 !important;
+}
+.hi-green {
+  font-weight: 600;
+  color: #7CAE96 !important;
+}
+.hi-grey {
+  font-weight: 600;
+  color: #8AA19E !important;
+}
+.hi-blue {
+  font-weight: 600;
+  color: #54778B !important;
+}
+.hi-red {
+  font-weight: 600;
+  color: #fb6107 !important;
+}
+/* Pink text */
+.pink {
+  color: #e64173 !important;
+}
+/* Slate ("darkslategrey") text */
+.slate {
+  color: #314f4f !important;
+}
+/* Turquoise ("lightseagreen") text */
+.turquoise {
+  color: #44C1C4 !important;
+}
+/* Purple-ish ("slateblue") text */
+.purple {
+  color: #6A5ACD !important;
+}
+/* Orange ("orange") text */
+.orange {
+  color: #FFA500 !important;
+}
+.yellow{
+  color: #D8BD44 !important;
+}
+.green {
+  color: #7CAE96 !important;
+}
+.grey {
+  color: #8AA19E !important;
+}
+.blue {
+  color: #54778B !important;
+}
+.red {
+  color: #fb6107 !important;
+}
+
+/* Grey text */
+.grey-mid {
+  color: #7f7f7f !important;
+}
+/* Grey text */
+.grey-vlight {
+  color: #e5e5e5 !important;
+}
+/* White text */
+.white {
+  color: #ffffff !important;
+}
+.black {
+  color: #000000 !important;
+}
+
+/* Mono-spaced font */
+.mono {
+  font-family: monospace;
+}
+/* Underline */
+.ul {
+  text-decoration: underline;
+}
+/* Overline */
+.ol {
+  text-decoration: overline;
+}
+.st {
+  text-decoration: line-through;
+}
+/* Fraction */
+.top{
+  display:inline-block;
+}
+.bottom{
+  border-top:solid black 1px;
+  display:inline-block;
+  clear:left;
+}
+
+.remark-code-line-highlighted {
+  background-color: rgba(249, 39, 114, 0.5);
+}
+
+.bigger {
+  font-size: 125%;
+}
+
+.smaller {
+  font-size: 95%;
+}
+
+.smallest {
+  font-size: 85%;
+}
+
+.remark-slide-content {
+  background-color: #ffffff;
+  font-size: 24px;
+  /* font-weight: 300; */
+  /* line-height: 1.5; */
+  /* padding: 1em 2em 1em 2em; */
+}
+
+.inverse {
+  background-color: #23373B;
+  text-shadow: 0 0 20px #333;
+  /* text-shadow: none; */
+}
+
+.title-slide {
+  background-color: #FAFAFA;
+}
+
+.footnote {
+  bottom: 1.5em;
+  font-size: 70%;
+}
+
+.dark-slide {
+  background-color: #23373B;
+  border-top: 0px solid #23373B;
+}
+.dark-slide .remark-slide-number {
+  display: none;
+}
+
+.white-slide {
+  background-color: #ffffff;
+  border-top: 0px solid #ffffff;
+}
+.white-slide .remark-slide-number {
+  display: none;
+}
+
+.mjx-chtml{
+  font-size: 103% !important;
+}
+
+/* Mono-spaced font, smaller */
+.mono-small {
+  font-family: monospace;
+  font-size: 20px;
+}
+.mono-small .mjx-chtml {
+  font-size: 103% !important;
+}
+
+.pseudocode, .pseudocode-small {
+  font-family: monospace;
+  background: #f8f8f8;
+  border-radius: 3px;
+  padding: 10px;
+}
+.pseudocode-small {
+  font-size: 20px;
+}
+
+.super{
+  vertical-align: super;
+  font-size: 70%;
+}
+.sub{
+  vertical-align: sub;
+  font-size: 70%;
+}
+
+.remark-code {
+  font-size: 70%;
+}
+
+.inverse > h2 {
+  color: #e64173;
+  font-weight: 300;
+  font-size: 40px;
+  font-style: italic;
+  margin-top: -25px;
+}
+.title-slide > h2  {
+  margin-top: -25px;
+  padding-bottom: -20px;
+  color: rgba(249, 38, 114, 0.75);
+  text-shadow: none;
+  font-weight: 300;
+  font-size: 35px;
+  font-style: normal;
+  text-align: left;
+  margin-left: 15px;
+}
+
+.remark-inline-code {
+  background: #F5F5F5; /* lighter */
+  /* background: #e7e8e2; /* darker */
+  border-radius: 3px;
+  padding: 4px;
+}
