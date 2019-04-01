@@ -379,13 +379,19 @@ name: syllabus
 # Our class
 ## Mini-syllabus
 
-.hi[Class] Attend/participate. Read assigned readings—especially discussion papers.
+.hi[Class] Attend/participate. Read assigned readings—especially papers.
 
 .hi[Lab] Practice applying our in-class content in .mono[R] with Jenni Putz. Attend.
 
 .hi[Problem sets] 2–4 problem sets mixing theory and applications in .mono[R].
 
 .hi[Other grades] The current plan: Two take-home exams.
+
+--
+
+***Note:*** This class is under development.
+- .hi-slate[Challenge:] Less structure.
+- .hi-slate[Benefit:] You get more say in what we cover/do. Participate!
 
 ---
 layout: false
@@ -401,16 +407,267 @@ name: basics
 
 ## What is it?
 
-TODO
+The [.mono[R] project website](https://www.r-project.org):
 
+&gt; R is a free software environment for statistical computing and graphics. It compiles and runs on a wide variety of UNIX platforms, Windows and MacOS.
+
+--
+
+What does that mean?
+
+- .mono[R] was created for the statistical and graphical work required by econometrics.
+
+- .mono[R] has a vibrant, thriving online community (*e.g.*, [Stack Overflow](https://stackoverflow.com/questions/tagged/r)).
+
+- Plus it's __free__ and __open source__.
+
+---
+
+## Why are we using .mono[R]?
+
+1\. .mono[R] is __free__ and __open source__—saving both you and the university 💰💵💰.
+
+2\. _Related:_ Outside of a small group of economists, private- and public-sector __employers favor .mono[R]__ over .mono[Stata] and most competing softwares.
+
+3\. .mono[R] is very __flexible and powerful__—adaptable to nearly any task, _e.g._, 'metrics, spatial data analysis, machine learning, web scraping, data cleaning, website building, teaching. [My website](https://edrub.in), the [TWEEDS website](https://tweeds.io), and these notes all came out of .mono[R].
+
+---
+
+&lt;img src="01ResearchR_files/figure-html/statistical languages-1.svg" style="display: block; margin: auto;" /&gt;
+
+---
+
+## Why are we using .mono[R]?
+
+4\. _Related:_ .mono[R] imposes __no limitations__ on your amount of observations, variables, memory, or processing power. (I'm looking at __you__, .mono[Stata].)
+
+5\. If you put in the work,&lt;sup&gt;.tiny[🖥️]&lt;/sup&gt; you (and your students!) will come away with a __valuable and marketable__ tool.
+
+.footnote[
+🖥️: Learning .mono[R] definitely requires time and effort.
+]
+
+6\. I 💖 __.mono[R]__
+
+---
+
+.center[![Gapminder](ex_gganimate.gif)]
 ---
 name: install
 
-## Installing
+## The install
+
+Installing .mono[R] is fairly straightfoward, but it occasionally involves challenges for older computers.
+
+.hi-slate[Step 1:] Download ([r-project.org](https://www.r-project.org/)) and install .mono[R] .purple[for your operating system].
+
+.hi-slate[Step 2:] Download ([rstudio.com](https://www.rstudio.com/products/rstudio/download/#download)) and install .mono[RStudio] .orange[Desktop] .purple[for your operating system].
+
+[DataCamp](https://www.datacamp.com/community/tutorials/installing-R-windows-mac-ubuntu) has a nice tutorial on installing .mono[R] and .mono[RStudio] for Windows, Mac, and Linux operating systems.
+
+---
+name: fundamentals
+
+## Fundamentals
+
+Let's get started. There are a few principals to keep in mind with .mono[R]:
+
+--
+
+.more-left[1\. Everything is an __object__.]
+--
+.less-right[`foo`]
+
+&lt;br&gt;
+
+--
+
+.more-left[2\. Every object has a __name__ and __value__.]
+--
+.less-right[`foo &lt;- 2`]
+
+&lt;br&gt;
+
+--
+
+.more-left[3\. You use __functions__ on these objects.]
+--
+.less-right[`mean(foo)`]
+
+&lt;br&gt;
+
+--
+
+.more-left[4\. Functions come in __libraries__ (__packages__)]
+--
+.less-right[`library(dplyr)`]
+
+&lt;br&gt;
+
+--
+
+.more-left[5\. .mono[R] will try to __help__ you.]
+--
+.less-right[`?dplyr`]
+
+&lt;br&gt;
+
+--
+
+.more-left[6\. .mono[R] has its __quirks__.]
+--
+.less-right[`NA; error; warning`]
 
 ---
 
-## Working
+## Fundamentals of functions
+
+Functions operate on objects, but they need some guidance—arguments.
+
+--
+
+***Example:*** `ex_fun(arg1, arg2, arg3)`
+
+--
+
+- Our function is named `ex_fun`.
+
+- This function takes three arguments: `arg1`, `arg2`, `arg3`.
+
+- You can tell .mono[R] which values to assign to which arguments:&lt;br&gt;`ex_fun(arg1 = 13, arg2 = 25, arg3 = 7)` (probably best practice)
+
+- ... or .mono[R] will assign the values using the arguments' defined order:&lt;br&gt;`ex_fun(13, 25, 7)` (shorter/lazier but has the same result)
+
+- You must assign a name to a function's outputted object (to keep it).
+---
+
+## Example function: `matrix`
+
+We will need to create matrices in this class.
+
+Enter: .mono[R]'s `matrix()` function!
+
+---
+layout: false
+class: clear
+
+
+.pull-left[
+
+```r
+# 3x2 matrix filled w/ zeros
+matrix(
+  data = 0, nrow = 3, ncol = 2
+)
+```
+
+```
+#&gt;      [,1] [,2]
+#&gt; [1,]    0    0
+#&gt; [2,]    0    0
+#&gt; [3,]    0    0
+```
+]
+--
+.pull-right[
+
+```r
+# 3x2 matrix filled w/ 1 to 6
+matrix(
+  data = 1:6, nrow = 3, ncol = 2
+)
+```
+
+```
+#&gt;      [,1] [,2]
+#&gt; [1,]    1    4
+#&gt; [2,]    2    5
+#&gt; [3,]    3    6
+```
+]
+
+---
+layout: false
+class: clear
+
+.pull-left[
+
+```r
+# 3x2 matrix filled w/ 1:6 by row
+matrix(
+  data = 1:6, nrow = 3, ncol = 2,
+  byrow = T
+)
+```
+
+```
+#&gt;      [,1] [,2]
+#&gt; [1,]    1    2
+#&gt; [2,]    3    4
+#&gt; [3,]    5    6
+```
+]
+--
+.pull-right[
+
+```r
+# 3x2 matrix filled w/ 1:3
+matrix(
+  data = 1:3,
+  nrow = 3, ncol = 2
+)
+```
+
+```
+#&gt;      [,1] [,2]
+#&gt; [1,]    1    1
+#&gt; [2,]    2    2
+#&gt; [3,]    3    3
+```
+]
+--
+.pull-left[
+
+```r
+# 3x2 matrix filled w/ 1:3
+# Assigned to memory
+our_matrix &lt;- matrix(
+  data = 1:3,
+  nrow = 3, ncol = 2
+)
+```
+]
+
+---
+layout: true
+
+# .mono[R] basics
+
+---
+
+## Help and functions
+
+.hi[Q] How do we know which arguments a function requires/accepts?
+
+--
+
+.hi[A] `?`
+--
+ Meaning you can type `?matrix` into your .mono[R] console to find the help file associated with the functions/objects named `matrix`.
+
+--
+
+.hi[Double bonus:] Use `??matrix` to perform a fuzzy search for the term `matrix` in all of the help files.
+
+---
+
+## Example function: `matrix`
+
+.hi[Q] How do we know which arguments a function requires/accepts?
+
+.hi[A.sub[2]] .mono[RStudio] will also try to help you.
+- Type a name (_e.g._, `matrix`) into the console; .mono[RStudio] will show you some info about the function.
+- After you type the name and parentheses (_e.g._, `matrix()`), press .mono[tab], and .mono[RStudio] will show you a list of arguments for the function.
 
 ---
 layout: false
@@ -422,9 +679,8 @@ layout: false
 
 1. [Schedule](#schedule)
 1. [Mini-syllabus](#syllabus)
-1. [.mono[R] basics](#basics)
-1. [.mono[R] install](#install)
 ]
+
 ]
 
 .pull-right[
@@ -438,6 +694,15 @@ layout: false
   1. [Identification](#faq3)
   1. [Inference](#faq4)
 ]
+
+### .mono[R]
+.smallest[
+
+1. [Basics](#basics)
+1. [Install](#install)
+1. [Fundamentals](#fundamentals)
+]
+
 ]
 ---
 exclude: true

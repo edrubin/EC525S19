@@ -1,6 +1,6 @@
 # EC 425/525, Spring 2019
 
-Welcome to **Economics 425/525: Econometrics III** (Spring 2019) at the University of Oregon (taught by Dr. [Ed Rubin](https://edrub.in) in UO Econ.).
+Welcome to **Economics 425/525: Econometrics III** (Spring 2019) at the University of Oregon (taught by Dr. [Ed Rubin](https://edrub.in)).
 
 ## Lecture slides
 
@@ -8,6 +8,8 @@ The slides below (linked by their topic) are .html files that will only work pro
 
 Thanks to [Grant McDermott](grantmcdermott.com/) for encouraging me to use `xaringan`.
 
-Lecture 01: **Research + R + You = 💖**
+**Lecture 01: Research + R + You = 💖**
 <br> An introduction to empirical research via applied econometrics.
+<br> Light introduction to R.
 <br> Readings: MHE preface and MHE chapter 1
+<br> .html | .pdf | .Rmd
