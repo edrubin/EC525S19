@@ -12,4 +12,4 @@ Thanks to [Grant McDermott](grantmcdermott.com/) for encouraging me to use `xari
 <br> An introduction to empirical research via applied econometrics.
 <br> Light introduction to R.
 <br> Readings: MHE preface and MHE chapter 1
-<br> .html | .pdf | .Rmd
+<br> [.html](https://raw.githack.com/edrubin/EC525S19/master/LectureNotes/01ResearchR/01ResearchR.html) | [.pdf](https://raw.githack.com/edrubin/EC525S19/master/LectureNotes/01ResearchR/01ResearchR.pdf) | [.Rmd](https://raw.githack.com/edrubin/EC525S19/master/LectureNotes/01ResearchR/01ResearchR.Rmd)
