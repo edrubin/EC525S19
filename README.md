@@ -36,6 +36,7 @@ We will use two books.
 
 1. Neyman potential outcomes framework (Rubin causal model)
 1. Selection bias and experimental variation in treatment
+1. R: Object types/classes and package management.
 
 **Note formats:** [.html](https://raw.githack.com/edrubin/EC525S19/master/NotesLecture/02Ideal/02Ideal.html) | [.pdf](https://raw.githack.com/edrubin/EC525S19/master/NotesLecture/02Ideal/02Ideal.pdf) | [.Rmd](https://raw.githack.com/edrubin/EC525S19/master/NotesLecture/02Ideal/02Ideal.Rmd)
 <br>**Readings:** MHE chapter 2
