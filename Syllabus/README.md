@@ -1,2 +1,0 @@
-# Syllabus
-Our syllabus!
