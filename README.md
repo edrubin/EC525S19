@@ -22,7 +22,7 @@ We will use two books.
 
 ## Lecture slides
 
-*Note:* The linked slides (below) are `.html` files that will only work properly if you are connected to the internet. If you're going off grid (camping + metrics?), grab the PDFs. You'll miss out on gifs and interactive plots, but the equations will actually show up.
+*Note:* The linked slides (below) are `.html` files that will only work properly if you are connected to the internet. If you're going off grid (camping + metrics?), grab the PDFs. You'll miss out on gifs and interactive plots, but the equations will actually show up. I've removed the within-slide (incremental) pauses in the *(no pause)* slides.
 
 **[Lecture 01: Research + R + You = 💖](https://raw.githack.com/edrubin/EC525S19/master/NotesLecture/01ResearchR/01ResearchR.html)**
 
@@ -38,7 +38,7 @@ We will use two books.
 1. Selection bias and experimental variation in treatment
 1. R: Object types/classes and package management.
 
-**Note formats:** [.html](https://raw.githack.com/edrubin/EC525S19/master/NotesLecture/02Ideal/02Ideal.html) | [.pdf](https://raw.githack.com/edrubin/EC525S19/master/NotesLecture/02Ideal/02Ideal.pdf) | [.Rmd](https://raw.githack.com/edrubin/EC525S19/master/NotesLecture/02Ideal/02Ideal.Rmd)
+**Note formats:** [.html](https://raw.githack.com/edrubin/EC525S19/master/NotesLecture/02Ideal/02Ideal.html) | [.html (no pause)](https://raw.githack.com/edrubin/EC525S19/master/NotesLecture/02Ideal/02Ideal_NoPause.html) | [.pdf](https://raw.githack.com/edrubin/EC525S19/master/NotesLecture/02Ideal/02Ideal.pdf) | [.pdf (no pause)](https://raw.githack.com/edrubin/EC525S19/master/NotesLecture/02Ideal/02Ideal_NoPause.pdf) | [.Rmd](https://raw.githack.com/edrubin/EC525S19/master/NotesLecture/02Ideal/02Ideal.Rmd)
 <br>**Readings:** MHE chapter 2
 
 *Another note on the notes:* I create the slides with [`xaringan`](https://github.com/yihui/xaringan/wiki) in [R](cran.r-project.org). Thanks to [Grant McDermott](grantmcdermott.com/) for encouraging me to make this switch.
@@ -49,7 +49,11 @@ We will use two books.
 
 ## Project
 
-Research proposal.
+Building a research project/proposal.
+
+Step 1: **Research question (causal relationship of interest) and motivation.**
+<br>Should be between 2 sentences and 2 paragraphs.
+<br>*Due 17 April 2019.*
 
 ## Resources
 

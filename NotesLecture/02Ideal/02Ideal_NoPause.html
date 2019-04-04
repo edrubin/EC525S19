@@ -1,0 +1,1521 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <title>The Experimental Ideal</title>
+    <meta charset="utf-8">
+    <meta name="author" content="Edward Rubin" />
+    <meta name="date" content="2019-04-04" />
+    <link href="02Ideal_NoPause_files/remark-css-0.0.1/default.css" rel="stylesheet" />
+    <link href="02Ideal_NoPause_files/remark-css-0.0.1/metropolis.css" rel="stylesheet" />
+    <link href="02Ideal_NoPause_files/remark-css-0.0.1/metropolis-fonts.css" rel="stylesheet" />
+    <script src="02Ideal_NoPause_files/kePrint-0.0.1/kePrint.js"></script>
+    <link rel="stylesheet" href="my-css.css" type="text/css" />
+  </head>
+  <body>
+    <textarea id="source">
+class: center, middle, inverse, title-slide
+
+# The Experimental Ideal
+## EC 425/525, Set 2
+### Edward Rubin
+### 04 April 2019
+
+---
+
+class: inverse, middle
+
+
+
+# Prologue
+
+---
+name: schedule
+
+# Schedule
+
+## Last time
+
+Research basics, our class, and .mono[R]
+
+## Today
+
+.hi-slate[Admin:] Canvas exists. Updated class [website](https://github.com/edrubin/EC525S19).
+&lt;br&gt;.hi-slate[Material:] The Rubin causal model (not mine), .orange[Chapter 2 MHE]. .mono[R] basics.
+&lt;br&gt;.hi-purple[Assignment.sub[1]] Install [.mono[R]](https://www.r-project.org/) and [.mono[RStudio]](https://www.rstudio.com/products/rstudio/download/#download) on your computer.
+&lt;br&gt;.hi-purple[Assignment.sub[2]] Take 15 minutes to quietly think about your interests.
+
+
+## Future
+
+.hi-slate[Lab:] Matrix work, regression, functions, simulation
+&lt;br&gt;.hi[Long run:] Deepen understandings/intuitions for causality and inference.
+---
+layout: false
+class: inverse, middle
+name: review
+
+# Review
+## Research fundamentals
+---
+
+# Review
+## Research fundamentals
+
+Angrist and Pischke provide four .hi-slate[fundamental questions for research:]
+
+1. What is the .hi[causal relationship of interest]?
+
+2. How would an .hi[ideal experiment] capture this causal effect of interest?
+
+3. What is your .hi[identification strategy]?
+
+4. What is your .hi[mode of inference]?
+
+
+Seemingly straightforward questions can be fundamentally unanswerable.
+---
+
+# Review
+## General research recommendations
+
+More unsolicited advice:
+
+- Be curious.
+
+- Ask questions.
+
+- Attend seminars.
+
+- Meet faculty (UO + visitors).
+
+- Focus on learning—especially intuition.&lt;sup&gt;.pink[†]&lt;/sup&gt;
+
+- .hi-pink[Be kind and constructive.]
+
+.footnote[
+.pink[†] *Learning* is not always the same as getting good grades.
+]
+
+---
+layout: true
+# The experimental ideal
+---
+class: inverse, middle
+---
+
+## What's so great about experiments?
+
+Science widely regards .hi[experiments as the gold standard] for research.
+
+*But why?* The costs can be substantial.
+
+.hi-slate[Costs]
+
+- slow and expensive
+- heavily regulated by review boards
+- can abstract away from the actual question/setting
+
+.hi-slate[Benefits]
+
+So the benefits need to be pretty large, right?
+---
+
+## Example: Hospitals and health
+
+Imagine we want to know the .hi[causal effect of hospitals on health].
+
+
+.hi-slate[Research question]
+
+Within the population of poor, elderly individuals, does visiting the emergency room for primary care improve health?
+
+
+.hi-slate[Empirical exercise]
+
+1. Collect data on *health status* and *hospital visits*.
+1. Summarize health status by hospital-visit group.
+
+---
+
+## Example: Hospitals and health
+
+Our empirical exercise from the 2005 National Health Inteview Survey:
+
+&lt;table class="table" style="font-size: 22px; margin-left: auto; margin-right: auto;"&gt;
+ &lt;thead&gt;
+  &lt;tr&gt;
+   &lt;th style="text-align:left;"&gt; Group &lt;/th&gt;
+   &lt;th style="text-align:center;"&gt; Sample Size &lt;/th&gt;
+   &lt;th style="text-align:center;"&gt; Mean Health Status &lt;/th&gt;
+   &lt;th style="text-align:center;"&gt; Std. Error &lt;/th&gt;
+  &lt;/tr&gt;
+ &lt;/thead&gt;
+&lt;tbody&gt;
+  &lt;tr&gt;
+   &lt;td style="text-align:left;color: #314f4f;background-color: white;"&gt; Hospital &lt;/td&gt;
+   &lt;td style="text-align:center;color: #314f4f;background-color: white;"&gt; 7,774 &lt;/td&gt;
+   &lt;td style="text-align:center;color: #314f4f;background-color: white;"&gt; 3.21 &lt;/td&gt;
+   &lt;td style="text-align:center;color: #314f4f;background-color: white;"&gt; 0.014 &lt;/td&gt;
+  &lt;/tr&gt;
+  &lt;tr&gt;
+   &lt;td style="text-align:left;color: #314f4f;background-color: white;"&gt; No hospital &lt;/td&gt;
+   &lt;td style="text-align:center;color: #314f4f;background-color: white;"&gt; 90,049 &lt;/td&gt;
+   &lt;td style="text-align:center;color: #314f4f;background-color: white;"&gt; 3.93 &lt;/td&gt;
+   &lt;td style="text-align:center;color: #314f4f;background-color: white;"&gt; 0.003 &lt;/td&gt;
+  &lt;/tr&gt;
+&lt;/tbody&gt;
+&lt;/table&gt;
+
+
+We get a `\(t\)` statistic of 58.9 when testing a difference in groups' means (0.72).
+
+
+.hi[Conclusion?] Hospitals make folks worse. Hospitals make sick people sicker.
+
+
+.hi[Alternative conclusion:] Perhaps we're making a mistake in our analysis...
+&lt;br&gt;maybe sick people go to hospitals?
+---
+name: framework
+
+## Potential outcomes framework
+
+Let's develop a framework to better discuss the problem here.
+
+
+- Binary treatment variable (_e.g._, hospitalized): `\(\text{D}_i = {0,1}\)`
+- Outcome for individual `\(i\)` (_e.g._, health): `\(\text{Y}_i\)`
+
+This framework has a few names...
+
+- Neyman potential outcomes framework
+- Rubin causal model
+- Neyman-Rubin .pseudocode-small["potential outcome"|"causal" "framework"|"model"]
+
+---
+
+## Potential outcomes framework
+
+.hi-slate[Research question:] Does `\(\text{D}_i\)` affect `\(\text{Y}_i\)`?
+
+
+For each individual `\(i\)`, there are two .b[potential outcomes] (w/ binary `\(\text{D}_i\)`)
+
+
+1. `\(\color{#e64173}{\text{Y}_{1i}}\)` .pink[if] `\(\color{#e64173}{\text{D}_i = 1}\)`
+&lt;br&gt; `\(\color{#e64173}{i}\)`.pink['s health outcome if she went to the hospital]
+
+
+1. `\(\color{#6A5ACD}{\text{Y}_{0i}}\)` .purple[if] `\(\color{#6A5ACD}{\text{D}_i = 0}\)`
+&lt;br&gt; `\(\color{#6A5ACD}{i}\)`.purple['s health outcome if she did not go to the hospital]
+
+
+The difference between these two outcomes gives us the .hi-orange[causal effect of hospital treatment], _i.e._,
+
+$$
+`\begin{align}
+  \color{#FFA500}{\tau_i} = \color{#e64173}{\text{Y}_{1i}} - \color{#6A5ACD}{\text{Y}_{0i}}
+\end{align}`
+$$
+---
+
+## #problems
+
+This simple equation
+$$
+`\begin{align}
+  \color{#FFA500}{\tau_i} = \color{#e64173}{\text{Y}_{1i}} - \color{#6A5ACD}{\text{Y}_{0i}}
+\end{align}`
+$$
+leads us to .hi-slate[*the fundamental problem of causal inference.*]
+
+
+&gt; We can never simultaneously observe `\(\color{#e64173}{\text{Y}_{1i}}\)` and `\(\color{#6A5ACD}{\text{Y}_{0i}}\)`.
+
+
+Most of applied econometrics focuses on addressing this simple problem.
+
+
+Accordingly, our methods try to address the related question
+&gt; For each `\(\color{#e64173}{\text{Y}_{1i}}\)`, what is a (reasonably) good counterfactual?
+---
+
+## Solutions?
+
+.hi-slate[Problem] We cannot directly calculate `\(\color{#FFA500}{\tau_i} = \color{#e64173}{\text{Y}_{1i}} - \color{#6A5ACD}{\text{Y}_{0i}}\)`.
+
+
+.hi-slate[Proposed solution]
+&lt;br&gt;
+Compare .pink[outcomes for people who visited the hospital] `\(\left( \color{#e64173}{\text{Y}_{1i}\mid \color{#e64173}{\text{D}_{i}=1}} \right)\)`
+&lt;br&gt;to .purple[outcomes for people who did not visit the hospital] `\(\left( \color{#6A5ACD}{\text{Y}_{0j}\mid \color{#6A5ACD}{\text{D}_{j}=0}} \right)\)`.
+
+
+$$
+`\begin{align}
+  \mathop{E}\left[ \text{Y}_{i} \mid \color{#e64173}{\text{D}_{i}=1} \right] - \mathop{E}\left[ \text{Y}_{i}\mid \color{#6A5ACD}{\text{D}_{i}=0} \right]
+\end{align}`
+$$
+which gives us the *observed difference in health outcomes*.
+
+
+.hi-slate[Q] This comparison will return *an* answer, but is it *the* answer we want?
+---
+name: selection
+
+## Selection
+
+.hi-slate[Q] What does `\(\mathop{E}\left[ \text{Y}_{i} \mid \color{#e64173}{\text{D}_{i}=1} \right] - \mathop{E}\left[ \text{Y}_{i}\mid \color{#6A5ACD}{\text{D}_{i}=0} \right]\)` actually tell us?
+
+
+.hi-slate[A] First notice that we can write `\(i\)`'s outcome `\(\text{Y}_{i}\)` as
+$$
+`\begin{align}
+  \text{Y}_{i}
+  &amp;= \color{#6A5ACD}{\text{Y}_{0i}} + \text{D}_{i} \underbrace{\left( \color{#e64173}{\text{Y}_{1i}} - \color{#6A5ACD}{\text{Y}_{0i}} \right)}_\color{#FFA500}{\tau_i}
+\end{align}`
+$$
+
+
+Now write out our expectation, apply this definition, do creative math.
+
+`\(\mathop{E}\left[ \text{Y}_{i} \mid \color{#e64173}{\text{D}_{i}=1} \right] - \mathop{E}\left[ \text{Y}_{i}\mid \color{#6A5ACD}{\text{D}_{i}=0} \right]\)`
+&lt;br&gt;  `\(= \mathop{E}\left[ \color{#e64173}{\text{Y}_{1i}}\mid \color{#e64173}{\text{D}_{i}=1} \right] - \mathop{E}\left[ \color{#6A5ACD}{\text{Y}_{0i}}\mid \color{#6A5ACD}{\text{D}_{i}=0} \right]\)`
+&lt;br&gt;  `\(= \mathop{E}\left[ \color{#e64173}{\text{Y}_{1i}}\mid \color{#e64173}{\text{D}_{i}=1} \right] - \mathop{E}\left[ \color{#6A5ACD}{\text{Y}_{0i}}\mid \color{#e64173}{\text{D}_{i}=1} \right] + \mathop{E}\left[ \color{#6A5ACD}{\text{Y}_{0i}}\mid \color{#e64173}{\text{D}_{i}=1} \right] - \mathop{E}\left[ \color{#6A5ACD}{\text{Y}_{0i}}\mid \color{#6A5ACD}{\text{D}_{i}=0} \right]\)`
+---
+count: false
+
+## Selection
+
+.hi-slate[Q] What does `\(\mathop{E}\left[ \text{Y}_{i} \mid \color{#e64173}{\text{D}_{i}=1} \right] - \mathop{E}\left[ \text{Y}_{i}\mid \color{#6A5ACD}{\text{D}_{i}=0} \right]\)` actually tell us?
+
+.hi-slate[A] First notice that we can write `\(i\)`'s outcome `\(\text{Y}_{i}\)` as
+$$
+`\begin{align}
+  \text{Y}_{i}
+  &amp;= \color{#6A5ACD}{\text{Y}_{0i}} + \text{D}_{i} \underbrace{\left( \color{#e64173}{\text{Y}_{1i}} - \color{#6A5ACD}{\text{Y}_{0i}} \right)}_\color{#FFA500}{\tau_i}
+\end{align}`
+$$
+
+Now write out our expectation, apply this definition, do creative math.
+
+`\(\mathop{E}\left[ \text{Y}_{i} \mid \color{#e64173}{\text{D}_{i}=1} \right] - \mathop{E}\left[ \text{Y}_{i}\mid \color{#6A5ACD}{\text{D}_{i}=0} \right]\)`
+&lt;br&gt;  `\(= \mathop{E}\left[ \color{#e64173}{\text{Y}_{1i}}\mid \color{#e64173}{\text{D}_{i}=1} \right] - \mathop{E}\left[ \color{#6A5ACD}{\text{Y}_{0i}}\mid \color{#6A5ACD}{\text{D}_{i}=0} \right]\)`
+&lt;br&gt;  `\(= \underbrace{\mathop{E}\left[ \color{#e64173}{\text{Y}_{1i}}\mid \color{#e64173}{\text{D}_{i}=1} \right] - \mathop{E}\left[ \color{#6A5ACD}{\text{Y}_{0i}}\mid \color{#e64173}{\text{D}_{i}=1} \right]}_\text{Average treatment effect on the treated 😀} + \mathop{E}\left[ \color{#6A5ACD}{\text{Y}_{0i}}\mid \color{#e64173}{\text{D}_{i}=1} \right] - \mathop{E}\left[ \color{#6A5ACD}{\text{Y}_{0i}}\mid \color{#6A5ACD}{\text{D}_{i}=0} \right]\)`
+---
+count: false
+
+## Selection
+
+.hi-slate[Q] What does `\(\mathop{E}\left[ \text{Y}_{i} \mid \color{#e64173}{\text{D}_{i}=1} \right] - \mathop{E}\left[ \text{Y}_{i}\mid \color{#6A5ACD}{\text{D}_{i}=0} \right]\)` actually tell us?
+
+.hi-slate[A] First notice that we can write `\(i\)`'s outcome `\(\text{Y}_{i}\)` as
+$$
+`\begin{align}
+  \text{Y}_{i}
+  &amp;= \color{#6A5ACD}{\text{Y}_{0i}} + \text{D}_{i} \underbrace{\left( \color{#e64173}{\text{Y}_{1i}} - \color{#6A5ACD}{\text{Y}_{0i}} \right)}_\color{#FFA500}{\tau_i}
+\end{align}`
+$$
+
+Now write out our expectation, apply this definition, do creative math.
+
+`\(\mathop{E}\left[ \text{Y}_{i} \mid \color{#e64173}{\text{D}_{i}=1} \right] - \mathop{E}\left[ \text{Y}_{i}\mid \color{#6A5ACD}{\text{D}_{i}=0} \right]\)`
+&lt;br&gt;  `\(= \mathop{E}\left[ \color{#e64173}{\text{Y}_{1i}}\mid \color{#e64173}{\text{D}_{i}=1} \right] - \mathop{E}\left[ \color{#6A5ACD}{\text{Y}_{0i}}\mid \color{#6A5ACD}{\text{D}_{i}=0} \right]\)`
+&lt;br&gt;  `\(= \underbrace{\mathop{E}\left[ \color{#e64173}{\text{Y}_{1i}}\mid \color{#e64173}{\text{D}_{i}=1} \right] - \mathop{E}\left[ \color{#6A5ACD}{\text{Y}_{0i}}\mid \color{#e64173}{\text{D}_{i}=1} \right]}_\text{Average treatment effect on the treated 😀} + \underbrace{\mathop{E}\left[ \color{#6A5ACD}{\text{Y}_{0i}}\mid \color{#e64173}{\text{D}_{i}=1} \right] - \mathop{E}\left[ \color{#6A5ACD}{\text{Y}_{0i}}\mid \color{#6A5ACD}{\text{D}_{i}=0} \right]}_\text{Selection bias 😞}\)`
+---
+
+## Selection
+
+The .b[first term] is *good variation*—essentially the answer that we want.
+&lt;br&gt;
+  `\(\mathop{E}\left[ \color{#e64173}{\text{Y}_{1i}}\mid \color{#e64173}{\text{D}_{i}=1} \right] - \mathop{E}\left[ \color{#6A5ACD}{\text{Y}_{0i}}\mid \color{#e64173}{\text{D}_{i}=1} \right]\)`
+&lt;br&gt;   `\(=\mathop{E}\left[ \color{#e64173}{\text{Y}_{1i}} - \color{#6A5ACD}{\text{Y}_{0i}} \mid \color{#e64173}{\text{D}_{i}=1} \right]\)`
+&lt;br&gt;   `\(=\mathop{E}\left[ \color{#FFA500}{\tau_i} \mid \color{#e64173}{\text{D}_{i}=1} \right]\)`
+&lt;br&gt;The .hi-orange[average causal effect] of hospitalization *for hospitalized individuals*.
+
+
+The .b[second term] is bad variation—preventing us from knowing the answer.
+&lt;br&gt;
+  `\(\mathop{E}\left[ \color{#6A5ACD}{\text{Y}_{0i}}\mid \color{#e64173}{\text{D}_{i}=1} \right] - \mathop{E}\left[ \color{#6A5ACD}{\text{Y}_{0i}}\mid \color{#6A5ACD}{\text{D}_{i}=0} \right]\)`
+&lt;br&gt;The difference in the average untreated outcome between the treatment and control groups.
+
+
+.hi-slate[*Selection bias*] The extent to which the "control group" provides a bad counterfactual for the treated individuals.
+---
+
+## Selection
+
+Angrist and Pischke (MHE, p. 15),
+&gt; The goal of most empirical economic research is to overcome selection bias, and therefore to say something about the causal effect of a variable like `\(\text{D}_{i}\)`.
+
+
+.hi-slate[Q] So how do experiments—the gold standard of empirical economic (and scientific) research—accomplish this goal and overcome selection bias?
+
+---
+name: experiments
+
+## Back to experiments
+
+.hi-slate[Q] How do experiments overcome selection bias?
+&lt;br&gt;.hi-slate[A] Experiments break the link between potential outcomes and treatment.
+
+*In other words:* Randomly assigning `\(\text{D}_{i}\)` makes `\(\text{D}_{i}\)` independent of which outcome we observe (meaning `\(\color{#e64173}{\text{Y}_{1i}}\)` or `\(\color{#6A5ACD}{\text{Y}_{0i}}\)`).
+
+
+.hi-slate[Difference in means] with random assignment of `\(\text{D}_{i}\)`
+&lt;br&gt;
+`\(\mathop{E}\left[ \text{Y}_{i} \mid \color{#e64173}{\text{D}_{i}=1} \right] - \mathop{E}\left[ \text{Y}_{i}\mid \color{#6A5ACD}{\text{D}_{i}=0} \right]\)`
+&lt;br&gt;  `\(= \mathop{E}\left[ \color{#e64173}{\text{Y}_{1i}}\mid \color{#e64173}{\text{D}_{i}=1} \right] - \mathop{E}\left[ \color{#6A5ACD}{\text{Y}_{0i}}\mid \color{#6A5ACD}{\text{D}_{i}=0} \right]\)`
+&lt;br&gt;  `\(= \mathop{E}\left[ \color{#e64173}{\text{Y}_{1i}}\mid \color{#e64173}{\text{D}_{i}=1} \right] - \mathop{E}\left[ \color{#6A5ACD}{\text{Y}_{0i}}\mid \color{#e64173}{\text{D}_{i}=1} \right]\)`
+  from random assignment of `\({\text{D}_{i}}\)`
+&lt;br&gt;  `\(= \mathop{E}\left[ \color{#e64173}{\text{Y}_{1i}} - \color{#6A5ACD}{\text{Y}_{0i}}\mid \color{#e64173}{\text{D}_{i}=1} \right]\)`
+&lt;br&gt;  `\(= \mathop{E}\left[ \color{#FFA500}{\tau_i}\mid \color{#e64173}{\text{D}_{i}=1} \right]\)`
+&lt;br&gt;  `\(= \mathop{E}\left[ \color{#FFA500}{\tau_i} \right]\)`
+       Random assignment of `\(\text{D}_{i}\)` breaks selection bias.
+---
+name: ex_training
+
+## Example: Training programs
+
+Governments subsidize training programs to assist disadvantaged workers.
+
+
+.hi-slate[Q] Do these programs have the desired effects (_i.e._, increase wages)?
+
+
+.hi-slate[A] Observational studies—comparing wage data from participants and non-participants—often find that people who complete these programs actually make .pink[lower wages].
+
+
+.hi-slate[Challenges] Participants self select. .hi-slate[+] Programs target lower-wage workers.
+
+---
+
+## Example: Training programs
+
+How do we formalize these concerns in our framework?
+
+
+.hi-slate[Observational program evaluations]
+&lt;br&gt;
+`\(\quad\mathop{E}\left[ \text{Wage}_{i}\mid \color{#e64173}{\text{Program}_{i}=1} \right] - \mathop{E}\left[ \text{Wage}_i \mid \color{#6A5ACD}{\text{Program}_{i}=0} \right]=\)`
+$$
+`\begin{align}
+&amp;\underbrace{\mathop{E}\left[ \color{#e64173}{\text{Wage}_{1i}}\mid \color{#e64173}{\text{Program}_{i}=1} \right] - \mathop{E}\left[ \color{#6A5ACD}{\text{Wage}_{0i}}\mid \color{#e64173}{\text{Program}_{i}=1} \right]}_{\text{Average causal effect of training program on wages for participants, }\mathit{i.e.} \text{, } \overline{\tau}_{1}} \, + \\[0.5em]
+&amp;\underbrace{\mathop{E}\left[ \color{#6A5ACD}{\text{Wage}_{0i}}\mid \color{#e64173}{\text{Program}_{i}=1} \right] - \mathop{E}\left[ \color{#6A5ACD}{\text{Wage}_{0i}}\mid \color{#6A5ACD}{\text{Program}_{i}=0} \right]}_\text{Selection bias}
+\end{align}`
+$$
+
+
+If the program attracts/selects individuals who, on average, have lower wages without the program (sort of the point of the program), then we have negative selection bias.
+---
+
+## Example: Training programs
+
+`\(\quad\mathop{E}\left[ \text{Wage}_{i}\mid \color{#e64173}{\text{Program}_{i}=1} \right] - \mathop{E}\left[ \text{Wage}_i \mid \color{#6A5ACD}{\text{Program}_{i}=0} \right] =\)`
+$$
+`\begin{align}
+&amp;\mathop{E}\left[ \color{#e64173}{\text{Wage}_{1i}}\mid \color{#e64173}{\text{Program}_{i}=1} \right] - \mathop{E}\left[ \color{#6A5ACD}{\text{Wage}_{0i}}\mid \color{#e64173}{\text{Program}_{i}=1} \right] \, + \\[0.5em]
+&amp;\mathop{E}\left[ \color{#6A5ACD}{\text{Wage}_{0i}}\mid \color{#e64173}{\text{Program}_{i}=1} \right] - \mathop{E}\left[ \color{#6A5ACD}{\text{Wage}_{0i}}\mid \color{#6A5ACD}{\text{Program}_{i}=0} \right] \\[0.5em]
+\end{align}`
+$$
+
+So even if the program, on average, has an positive wage effect (in the participant group), _i.e._, `\(\overline{\tau}_1&gt;0\)`, we will detect a lower effect due to the negative selection bias.
+
+
+If the bias is sufficiently large (relative to the treatment effect), our estimate will even get the sign of the effect wrong.
+
+
+.hi-slate[Related] While observational studies typically found negative program effects, several experiments found positive program effects.
+---
+layout: true
+# The experimental ideal
+## Example: The STAR experiment
+---
+name: ex_star
+
+The Tennessee STAR experiment is a famous/popular example of an experiment that allows us to answer an important social/policy question.
+
+.hi-slate[Research question] Do classroom resources affect student performance?
+
+
+- Statewide(-ish) in Tennessee for the 1985–1986 kindergarten cohort
+- Ran for 4 years with ∼11,600 children. Cost ∼$12 million.
+
+
+.hi-slate[Treatments]
+  1. *Small* classes (13–17 students)
+  1. *Regular* classes (22–35 students) plus part-time teacher's aide
+  1. *Regular* classes (22–35 students) plus full-time teacher's aide
+---
+
+.hi-slate[First question] Did the randomization balance participants' characteristics across the treatment groups?
+
+
+Ideally, we would have pre-experiment data on outcome variable.
+
+Unfortunately, we only have a few demographic attributes.
+
+---
+name: mean_diff
+layout: false
+class: clear, middle
+
+&lt;table&gt;
+&lt;caption&gt;Table 2.2.1, MHE&lt;/caption&gt;
+ &lt;thead&gt;
+&lt;tr&gt;
+&lt;th style="border-bottom:hidden" colspan="1"&gt;&lt;/th&gt;
+&lt;th style="border-bottom:hidden; padding-bottom:0; padding-left:3px;padding-right:3px;text-align: center; " colspan="3"&gt;&lt;div style="border-bottom: 1px solid #ddd; padding-bottom: 5px;"&gt;Treatment: Class Size&lt;/div&gt;&lt;/th&gt;
+&lt;th style="border-bottom:hidden" colspan="1"&gt;&lt;/th&gt;
+&lt;/tr&gt;
+  &lt;tr&gt;
+   &lt;th style="text-align:left;"&gt; Variable &lt;/th&gt;
+   &lt;th style="text-align:center;"&gt; Small &lt;/th&gt;
+   &lt;th style="text-align:center;"&gt; Regular &lt;/th&gt;
+   &lt;th style="text-align:center;"&gt; Regular + Aide &lt;/th&gt;
+   &lt;th style="text-align:center;"&gt; P-value &lt;/th&gt;
+  &lt;/tr&gt;
+ &lt;/thead&gt;
+&lt;tbody&gt;
+  &lt;tr&gt;
+   &lt;td style="text-align:left;color: #314f4f;background-color: white;font-style: italic;color: black;"&gt; Free lunch &lt;/td&gt;
+   &lt;td style="text-align:center;color: #314f4f;background-color: white;"&gt; 0.47 &lt;/td&gt;
+   &lt;td style="text-align:center;color: #314f4f;background-color: white;"&gt; 0.48 &lt;/td&gt;
+   &lt;td style="text-align:center;color: #314f4f;background-color: white;"&gt; 0.50 &lt;/td&gt;
+   &lt;td style="text-align:center;color: #314f4f;background-color: white;"&gt; 0.09 &lt;/td&gt;
+  &lt;/tr&gt;
+  &lt;tr&gt;
+   &lt;td style="text-align:left;color: #314f4f;background-color: white;font-style: italic;color: black;"&gt; White/Asian &lt;/td&gt;
+   &lt;td style="text-align:center;color: #314f4f;background-color: white;"&gt; 0.68 &lt;/td&gt;
+   &lt;td style="text-align:center;color: #314f4f;background-color: white;"&gt; 0.67 &lt;/td&gt;
+   &lt;td style="text-align:center;color: #314f4f;background-color: white;"&gt; 0.66 &lt;/td&gt;
+   &lt;td style="text-align:center;color: #314f4f;background-color: white;"&gt; 0.26 &lt;/td&gt;
+  &lt;/tr&gt;
+  &lt;tr&gt;
+   &lt;td style="text-align:left;color: #314f4f;background-color: white;font-style: italic;color: black;"&gt; Age in 1985 &lt;/td&gt;
+   &lt;td style="text-align:center;color: #314f4f;background-color: white;"&gt; 5.44 &lt;/td&gt;
+   &lt;td style="text-align:center;color: #314f4f;background-color: white;"&gt; 5.43 &lt;/td&gt;
+   &lt;td style="text-align:center;color: #314f4f;background-color: white;"&gt; 5.42 &lt;/td&gt;
+   &lt;td style="text-align:center;color: #314f4f;background-color: white;"&gt; 0.32 &lt;/td&gt;
+  &lt;/tr&gt;
+  &lt;tr&gt;
+   &lt;td style="text-align:left;color: #314f4f;background-color: white;font-style: italic;color: black;"&gt; Attrition rate &lt;/td&gt;
+   &lt;td style="text-align:center;color: #314f4f;background-color: white;"&gt; 0.49 &lt;/td&gt;
+   &lt;td style="text-align:center;color: #314f4f;background-color: white;"&gt; 0.52 &lt;/td&gt;
+   &lt;td style="text-align:center;color: #314f4f;background-color: white;"&gt; 0.53 &lt;/td&gt;
+   &lt;td style="text-align:center;color: #314f4f;background-color: white;"&gt; 0.02 &lt;/td&gt;
+  &lt;/tr&gt;
+  &lt;tr&gt;
+   &lt;td style="text-align:left;color: #314f4f;background-color: white;font-style: italic;color: black;"&gt; K. class size &lt;/td&gt;
+   &lt;td style="text-align:center;color: #314f4f;background-color: white;"&gt; 15.10 &lt;/td&gt;
+   &lt;td style="text-align:center;color: #314f4f;background-color: white;"&gt; 22.40 &lt;/td&gt;
+   &lt;td style="text-align:center;color: #314f4f;background-color: white;"&gt; 22.80 &lt;/td&gt;
+   &lt;td style="text-align:center;color: #314f4f;background-color: white;"&gt; 0.00 &lt;/td&gt;
+  &lt;/tr&gt;
+  &lt;tr&gt;
+   &lt;td style="text-align:left;color: #314f4f;background-color: white;font-style: italic;color: black;"&gt; K. test percentile &lt;/td&gt;
+   &lt;td style="text-align:center;color: #314f4f;background-color: white;"&gt; 54.70 &lt;/td&gt;
+   &lt;td style="text-align:center;color: #314f4f;background-color: white;"&gt; 48.90 &lt;/td&gt;
+   &lt;td style="text-align:center;color: #314f4f;background-color: white;"&gt; 50.00 &lt;/td&gt;
+   &lt;td style="text-align:center;color: #314f4f;background-color: white;"&gt; 0.00 &lt;/td&gt;
+  &lt;/tr&gt;
+&lt;/tbody&gt;
+&lt;/table&gt;
+
+.white[space]
+---
+class: clear, middle
+
+&lt;table&gt;
+&lt;caption&gt;Table 2.2.1, MHE&lt;/caption&gt;
+ &lt;thead&gt;
+&lt;tr&gt;
+&lt;th style="border-bottom:hidden" colspan="1"&gt;&lt;/th&gt;
+&lt;th style="border-bottom:hidden; padding-bottom:0; padding-left:3px;padding-right:3px;text-align: center; " colspan="3"&gt;&lt;div style="border-bottom: 1px solid #ddd; padding-bottom: 5px;"&gt;Treatment: Class Size&lt;/div&gt;&lt;/th&gt;
+&lt;th style="border-bottom:hidden" colspan="1"&gt;&lt;/th&gt;
+&lt;/tr&gt;
+  &lt;tr&gt;
+   &lt;th style="text-align:left;"&gt; Variable &lt;/th&gt;
+   &lt;th style="text-align:center;"&gt; Small &lt;/th&gt;
+   &lt;th style="text-align:center;"&gt; Regular &lt;/th&gt;
+   &lt;th style="text-align:center;"&gt; Regular + Aide &lt;/th&gt;
+   &lt;th style="text-align:center;"&gt; P-value &lt;/th&gt;
+  &lt;/tr&gt;
+ &lt;/thead&gt;
+&lt;tbody&gt;
+  &lt;tr&gt;
+   &lt;td style="text-align:left;color: #314f4f;background-color: white;font-style: italic;color: black;font-weight: bold;color: #e64173;"&gt; Free lunch &lt;/td&gt;
+   &lt;td style="text-align:center;color: #314f4f;background-color: white;font-weight: bold;color: #e64173;"&gt; 0.47 &lt;/td&gt;
+   &lt;td style="text-align:center;color: #314f4f;background-color: white;font-weight: bold;color: #e64173;"&gt; 0.48 &lt;/td&gt;
+   &lt;td style="text-align:center;color: #314f4f;background-color: white;font-weight: bold;color: #e64173;"&gt; 0.50 &lt;/td&gt;
+   &lt;td style="text-align:center;color: #314f4f;background-color: white;font-weight: bold;color: #e64173;"&gt; 0.09 &lt;/td&gt;
+  &lt;/tr&gt;
+  &lt;tr&gt;
+   &lt;td style="text-align:left;color: #314f4f;background-color: white;font-style: italic;color: black;font-weight: bold;color: #e64173;"&gt; White/Asian &lt;/td&gt;
+   &lt;td style="text-align:center;color: #314f4f;background-color: white;font-weight: bold;color: #e64173;"&gt; 0.68 &lt;/td&gt;
+   &lt;td style="text-align:center;color: #314f4f;background-color: white;font-weight: bold;color: #e64173;"&gt; 0.67 &lt;/td&gt;
+   &lt;td style="text-align:center;color: #314f4f;background-color: white;font-weight: bold;color: #e64173;"&gt; 0.66 &lt;/td&gt;
+   &lt;td style="text-align:center;color: #314f4f;background-color: white;font-weight: bold;color: #e64173;"&gt; 0.26 &lt;/td&gt;
+  &lt;/tr&gt;
+  &lt;tr&gt;
+   &lt;td style="text-align:left;color: #314f4f;background-color: white;font-style: italic;color: black;font-weight: bold;color: #e64173;"&gt; Age in 1985 &lt;/td&gt;
+   &lt;td style="text-align:center;color: #314f4f;background-color: white;font-weight: bold;color: #e64173;"&gt; 5.44 &lt;/td&gt;
+   &lt;td style="text-align:center;color: #314f4f;background-color: white;font-weight: bold;color: #e64173;"&gt; 5.43 &lt;/td&gt;
+   &lt;td style="text-align:center;color: #314f4f;background-color: white;font-weight: bold;color: #e64173;"&gt; 5.42 &lt;/td&gt;
+   &lt;td style="text-align:center;color: #314f4f;background-color: white;font-weight: bold;color: #e64173;"&gt; 0.32 &lt;/td&gt;
+  &lt;/tr&gt;
+  &lt;tr&gt;
+   &lt;td style="text-align:left;color: #314f4f;background-color: white;font-style: italic;color: black;"&gt; Attrition rate &lt;/td&gt;
+   &lt;td style="text-align:center;color: #314f4f;background-color: white;"&gt; 0.49 &lt;/td&gt;
+   &lt;td style="text-align:center;color: #314f4f;background-color: white;"&gt; 0.52 &lt;/td&gt;
+   &lt;td style="text-align:center;color: #314f4f;background-color: white;"&gt; 0.53 &lt;/td&gt;
+   &lt;td style="text-align:center;color: #314f4f;background-color: white;"&gt; 0.02 &lt;/td&gt;
+  &lt;/tr&gt;
+  &lt;tr&gt;
+   &lt;td style="text-align:left;color: #314f4f;background-color: white;font-style: italic;color: black;"&gt; K. class size &lt;/td&gt;
+   &lt;td style="text-align:center;color: #314f4f;background-color: white;"&gt; 15.10 &lt;/td&gt;
+   &lt;td style="text-align:center;color: #314f4f;background-color: white;"&gt; 22.40 &lt;/td&gt;
+   &lt;td style="text-align:center;color: #314f4f;background-color: white;"&gt; 22.80 &lt;/td&gt;
+   &lt;td style="text-align:center;color: #314f4f;background-color: white;"&gt; 0.00 &lt;/td&gt;
+  &lt;/tr&gt;
+  &lt;tr&gt;
+   &lt;td style="text-align:left;color: #314f4f;background-color: white;font-style: italic;color: black;"&gt; K. test percentile &lt;/td&gt;
+   &lt;td style="text-align:center;color: #314f4f;background-color: white;"&gt; 54.70 &lt;/td&gt;
+   &lt;td style="text-align:center;color: #314f4f;background-color: white;"&gt; 48.90 &lt;/td&gt;
+   &lt;td style="text-align:center;color: #314f4f;background-color: white;"&gt; 50.00 &lt;/td&gt;
+   &lt;td style="text-align:center;color: #314f4f;background-color: white;"&gt; 0.00 &lt;/td&gt;
+  &lt;/tr&gt;
+&lt;/tbody&gt;
+&lt;/table&gt;
+
+Demographics appear balanced across the three treatment groups.
+---
+class: clear, middle
+
+&lt;table&gt;
+&lt;caption&gt;Table 2.2.1, MHE&lt;/caption&gt;
+ &lt;thead&gt;
+&lt;tr&gt;
+&lt;th style="border-bottom:hidden" colspan="1"&gt;&lt;/th&gt;
+&lt;th style="border-bottom:hidden; padding-bottom:0; padding-left:3px;padding-right:3px;text-align: center; " colspan="3"&gt;&lt;div style="border-bottom: 1px solid #ddd; padding-bottom: 5px;"&gt;Treatment: Class Size&lt;/div&gt;&lt;/th&gt;
+&lt;th style="border-bottom:hidden" colspan="1"&gt;&lt;/th&gt;
+&lt;/tr&gt;
+  &lt;tr&gt;
+   &lt;th style="text-align:left;"&gt; Variable &lt;/th&gt;
+   &lt;th style="text-align:center;"&gt; Small &lt;/th&gt;
+   &lt;th style="text-align:center;"&gt; Regular &lt;/th&gt;
+   &lt;th style="text-align:center;"&gt; Regular + Aide &lt;/th&gt;
+   &lt;th style="text-align:center;"&gt; P-value &lt;/th&gt;
+  &lt;/tr&gt;
+ &lt;/thead&gt;
+&lt;tbody&gt;
+  &lt;tr&gt;
+   &lt;td style="text-align:left;color: #314f4f;background-color: white;font-style: italic;color: black;"&gt; Free lunch &lt;/td&gt;
+   &lt;td style="text-align:center;color: #314f4f;background-color: white;"&gt; 0.47 &lt;/td&gt;
+   &lt;td style="text-align:center;color: #314f4f;background-color: white;"&gt; 0.48 &lt;/td&gt;
+   &lt;td style="text-align:center;color: #314f4f;background-color: white;"&gt; 0.50 &lt;/td&gt;
+   &lt;td style="text-align:center;color: #314f4f;background-color: white;"&gt; 0.09 &lt;/td&gt;
+  &lt;/tr&gt;
+  &lt;tr&gt;
+   &lt;td style="text-align:left;color: #314f4f;background-color: white;font-style: italic;color: black;"&gt; White/Asian &lt;/td&gt;
+   &lt;td style="text-align:center;color: #314f4f;background-color: white;"&gt; 0.68 &lt;/td&gt;
+   &lt;td style="text-align:center;color: #314f4f;background-color: white;"&gt; 0.67 &lt;/td&gt;
+   &lt;td style="text-align:center;color: #314f4f;background-color: white;"&gt; 0.66 &lt;/td&gt;
+   &lt;td style="text-align:center;color: #314f4f;background-color: white;"&gt; 0.26 &lt;/td&gt;
+  &lt;/tr&gt;
+  &lt;tr&gt;
+   &lt;td style="text-align:left;color: #314f4f;background-color: white;font-style: italic;color: black;"&gt; Age in 1985 &lt;/td&gt;
+   &lt;td style="text-align:center;color: #314f4f;background-color: white;"&gt; 5.44 &lt;/td&gt;
+   &lt;td style="text-align:center;color: #314f4f;background-color: white;"&gt; 5.43 &lt;/td&gt;
+   &lt;td style="text-align:center;color: #314f4f;background-color: white;"&gt; 5.42 &lt;/td&gt;
+   &lt;td style="text-align:center;color: #314f4f;background-color: white;"&gt; 0.32 &lt;/td&gt;
+  &lt;/tr&gt;
+  &lt;tr&gt;
+   &lt;td style="text-align:left;color: #314f4f;background-color: white;font-style: italic;color: black;font-weight: bold;color: #e64173;"&gt; Attrition rate &lt;/td&gt;
+   &lt;td style="text-align:center;color: #314f4f;background-color: white;font-weight: bold;color: #e64173;"&gt; 0.49 &lt;/td&gt;
+   &lt;td style="text-align:center;color: #314f4f;background-color: white;font-weight: bold;color: #e64173;"&gt; 0.52 &lt;/td&gt;
+   &lt;td style="text-align:center;color: #314f4f;background-color: white;font-weight: bold;color: #e64173;"&gt; 0.53 &lt;/td&gt;
+   &lt;td style="text-align:center;color: #314f4f;background-color: white;font-weight: bold;color: #e64173;"&gt; 0.02 &lt;/td&gt;
+  &lt;/tr&gt;
+  &lt;tr&gt;
+   &lt;td style="text-align:left;color: #314f4f;background-color: white;font-style: italic;color: black;"&gt; K. class size &lt;/td&gt;
+   &lt;td style="text-align:center;color: #314f4f;background-color: white;"&gt; 15.10 &lt;/td&gt;
+   &lt;td style="text-align:center;color: #314f4f;background-color: white;"&gt; 22.40 &lt;/td&gt;
+   &lt;td style="text-align:center;color: #314f4f;background-color: white;"&gt; 22.80 &lt;/td&gt;
+   &lt;td style="text-align:center;color: #314f4f;background-color: white;"&gt; 0.00 &lt;/td&gt;
+  &lt;/tr&gt;
+  &lt;tr&gt;
+   &lt;td style="text-align:left;color: #314f4f;background-color: white;font-style: italic;color: black;"&gt; K. test percentile &lt;/td&gt;
+   &lt;td style="text-align:center;color: #314f4f;background-color: white;"&gt; 54.70 &lt;/td&gt;
+   &lt;td style="text-align:center;color: #314f4f;background-color: white;"&gt; 48.90 &lt;/td&gt;
+   &lt;td style="text-align:center;color: #314f4f;background-color: white;"&gt; 50.00 &lt;/td&gt;
+   &lt;td style="text-align:center;color: #314f4f;background-color: white;"&gt; 0.00 &lt;/td&gt;
+  &lt;/tr&gt;
+&lt;/tbody&gt;
+&lt;/table&gt;
+
+The three groups differ significantly on attrition rate.
+---
+class: clear, middle
+
+&lt;table&gt;
+&lt;caption&gt;Table 2.2.1, MHE&lt;/caption&gt;
+ &lt;thead&gt;
+&lt;tr&gt;
+&lt;th style="border-bottom:hidden" colspan="1"&gt;&lt;/th&gt;
+&lt;th style="border-bottom:hidden; padding-bottom:0; padding-left:3px;padding-right:3px;text-align: center; " colspan="3"&gt;&lt;div style="border-bottom: 1px solid #ddd; padding-bottom: 5px;"&gt;Treatment: Class Size&lt;/div&gt;&lt;/th&gt;
+&lt;th style="border-bottom:hidden" colspan="1"&gt;&lt;/th&gt;
+&lt;/tr&gt;
+  &lt;tr&gt;
+   &lt;th style="text-align:left;"&gt; Variable &lt;/th&gt;
+   &lt;th style="text-align:center;"&gt; Small &lt;/th&gt;
+   &lt;th style="text-align:center;"&gt; Regular &lt;/th&gt;
+   &lt;th style="text-align:center;"&gt; Regular + Aide &lt;/th&gt;
+   &lt;th style="text-align:center;"&gt; P-value &lt;/th&gt;
+  &lt;/tr&gt;
+ &lt;/thead&gt;
+&lt;tbody&gt;
+  &lt;tr&gt;
+   &lt;td style="text-align:left;color: #314f4f;background-color: white;font-style: italic;color: black;"&gt; Free lunch &lt;/td&gt;
+   &lt;td style="text-align:center;color: #314f4f;background-color: white;"&gt; 0.47 &lt;/td&gt;
+   &lt;td style="text-align:center;color: #314f4f;background-color: white;"&gt; 0.48 &lt;/td&gt;
+   &lt;td style="text-align:center;color: #314f4f;background-color: white;"&gt; 0.50 &lt;/td&gt;
+   &lt;td style="text-align:center;color: #314f4f;background-color: white;"&gt; 0.09 &lt;/td&gt;
+  &lt;/tr&gt;
+  &lt;tr&gt;
+   &lt;td style="text-align:left;color: #314f4f;background-color: white;font-style: italic;color: black;"&gt; White/Asian &lt;/td&gt;
+   &lt;td style="text-align:center;color: #314f4f;background-color: white;"&gt; 0.68 &lt;/td&gt;
+   &lt;td style="text-align:center;color: #314f4f;background-color: white;"&gt; 0.67 &lt;/td&gt;
+   &lt;td style="text-align:center;color: #314f4f;background-color: white;"&gt; 0.66 &lt;/td&gt;
+   &lt;td style="text-align:center;color: #314f4f;background-color: white;"&gt; 0.26 &lt;/td&gt;
+  &lt;/tr&gt;
+  &lt;tr&gt;
+   &lt;td style="text-align:left;color: #314f4f;background-color: white;font-style: italic;color: black;"&gt; Age in 1985 &lt;/td&gt;
+   &lt;td style="text-align:center;color: #314f4f;background-color: white;"&gt; 5.44 &lt;/td&gt;
+   &lt;td style="text-align:center;color: #314f4f;background-color: white;"&gt; 5.43 &lt;/td&gt;
+   &lt;td style="text-align:center;color: #314f4f;background-color: white;"&gt; 5.42 &lt;/td&gt;
+   &lt;td style="text-align:center;color: #314f4f;background-color: white;"&gt; 0.32 &lt;/td&gt;
+  &lt;/tr&gt;
+  &lt;tr&gt;
+   &lt;td style="text-align:left;color: #314f4f;background-color: white;font-style: italic;color: black;"&gt; Attrition rate &lt;/td&gt;
+   &lt;td style="text-align:center;color: #314f4f;background-color: white;"&gt; 0.49 &lt;/td&gt;
+   &lt;td style="text-align:center;color: #314f4f;background-color: white;"&gt; 0.52 &lt;/td&gt;
+   &lt;td style="text-align:center;color: #314f4f;background-color: white;"&gt; 0.53 &lt;/td&gt;
+   &lt;td style="text-align:center;color: #314f4f;background-color: white;"&gt; 0.02 &lt;/td&gt;
+  &lt;/tr&gt;
+  &lt;tr&gt;
+   &lt;td style="text-align:left;color: #314f4f;background-color: white;font-style: italic;color: black;font-weight: bold;color: #e64173;"&gt; K. class size &lt;/td&gt;
+   &lt;td style="text-align:center;color: #314f4f;background-color: white;font-weight: bold;color: #e64173;"&gt; 15.10 &lt;/td&gt;
+   &lt;td style="text-align:center;color: #314f4f;background-color: white;font-weight: bold;color: #e64173;"&gt; 22.40 &lt;/td&gt;
+   &lt;td style="text-align:center;color: #314f4f;background-color: white;font-weight: bold;color: #e64173;"&gt; 22.80 &lt;/td&gt;
+   &lt;td style="text-align:center;color: #314f4f;background-color: white;font-weight: bold;color: #e64173;"&gt; 0.00 &lt;/td&gt;
+  &lt;/tr&gt;
+  &lt;tr&gt;
+   &lt;td style="text-align:left;color: #314f4f;background-color: white;font-style: italic;color: black;"&gt; K. test percentile &lt;/td&gt;
+   &lt;td style="text-align:center;color: #314f4f;background-color: white;"&gt; 54.70 &lt;/td&gt;
+   &lt;td style="text-align:center;color: #314f4f;background-color: white;"&gt; 48.90 &lt;/td&gt;
+   &lt;td style="text-align:center;color: #314f4f;background-color: white;"&gt; 50.00 &lt;/td&gt;
+   &lt;td style="text-align:center;color: #314f4f;background-color: white;"&gt; 0.00 &lt;/td&gt;
+  &lt;/tr&gt;
+&lt;/tbody&gt;
+&lt;/table&gt;
+
+The randomization generated variation in the treatment.
+---
+class: clear, middle
+
+&lt;table&gt;
+&lt;caption&gt;Table 2.2.1, MHE&lt;/caption&gt;
+ &lt;thead&gt;
+&lt;tr&gt;
+&lt;th style="border-bottom:hidden" colspan="1"&gt;&lt;/th&gt;
+&lt;th style="border-bottom:hidden; padding-bottom:0; padding-left:3px;padding-right:3px;text-align: center; " colspan="3"&gt;&lt;div style="border-bottom: 1px solid #ddd; padding-bottom: 5px;"&gt;Treatment: Class Size&lt;/div&gt;&lt;/th&gt;
+&lt;th style="border-bottom:hidden" colspan="1"&gt;&lt;/th&gt;
+&lt;/tr&gt;
+  &lt;tr&gt;
+   &lt;th style="text-align:left;"&gt; Variable &lt;/th&gt;
+   &lt;th style="text-align:center;"&gt; Small &lt;/th&gt;
+   &lt;th style="text-align:center;"&gt; Regular &lt;/th&gt;
+   &lt;th style="text-align:center;"&gt; Regular + Aide &lt;/th&gt;
+   &lt;th style="text-align:center;"&gt; P-value &lt;/th&gt;
+  &lt;/tr&gt;
+ &lt;/thead&gt;
+&lt;tbody&gt;
+  &lt;tr&gt;
+   &lt;td style="text-align:left;color: #314f4f;background-color: white;font-style: italic;color: black;"&gt; Free lunch &lt;/td&gt;
+   &lt;td style="text-align:center;color: #314f4f;background-color: white;"&gt; 0.47 &lt;/td&gt;
+   &lt;td style="text-align:center;color: #314f4f;background-color: white;"&gt; 0.48 &lt;/td&gt;
+   &lt;td style="text-align:center;color: #314f4f;background-color: white;"&gt; 0.50 &lt;/td&gt;
+   &lt;td style="text-align:center;color: #314f4f;background-color: white;"&gt; 0.09 &lt;/td&gt;
+  &lt;/tr&gt;
+  &lt;tr&gt;
+   &lt;td style="text-align:left;color: #314f4f;background-color: white;font-style: italic;color: black;"&gt; White/Asian &lt;/td&gt;
+   &lt;td style="text-align:center;color: #314f4f;background-color: white;"&gt; 0.68 &lt;/td&gt;
+   &lt;td style="text-align:center;color: #314f4f;background-color: white;"&gt; 0.67 &lt;/td&gt;
+   &lt;td style="text-align:center;color: #314f4f;background-color: white;"&gt; 0.66 &lt;/td&gt;
+   &lt;td style="text-align:center;color: #314f4f;background-color: white;"&gt; 0.26 &lt;/td&gt;
+  &lt;/tr&gt;
+  &lt;tr&gt;
+   &lt;td style="text-align:left;color: #314f4f;background-color: white;font-style: italic;color: black;"&gt; Age in 1985 &lt;/td&gt;
+   &lt;td style="text-align:center;color: #314f4f;background-color: white;"&gt; 5.44 &lt;/td&gt;
+   &lt;td style="text-align:center;color: #314f4f;background-color: white;"&gt; 5.43 &lt;/td&gt;
+   &lt;td style="text-align:center;color: #314f4f;background-color: white;"&gt; 5.42 &lt;/td&gt;
+   &lt;td style="text-align:center;color: #314f4f;background-color: white;"&gt; 0.32 &lt;/td&gt;
+  &lt;/tr&gt;
+  &lt;tr&gt;
+   &lt;td style="text-align:left;color: #314f4f;background-color: white;font-style: italic;color: black;"&gt; Attrition rate &lt;/td&gt;
+   &lt;td style="text-align:center;color: #314f4f;background-color: white;"&gt; 0.49 &lt;/td&gt;
+   &lt;td style="text-align:center;color: #314f4f;background-color: white;"&gt; 0.52 &lt;/td&gt;
+   &lt;td style="text-align:center;color: #314f4f;background-color: white;"&gt; 0.53 &lt;/td&gt;
+   &lt;td style="text-align:center;color: #314f4f;background-color: white;"&gt; 0.02 &lt;/td&gt;
+  &lt;/tr&gt;
+  &lt;tr&gt;
+   &lt;td style="text-align:left;color: #314f4f;background-color: white;font-style: italic;color: black;"&gt; K. class size &lt;/td&gt;
+   &lt;td style="text-align:center;color: #314f4f;background-color: white;"&gt; 15.10 &lt;/td&gt;
+   &lt;td style="text-align:center;color: #314f4f;background-color: white;"&gt; 22.40 &lt;/td&gt;
+   &lt;td style="text-align:center;color: #314f4f;background-color: white;"&gt; 22.80 &lt;/td&gt;
+   &lt;td style="text-align:center;color: #314f4f;background-color: white;"&gt; 0.00 &lt;/td&gt;
+  &lt;/tr&gt;
+  &lt;tr&gt;
+   &lt;td style="text-align:left;color: #314f4f;background-color: white;font-style: italic;color: black;font-weight: bold;color: #e64173;"&gt; K. test percentile &lt;/td&gt;
+   &lt;td style="text-align:center;color: #314f4f;background-color: white;font-weight: bold;color: #e64173;"&gt; 54.70 &lt;/td&gt;
+   &lt;td style="text-align:center;color: #314f4f;background-color: white;font-weight: bold;color: #e64173;"&gt; 48.90 &lt;/td&gt;
+   &lt;td style="text-align:center;color: #314f4f;background-color: white;font-weight: bold;color: #e64173;"&gt; 50.00 &lt;/td&gt;
+   &lt;td style="text-align:center;color: #314f4f;background-color: white;font-weight: bold;color: #e64173;"&gt; 0.00 &lt;/td&gt;
+  &lt;/tr&gt;
+&lt;/tbody&gt;
+&lt;/table&gt;
+
+The small-class treatment significantly increased test scores.
+---
+layout: true
+# The experimental ideal
+
+---
+
+## The STAR experiment
+
+The previous table estimated/compared the treatment effects using simple differences in means.
+
+We can make the same comparisons using regressions.
+
+Specifically, we regress our outcome (test percentile) on dummy variables (binary indicator variables) for each treatment group.
+
+---
+name: dummies
+
+Example of our three treatment dummies.
+
+$$
+`\begin{matrix}
+\color{#c2bebe}{i} &amp; \color{#c2bebe}{y_i} &amp; \color{#c2bebe}{\text{Trt}_{1i}} &amp; \color{#c2bebe}{\text{Trt}_{2i}} &amp; \color{#c2bebe}{\text{Trt}_{3i}} \\
+\color{#c2bebe}{1       } &amp; y_1        &amp; 1      &amp; 0      &amp; 0\\
+\color{#c2bebe}{2       } &amp; y_2        &amp; 1      &amp; 0      &amp; 0\\
+\color{#c2bebe}{\vdots  } &amp; \vdots     &amp; \vdots &amp; \vdots &amp; \vdots\\
+\color{#c2bebe}{\ell    } &amp; y_\ell     &amp; 1      &amp; 0      &amp; 0\\
+\color{#c2bebe}{\ell + 1} &amp; y_{\ell-1} &amp; 0      &amp; 1      &amp; 0\\
+\color{#c2bebe}{\vdots  } &amp; \vdots     &amp; \vdots &amp; \vdots &amp; \vdots\\
+\color{#c2bebe}{p       } &amp; y_p        &amp; 0      &amp; 1      &amp; 0\\
+\color{#c2bebe}{p+1     } &amp; y_{p+1}    &amp; 0      &amp; 0      &amp; 1\\
+\color{#c2bebe}{\vdots  } &amp; \vdots     &amp; \vdots &amp; \vdots &amp; \vdots\\
+\color{#c2bebe}{N       } &amp; y_N        &amp; 0      &amp; 0      &amp; 1
+\end{matrix}`
+$$
+
+---
+name: reg
+
+## Regression analysis
+
+Assume for the moment that the treatment effect is constant&lt;sup&gt;.pink[†]&lt;/sup&gt;, _i.e._,
+
+.footnote[.pink[†]You'll often hear econometricians say "homogeneous" (*vs.* "hetergeneous").]
+
+$$
+`\begin{align}
+  \color{#e64173}{\text{Y}_{1i}} - \color{#6A5ACD}{\text{Y}_{0i}} = \color{#FFA500}{\rho} \quad \forall i
+\end{align}`
+$$
+then we can rewrite
+$$
+`\begin{align}
+  \text{Y}_{i} = \color{#6A5ACD}{\text{Y}_{0i}} + \text{D}_{i}\left( \color{#e64173}{\text{Y}_{1i}} - \color{#6A5ACD}{\text{Y}_{0i}} \right)
+\end{align}`
+$$
+as
+$$
+`\begin{align}
+  \text{Y}_{i} = \underbrace{\alpha}_{=\mathop{E}\left[ \color{#6A5ACD}{\text{Y}_{0i}} \right]} + \text{D}_{i} \underbrace{\color{#FFA500}{\rho}}_{\color{#e64173}{\text{Y}_{1i}} - \color{#6A5ACD}{\text{Y}_{0i}}} + \underbrace{\eta_i}_{\color{#6A5ACD}{\text{Y}_{0i}} - \mathop{E}\left[ \color{#6A5ACD}{\text{Y}_{0i}} \right]}
+\end{align}`
+$$
+---
+
+## Regression analysis
+
+$$
+`\begin{align}
+  \text{Y}_{i} = \alpha + \text{D}_{i} \color{#FFA500}{\rho} + \eta_i
+\end{align}`
+$$
+
+
+Now write out the conditional expectation of `\(\text{Y}_{i}\)` for both levels of `\(\text{D}_{i}\)`
+
+
+  `\(\mathop{E}\left[ \text{Y}_{i} \mid \color{#e64173}{\text{D}_{i}=1} \right] =\)`
+ `\(\mathop{E}\left[ \alpha + \color{#FFA500}{\rho} + \eta_i \mid \color{#e64173}{\text{D}_{i}=1} \right]\)`
+ `\(=\alpha + \color{#FFA500}{\rho} + \mathop{E}\left[ \eta_i | \color{#e64173}{\text{D}_{i}=1} \right]\)`
+
+
+  `\(\mathop{E}\left[ \text{Y}_{i} \mid \color{#6A5ACD}{\text{D}_{i}=0} \right]\)`
+ `\(= \mathop{E}\left[ \alpha + \eta_i \mid \color{#6A5ACD}{\text{D}_{i}=0} \right]\)`
+ `\(= \alpha + \mathop{E}\left[ \eta_i \mid \color{#6A5ACD}{\text{D}_{i}=0} \right]\)`
+
+
+Take the difference...
+
+  `\(\mathop{E}\left[ \text{Y}_{i} \mid \color{#e64173}{\text{D}_{i}=1} \right] - \mathop{E}\left[ \text{Y}_{i} \mid \color{#6A5ACD}{\text{D}_{i}=0} \right]\)`
+&lt;br&gt;   `\(= \color{#FFA500}{\rho} + \underbrace{\mathop{E}\left[ \eta_i | \color{#e64173}{\text{D}_{i}=1} \right] - \mathop{E}\left[ \eta_i \mid \color{#6A5ACD}{\text{D}_{i}=0} \right]}_\text{Selection bias}\)`
+
+---
+
+## Regression analysis
+
+$$
+`\begin{align}
+  \mathop{E}\left[ \text{Y}_{i} \mid \color{#e64173}{\text{D}_{i}=1} \right] - \mathop{E}\left[ \text{Y}_{i} \mid \color{#6A5ACD}{\text{D}_{i}=0} \right] = \mathop{E}\left[ \eta_i | \color{#e64173}{\text{D}_{i}=1} \right] - \mathop{E}\left[ \eta_i \mid \color{#6A5ACD}{\text{D}_{i}=0} \right]
+\end{align}`
+$$
+
+Again, our estimate of the .hi-orange[treatment effect] `\(\left( \color{#FFA500}{\rho} \right)\)` is only going to be as good as our ability to shut down the .hi-slate[selection bias].
+
+.hi-slate[*Selection bias in regression model:*] `\(\mathop{E}\left[ \eta_i | \color{#e64173}{\text{D}_{i}=1} \right] - \mathop{E}\left[ \eta_i \mid \color{#6A5ACD}{\text{D}_{i}=0} \right]\)`
+
+Selection bias here should remind you a lot of
+ .hi-slate[omitted-variable bias.]
+
+There is something in our disturbance `\(\eta_i\)` that is affecting `\(\text{Y}_{i}\)` and is also correlated with `\(\text{D}_{i}\)`.
+
+
+In other metrics-*y* words: Our treatment `\(\text{D}_{i}\)` is endogenous.
+---
+name: covariates
+
+## Solutions and covariates
+
+.hi-slate[*Selection bias in regression model:*] `\(\mathop{E}\left[ \eta_i | \color{#e64173}{\text{D}_{i}=1} \right] - \mathop{E}\left[ \eta_i \mid \color{#6A5ACD}{\text{D}_{i}=0} \right]\)`
+
+
+As before, if we randomly assign `\(\text{D}_{i}\)`, then selection bias disappears.
+
+
+Another potential route to identification is to condition on covariates in the hopes that they "take care of" the relationship between `\(\text{D}_{i}\)` and whatever is in our disturbance `\(\eta_i\)`.
+
+
+Without very clear reasons explaining how you know you've controlled for the "bad variation", clean and convincing identification on this path is going to be challenging.
+
+---
+
+## Covariates
+
+That said, covariates can help with two things:
+
+1. Even experiments may need .hi-slate[conditioning/controls]: The STAR experiment was random *within school*—not across schools.
+
+1. Covariates can soak up unexplained variation—.hi-slate[increasing precision.]
+
+
+Now that we've seen regression can analyze experiments, let's estimate the STAR example...
+
+---
+layout: false
+class: clear, middle
+
+&lt;table&gt;
+&lt;caption&gt;Table 2.2.2, MHE&lt;/caption&gt;
+ &lt;thead&gt;
+  &lt;tr&gt;
+   &lt;th style="text-align:left;"&gt; Explanatory variable &lt;/th&gt;
+   &lt;th style="text-align:center;"&gt; 1 &lt;/th&gt;
+   &lt;th style="text-align:center;"&gt; 2 &lt;/th&gt;
+   &lt;th style="text-align:center;"&gt; 3 &lt;/th&gt;
+  &lt;/tr&gt;
+ &lt;/thead&gt;
+&lt;tbody&gt;
+  &lt;tr&gt;
+   &lt;td style="text-align:left;color: #314f4f;line-height: 110%;font-style: italic;color: black;"&gt; Small class &lt;/td&gt;
+   &lt;td style="text-align:center;color: #314f4f;line-height: 110%;"&gt; 4.82 &lt;/td&gt;
+   &lt;td style="text-align:center;color: #314f4f;line-height: 110%;"&gt; 5.37 &lt;/td&gt;
+   &lt;td style="text-align:center;color: #314f4f;line-height: 110%;"&gt; 5.36 &lt;/td&gt;
+  &lt;/tr&gt;
+  &lt;tr&gt;
+   &lt;td style="text-align:left;color: #314f4f;color: #c2bebe;line-height: 110%;font-style: italic;color: black;"&gt;  &lt;/td&gt;
+   &lt;td style="text-align:center;color: #314f4f;color: #c2bebe;line-height: 110%;"&gt; (2.19) &lt;/td&gt;
+   &lt;td style="text-align:center;color: #314f4f;color: #c2bebe;line-height: 110%;"&gt; (1.26) &lt;/td&gt;
+   &lt;td style="text-align:center;color: #314f4f;color: #c2bebe;line-height: 110%;"&gt; (1.21) &lt;/td&gt;
+  &lt;/tr&gt;
+  &lt;tr&gt;
+   &lt;td style="text-align:left;color: #314f4f;line-height: 110%;font-style: italic;color: black;"&gt; Regular + aide &lt;/td&gt;
+   &lt;td style="text-align:center;color: #314f4f;line-height: 110%;"&gt; 0.12 &lt;/td&gt;
+   &lt;td style="text-align:center;color: #314f4f;line-height: 110%;"&gt; 0.29 &lt;/td&gt;
+   &lt;td style="text-align:center;color: #314f4f;line-height: 110%;"&gt; 0.53 &lt;/td&gt;
+  &lt;/tr&gt;
+  &lt;tr&gt;
+   &lt;td style="text-align:left;color: #314f4f;color: #c2bebe;line-height: 110%;font-style: italic;color: black;"&gt;  &lt;/td&gt;
+   &lt;td style="text-align:center;color: #314f4f;color: #c2bebe;line-height: 110%;"&gt; (2.23) &lt;/td&gt;
+   &lt;td style="text-align:center;color: #314f4f;color: #c2bebe;line-height: 110%;"&gt; (1.13) &lt;/td&gt;
+   &lt;td style="text-align:center;color: #314f4f;color: #c2bebe;line-height: 110%;"&gt; (1.09) &lt;/td&gt;
+  &lt;/tr&gt;
+  &lt;tr&gt;
+   &lt;td style="text-align:left;color: #314f4f;line-height: 110%;font-style: italic;color: black;"&gt; White/Asian &lt;/td&gt;
+   &lt;td style="text-align:center;color: #314f4f;line-height: 110%;"&gt;  &lt;/td&gt;
+   &lt;td style="text-align:center;color: #314f4f;line-height: 110%;"&gt;  &lt;/td&gt;
+   &lt;td style="text-align:center;color: #314f4f;line-height: 110%;"&gt; 8.35 &lt;/td&gt;
+  &lt;/tr&gt;
+  &lt;tr&gt;
+   &lt;td style="text-align:left;color: #314f4f;color: #c2bebe;line-height: 110%;font-style: italic;color: black;"&gt;  &lt;/td&gt;
+   &lt;td style="text-align:center;color: #314f4f;color: #c2bebe;line-height: 110%;"&gt;  &lt;/td&gt;
+   &lt;td style="text-align:center;color: #314f4f;color: #c2bebe;line-height: 110%;"&gt;  &lt;/td&gt;
+   &lt;td style="text-align:center;color: #314f4f;color: #c2bebe;line-height: 110%;"&gt; (1.35) &lt;/td&gt;
+  &lt;/tr&gt;
+  &lt;tr&gt;
+   &lt;td style="text-align:left;color: #314f4f;line-height: 110%;font-style: italic;color: black;"&gt; Female &lt;/td&gt;
+   &lt;td style="text-align:center;color: #314f4f;line-height: 110%;"&gt;  &lt;/td&gt;
+   &lt;td style="text-align:center;color: #314f4f;line-height: 110%;"&gt;  &lt;/td&gt;
+   &lt;td style="text-align:center;color: #314f4f;line-height: 110%;"&gt; 4.48 &lt;/td&gt;
+  &lt;/tr&gt;
+  &lt;tr&gt;
+   &lt;td style="text-align:left;color: #314f4f;color: #c2bebe;line-height: 110%;font-style: italic;color: black;"&gt;  &lt;/td&gt;
+   &lt;td style="text-align:center;color: #314f4f;color: #c2bebe;line-height: 110%;"&gt;  &lt;/td&gt;
+   &lt;td style="text-align:center;color: #314f4f;color: #c2bebe;line-height: 110%;"&gt;  &lt;/td&gt;
+   &lt;td style="text-align:center;color: #314f4f;color: #c2bebe;line-height: 110%;"&gt; (0.63) &lt;/td&gt;
+  &lt;/tr&gt;
+  &lt;tr&gt;
+   &lt;td style="text-align:left;color: #314f4f;line-height: 110%;font-style: italic;color: black;"&gt; Free lunch &lt;/td&gt;
+   &lt;td style="text-align:center;color: #314f4f;line-height: 110%;"&gt;  &lt;/td&gt;
+   &lt;td style="text-align:center;color: #314f4f;line-height: 110%;"&gt;  &lt;/td&gt;
+   &lt;td style="text-align:center;color: #314f4f;line-height: 110%;"&gt; -13.15 &lt;/td&gt;
+  &lt;/tr&gt;
+  &lt;tr&gt;
+   &lt;td style="text-align:left;color: #314f4f;color: #c2bebe;line-height: 110%;font-style: italic;color: black;"&gt;  &lt;/td&gt;
+   &lt;td style="text-align:center;color: #314f4f;color: #c2bebe;line-height: 110%;"&gt;  &lt;/td&gt;
+   &lt;td style="text-align:center;color: #314f4f;color: #c2bebe;line-height: 110%;"&gt;  &lt;/td&gt;
+   &lt;td style="text-align:center;color: #314f4f;color: #c2bebe;line-height: 110%;"&gt; (0.77) &lt;/td&gt;
+  &lt;/tr&gt;
+  &lt;tr&gt;
+   &lt;td style="text-align:left;color: #314f4f;line-height: 110%;font-style: italic;color: black;"&gt; School F.E. &lt;/td&gt;
+   &lt;td style="text-align:center;color: #314f4f;line-height: 110%;"&gt; F &lt;/td&gt;
+   &lt;td style="text-align:center;color: #314f4f;line-height: 110%;"&gt; T &lt;/td&gt;
+   &lt;td style="text-align:center;color: #314f4f;line-height: 110%;"&gt; T &lt;/td&gt;
+  &lt;/tr&gt;
+&lt;/tbody&gt;
+&lt;/table&gt;
+
+The omitted level is *Regular* (with part-time aide).
+---
+class: clear, middle
+
+&lt;table&gt;
+&lt;caption&gt;Table 2.2.2, MHE&lt;/caption&gt;
+ &lt;thead&gt;
+  &lt;tr&gt;
+   &lt;th style="text-align:left;"&gt; Explanatory variable &lt;/th&gt;
+   &lt;th style="text-align:center;"&gt; 1 &lt;/th&gt;
+   &lt;th style="text-align:center;"&gt; 2 &lt;/th&gt;
+   &lt;th style="text-align:center;"&gt; 3 &lt;/th&gt;
+  &lt;/tr&gt;
+ &lt;/thead&gt;
+&lt;tbody&gt;
+  &lt;tr&gt;
+   &lt;td style="text-align:left;color: #314f4f;line-height: 110%;font-style: italic;color: black;"&gt; Small class &lt;/td&gt;
+   &lt;td style="text-align:center;color: #314f4f;line-height: 110%;font-weight: bold;"&gt; 4.82 &lt;/td&gt;
+   &lt;td style="text-align:center;color: #314f4f;line-height: 110%;"&gt; 5.37 &lt;/td&gt;
+   &lt;td style="text-align:center;color: #314f4f;line-height: 110%;"&gt; 5.36 &lt;/td&gt;
+  &lt;/tr&gt;
+  &lt;tr&gt;
+   &lt;td style="text-align:left;color: #314f4f;color: #c2bebe;line-height: 110%;font-style: italic;color: black;"&gt;  &lt;/td&gt;
+   &lt;td style="text-align:center;color: #314f4f;color: #c2bebe;line-height: 110%;font-weight: bold;"&gt; (2.19) &lt;/td&gt;
+   &lt;td style="text-align:center;color: #314f4f;color: #c2bebe;line-height: 110%;"&gt; (1.26) &lt;/td&gt;
+   &lt;td style="text-align:center;color: #314f4f;color: #c2bebe;line-height: 110%;"&gt; (1.21) &lt;/td&gt;
+  &lt;/tr&gt;
+  &lt;tr&gt;
+   &lt;td style="text-align:left;color: #314f4f;line-height: 110%;font-style: italic;color: black;"&gt; Regular + aide &lt;/td&gt;
+   &lt;td style="text-align:center;color: #314f4f;line-height: 110%;font-weight: bold;"&gt; 0.12 &lt;/td&gt;
+   &lt;td style="text-align:center;color: #314f4f;line-height: 110%;"&gt; 0.29 &lt;/td&gt;
+   &lt;td style="text-align:center;color: #314f4f;line-height: 110%;"&gt; 0.53 &lt;/td&gt;
+  &lt;/tr&gt;
+  &lt;tr&gt;
+   &lt;td style="text-align:left;color: #314f4f;color: #c2bebe;line-height: 110%;font-style: italic;color: black;"&gt;  &lt;/td&gt;
+   &lt;td style="text-align:center;color: #314f4f;color: #c2bebe;line-height: 110%;font-weight: bold;"&gt; (2.23) &lt;/td&gt;
+   &lt;td style="text-align:center;color: #314f4f;color: #c2bebe;line-height: 110%;"&gt; (1.13) &lt;/td&gt;
+   &lt;td style="text-align:center;color: #314f4f;color: #c2bebe;line-height: 110%;"&gt; (1.09) &lt;/td&gt;
+  &lt;/tr&gt;
+  &lt;tr&gt;
+   &lt;td style="text-align:left;color: #314f4f;line-height: 110%;font-style: italic;color: black;"&gt; White/Asian &lt;/td&gt;
+   &lt;td style="text-align:center;color: #314f4f;line-height: 110%;font-weight: bold;"&gt;  &lt;/td&gt;
+   &lt;td style="text-align:center;color: #314f4f;line-height: 110%;"&gt;  &lt;/td&gt;
+   &lt;td style="text-align:center;color: #314f4f;line-height: 110%;"&gt; 8.35 &lt;/td&gt;
+  &lt;/tr&gt;
+  &lt;tr&gt;
+   &lt;td style="text-align:left;color: #314f4f;color: #c2bebe;line-height: 110%;font-style: italic;color: black;"&gt;  &lt;/td&gt;
+   &lt;td style="text-align:center;color: #314f4f;color: #c2bebe;line-height: 110%;font-weight: bold;"&gt;  &lt;/td&gt;
+   &lt;td style="text-align:center;color: #314f4f;color: #c2bebe;line-height: 110%;"&gt;  &lt;/td&gt;
+   &lt;td style="text-align:center;color: #314f4f;color: #c2bebe;line-height: 110%;"&gt; (1.35) &lt;/td&gt;
+  &lt;/tr&gt;
+  &lt;tr&gt;
+   &lt;td style="text-align:left;color: #314f4f;line-height: 110%;font-style: italic;color: black;"&gt; Female &lt;/td&gt;
+   &lt;td style="text-align:center;color: #314f4f;line-height: 110%;font-weight: bold;"&gt;  &lt;/td&gt;
+   &lt;td style="text-align:center;color: #314f4f;line-height: 110%;"&gt;  &lt;/td&gt;
+   &lt;td style="text-align:center;color: #314f4f;line-height: 110%;"&gt; 4.48 &lt;/td&gt;
+  &lt;/tr&gt;
+  &lt;tr&gt;
+   &lt;td style="text-align:left;color: #314f4f;color: #c2bebe;line-height: 110%;font-style: italic;color: black;"&gt;  &lt;/td&gt;
+   &lt;td style="text-align:center;color: #314f4f;color: #c2bebe;line-height: 110%;font-weight: bold;"&gt;  &lt;/td&gt;
+   &lt;td style="text-align:center;color: #314f4f;color: #c2bebe;line-height: 110%;"&gt;  &lt;/td&gt;
+   &lt;td style="text-align:center;color: #314f4f;color: #c2bebe;line-height: 110%;"&gt; (0.63) &lt;/td&gt;
+  &lt;/tr&gt;
+  &lt;tr&gt;
+   &lt;td style="text-align:left;color: #314f4f;line-height: 110%;font-style: italic;color: black;"&gt; Free lunch &lt;/td&gt;
+   &lt;td style="text-align:center;color: #314f4f;line-height: 110%;font-weight: bold;"&gt;  &lt;/td&gt;
+   &lt;td style="text-align:center;color: #314f4f;line-height: 110%;"&gt;  &lt;/td&gt;
+   &lt;td style="text-align:center;color: #314f4f;line-height: 110%;"&gt; -13.15 &lt;/td&gt;
+  &lt;/tr&gt;
+  &lt;tr&gt;
+   &lt;td style="text-align:left;color: #314f4f;color: #c2bebe;line-height: 110%;font-style: italic;color: black;"&gt;  &lt;/td&gt;
+   &lt;td style="text-align:center;color: #314f4f;color: #c2bebe;line-height: 110%;font-weight: bold;"&gt;  &lt;/td&gt;
+   &lt;td style="text-align:center;color: #314f4f;color: #c2bebe;line-height: 110%;"&gt;  &lt;/td&gt;
+   &lt;td style="text-align:center;color: #314f4f;color: #c2bebe;line-height: 110%;"&gt; (0.77) &lt;/td&gt;
+  &lt;/tr&gt;
+  &lt;tr&gt;
+   &lt;td style="text-align:left;color: #314f4f;line-height: 110%;font-style: italic;color: black;"&gt; School F.E. &lt;/td&gt;
+   &lt;td style="text-align:center;color: #314f4f;line-height: 110%;font-weight: bold;"&gt; F &lt;/td&gt;
+   &lt;td style="text-align:center;color: #314f4f;line-height: 110%;"&gt; T &lt;/td&gt;
+   &lt;td style="text-align:center;color: #314f4f;line-height: 110%;"&gt; T &lt;/td&gt;
+  &lt;/tr&gt;
+&lt;/tbody&gt;
+&lt;/table&gt;
+
+Results without other controls are very similar to the difference in means.
+---
+class: clear, middle
+
+&lt;table&gt;
+&lt;caption&gt;Table 2.2.2, MHE&lt;/caption&gt;
+ &lt;thead&gt;
+  &lt;tr&gt;
+   &lt;th style="text-align:left;"&gt; Explanatory variable &lt;/th&gt;
+   &lt;th style="text-align:center;"&gt; 1 &lt;/th&gt;
+   &lt;th style="text-align:center;"&gt; 2 &lt;/th&gt;
+   &lt;th style="text-align:center;"&gt; 3 &lt;/th&gt;
+  &lt;/tr&gt;
+ &lt;/thead&gt;
+&lt;tbody&gt;
+  &lt;tr&gt;
+   &lt;td style="text-align:left;color: #314f4f;line-height: 110%;font-style: italic;color: black;"&gt; Small class &lt;/td&gt;
+   &lt;td style="text-align:center;color: #314f4f;line-height: 110%;"&gt; 4.82 &lt;/td&gt;
+   &lt;td style="text-align:center;color: #314f4f;line-height: 110%;font-weight: bold;"&gt; 5.37 &lt;/td&gt;
+   &lt;td style="text-align:center;color: #314f4f;line-height: 110%;"&gt; 5.36 &lt;/td&gt;
+  &lt;/tr&gt;
+  &lt;tr&gt;
+   &lt;td style="text-align:left;color: #314f4f;color: #c2bebe;line-height: 110%;font-style: italic;color: black;"&gt;  &lt;/td&gt;
+   &lt;td style="text-align:center;color: #314f4f;color: #c2bebe;line-height: 110%;"&gt; (2.19) &lt;/td&gt;
+   &lt;td style="text-align:center;color: #314f4f;color: #c2bebe;line-height: 110%;font-weight: bold;"&gt; (1.26) &lt;/td&gt;
+   &lt;td style="text-align:center;color: #314f4f;color: #c2bebe;line-height: 110%;"&gt; (1.21) &lt;/td&gt;
+  &lt;/tr&gt;
+  &lt;tr&gt;
+   &lt;td style="text-align:left;color: #314f4f;line-height: 110%;font-style: italic;color: black;"&gt; Regular + aide &lt;/td&gt;
+   &lt;td style="text-align:center;color: #314f4f;line-height: 110%;"&gt; 0.12 &lt;/td&gt;
+   &lt;td style="text-align:center;color: #314f4f;line-height: 110%;font-weight: bold;"&gt; 0.29 &lt;/td&gt;
+   &lt;td style="text-align:center;color: #314f4f;line-height: 110%;"&gt; 0.53 &lt;/td&gt;
+  &lt;/tr&gt;
+  &lt;tr&gt;
+   &lt;td style="text-align:left;color: #314f4f;color: #c2bebe;line-height: 110%;font-style: italic;color: black;"&gt;  &lt;/td&gt;
+   &lt;td style="text-align:center;color: #314f4f;color: #c2bebe;line-height: 110%;"&gt; (2.23) &lt;/td&gt;
+   &lt;td style="text-align:center;color: #314f4f;color: #c2bebe;line-height: 110%;font-weight: bold;"&gt; (1.13) &lt;/td&gt;
+   &lt;td style="text-align:center;color: #314f4f;color: #c2bebe;line-height: 110%;"&gt; (1.09) &lt;/td&gt;
+  &lt;/tr&gt;
+  &lt;tr&gt;
+   &lt;td style="text-align:left;color: #314f4f;line-height: 110%;font-style: italic;color: black;"&gt; White/Asian &lt;/td&gt;
+   &lt;td style="text-align:center;color: #314f4f;line-height: 110%;"&gt;  &lt;/td&gt;
+   &lt;td style="text-align:center;color: #314f4f;line-height: 110%;font-weight: bold;"&gt;  &lt;/td&gt;
+   &lt;td style="text-align:center;color: #314f4f;line-height: 110%;"&gt; 8.35 &lt;/td&gt;
+  &lt;/tr&gt;
+  &lt;tr&gt;
+   &lt;td style="text-align:left;color: #314f4f;color: #c2bebe;line-height: 110%;font-style: italic;color: black;"&gt;  &lt;/td&gt;
+   &lt;td style="text-align:center;color: #314f4f;color: #c2bebe;line-height: 110%;"&gt;  &lt;/td&gt;
+   &lt;td style="text-align:center;color: #314f4f;color: #c2bebe;line-height: 110%;font-weight: bold;"&gt;  &lt;/td&gt;
+   &lt;td style="text-align:center;color: #314f4f;color: #c2bebe;line-height: 110%;"&gt; (1.35) &lt;/td&gt;
+  &lt;/tr&gt;
+  &lt;tr&gt;
+   &lt;td style="text-align:left;color: #314f4f;line-height: 110%;font-style: italic;color: black;"&gt; Female &lt;/td&gt;
+   &lt;td style="text-align:center;color: #314f4f;line-height: 110%;"&gt;  &lt;/td&gt;
+   &lt;td style="text-align:center;color: #314f4f;line-height: 110%;font-weight: bold;"&gt;  &lt;/td&gt;
+   &lt;td style="text-align:center;color: #314f4f;line-height: 110%;"&gt; 4.48 &lt;/td&gt;
+  &lt;/tr&gt;
+  &lt;tr&gt;
+   &lt;td style="text-align:left;color: #314f4f;color: #c2bebe;line-height: 110%;font-style: italic;color: black;"&gt;  &lt;/td&gt;
+   &lt;td style="text-align:center;color: #314f4f;color: #c2bebe;line-height: 110%;"&gt;  &lt;/td&gt;
+   &lt;td style="text-align:center;color: #314f4f;color: #c2bebe;line-height: 110%;font-weight: bold;"&gt;  &lt;/td&gt;
+   &lt;td style="text-align:center;color: #314f4f;color: #c2bebe;line-height: 110%;"&gt; (0.63) &lt;/td&gt;
+  &lt;/tr&gt;
+  &lt;tr&gt;
+   &lt;td style="text-align:left;color: #314f4f;line-height: 110%;font-style: italic;color: black;"&gt; Free lunch &lt;/td&gt;
+   &lt;td style="text-align:center;color: #314f4f;line-height: 110%;"&gt;  &lt;/td&gt;
+   &lt;td style="text-align:center;color: #314f4f;line-height: 110%;font-weight: bold;"&gt;  &lt;/td&gt;
+   &lt;td style="text-align:center;color: #314f4f;line-height: 110%;"&gt; -13.15 &lt;/td&gt;
+  &lt;/tr&gt;
+  &lt;tr&gt;
+   &lt;td style="text-align:left;color: #314f4f;color: #c2bebe;line-height: 110%;font-style: italic;color: black;"&gt;  &lt;/td&gt;
+   &lt;td style="text-align:center;color: #314f4f;color: #c2bebe;line-height: 110%;"&gt;  &lt;/td&gt;
+   &lt;td style="text-align:center;color: #314f4f;color: #c2bebe;line-height: 110%;font-weight: bold;"&gt;  &lt;/td&gt;
+   &lt;td style="text-align:center;color: #314f4f;color: #c2bebe;line-height: 110%;"&gt; (0.77) &lt;/td&gt;
+  &lt;/tr&gt;
+  &lt;tr&gt;
+   &lt;td style="text-align:left;color: #314f4f;line-height: 110%;font-style: italic;color: black;"&gt; School F.E. &lt;/td&gt;
+   &lt;td style="text-align:center;color: #314f4f;line-height: 110%;"&gt; F &lt;/td&gt;
+   &lt;td style="text-align:center;color: #314f4f;line-height: 110%;font-weight: bold;"&gt; T &lt;/td&gt;
+   &lt;td style="text-align:center;color: #314f4f;line-height: 110%;"&gt; T &lt;/td&gt;
+  &lt;/tr&gt;
+&lt;/tbody&gt;
+&lt;/table&gt;
+
+School FEs enforce the experiment's design and increase precision.
+---
+class: clear, middle
+
+&lt;table&gt;
+&lt;caption&gt;Table 2.2.2, MHE&lt;/caption&gt;
+ &lt;thead&gt;
+  &lt;tr&gt;
+   &lt;th style="text-align:left;"&gt; Explanatory variable &lt;/th&gt;
+   &lt;th style="text-align:center;"&gt; 1 &lt;/th&gt;
+   &lt;th style="text-align:center;"&gt; 2 &lt;/th&gt;
+   &lt;th style="text-align:center;"&gt; 3 &lt;/th&gt;
+  &lt;/tr&gt;
+ &lt;/thead&gt;
+&lt;tbody&gt;
+  &lt;tr&gt;
+   &lt;td style="text-align:left;color: #314f4f;line-height: 110%;font-style: italic;color: black;"&gt; Small class &lt;/td&gt;
+   &lt;td style="text-align:center;color: #314f4f;line-height: 110%;"&gt; 4.82 &lt;/td&gt;
+   &lt;td style="text-align:center;color: #314f4f;line-height: 110%;"&gt; 5.37 &lt;/td&gt;
+   &lt;td style="text-align:center;color: #314f4f;line-height: 110%;font-weight: bold;"&gt; 5.36 &lt;/td&gt;
+  &lt;/tr&gt;
+  &lt;tr&gt;
+   &lt;td style="text-align:left;color: #314f4f;color: #c2bebe;line-height: 110%;font-style: italic;color: black;"&gt;  &lt;/td&gt;
+   &lt;td style="text-align:center;color: #314f4f;color: #c2bebe;line-height: 110%;"&gt; (2.19) &lt;/td&gt;
+   &lt;td style="text-align:center;color: #314f4f;color: #c2bebe;line-height: 110%;"&gt; (1.26) &lt;/td&gt;
+   &lt;td style="text-align:center;color: #314f4f;color: #c2bebe;line-height: 110%;font-weight: bold;"&gt; (1.21) &lt;/td&gt;
+  &lt;/tr&gt;
+  &lt;tr&gt;
+   &lt;td style="text-align:left;color: #314f4f;line-height: 110%;font-style: italic;color: black;"&gt; Regular + aide &lt;/td&gt;
+   &lt;td style="text-align:center;color: #314f4f;line-height: 110%;"&gt; 0.12 &lt;/td&gt;
+   &lt;td style="text-align:center;color: #314f4f;line-height: 110%;"&gt; 0.29 &lt;/td&gt;
+   &lt;td style="text-align:center;color: #314f4f;line-height: 110%;font-weight: bold;"&gt; 0.53 &lt;/td&gt;
+  &lt;/tr&gt;
+  &lt;tr&gt;
+   &lt;td style="text-align:left;color: #314f4f;color: #c2bebe;line-height: 110%;font-style: italic;color: black;"&gt;  &lt;/td&gt;
+   &lt;td style="text-align:center;color: #314f4f;color: #c2bebe;line-height: 110%;"&gt; (2.23) &lt;/td&gt;
+   &lt;td style="text-align:center;color: #314f4f;color: #c2bebe;line-height: 110%;"&gt; (1.13) &lt;/td&gt;
+   &lt;td style="text-align:center;color: #314f4f;color: #c2bebe;line-height: 110%;font-weight: bold;"&gt; (1.09) &lt;/td&gt;
+  &lt;/tr&gt;
+  &lt;tr&gt;
+   &lt;td style="text-align:left;color: #314f4f;line-height: 110%;font-style: italic;color: black;"&gt; White/Asian &lt;/td&gt;
+   &lt;td style="text-align:center;color: #314f4f;line-height: 110%;"&gt;  &lt;/td&gt;
+   &lt;td style="text-align:center;color: #314f4f;line-height: 110%;"&gt;  &lt;/td&gt;
+   &lt;td style="text-align:center;color: #314f4f;line-height: 110%;font-weight: bold;"&gt; 8.35 &lt;/td&gt;
+  &lt;/tr&gt;
+  &lt;tr&gt;
+   &lt;td style="text-align:left;color: #314f4f;color: #c2bebe;line-height: 110%;font-style: italic;color: black;"&gt;  &lt;/td&gt;
+   &lt;td style="text-align:center;color: #314f4f;color: #c2bebe;line-height: 110%;"&gt;  &lt;/td&gt;
+   &lt;td style="text-align:center;color: #314f4f;color: #c2bebe;line-height: 110%;"&gt;  &lt;/td&gt;
+   &lt;td style="text-align:center;color: #314f4f;color: #c2bebe;line-height: 110%;font-weight: bold;"&gt; (1.35) &lt;/td&gt;
+  &lt;/tr&gt;
+  &lt;tr&gt;
+   &lt;td style="text-align:left;color: #314f4f;line-height: 110%;font-style: italic;color: black;"&gt; Female &lt;/td&gt;
+   &lt;td style="text-align:center;color: #314f4f;line-height: 110%;"&gt;  &lt;/td&gt;
+   &lt;td style="text-align:center;color: #314f4f;line-height: 110%;"&gt;  &lt;/td&gt;
+   &lt;td style="text-align:center;color: #314f4f;line-height: 110%;font-weight: bold;"&gt; 4.48 &lt;/td&gt;
+  &lt;/tr&gt;
+  &lt;tr&gt;
+   &lt;td style="text-align:left;color: #314f4f;color: #c2bebe;line-height: 110%;font-style: italic;color: black;"&gt;  &lt;/td&gt;
+   &lt;td style="text-align:center;color: #314f4f;color: #c2bebe;line-height: 110%;"&gt;  &lt;/td&gt;
+   &lt;td style="text-align:center;color: #314f4f;color: #c2bebe;line-height: 110%;"&gt;  &lt;/td&gt;
+   &lt;td style="text-align:center;color: #314f4f;color: #c2bebe;line-height: 110%;font-weight: bold;"&gt; (0.63) &lt;/td&gt;
+  &lt;/tr&gt;
+  &lt;tr&gt;
+   &lt;td style="text-align:left;color: #314f4f;line-height: 110%;font-style: italic;color: black;"&gt; Free lunch &lt;/td&gt;
+   &lt;td style="text-align:center;color: #314f4f;line-height: 110%;"&gt;  &lt;/td&gt;
+   &lt;td style="text-align:center;color: #314f4f;line-height: 110%;"&gt;  &lt;/td&gt;
+   &lt;td style="text-align:center;color: #314f4f;line-height: 110%;font-weight: bold;"&gt; -13.15 &lt;/td&gt;
+  &lt;/tr&gt;
+  &lt;tr&gt;
+   &lt;td style="text-align:left;color: #314f4f;color: #c2bebe;line-height: 110%;font-style: italic;color: black;"&gt;  &lt;/td&gt;
+   &lt;td style="text-align:center;color: #314f4f;color: #c2bebe;line-height: 110%;"&gt;  &lt;/td&gt;
+   &lt;td style="text-align:center;color: #314f4f;color: #c2bebe;line-height: 110%;"&gt;  &lt;/td&gt;
+   &lt;td style="text-align:center;color: #314f4f;color: #c2bebe;line-height: 110%;font-weight: bold;"&gt; (0.77) &lt;/td&gt;
+  &lt;/tr&gt;
+  &lt;tr&gt;
+   &lt;td style="text-align:left;color: #314f4f;line-height: 110%;font-style: italic;color: black;"&gt; School F.E. &lt;/td&gt;
+   &lt;td style="text-align:center;color: #314f4f;line-height: 110%;"&gt; F &lt;/td&gt;
+   &lt;td style="text-align:center;color: #314f4f;line-height: 110%;"&gt; T &lt;/td&gt;
+   &lt;td style="text-align:center;color: #314f4f;line-height: 110%;font-weight: bold;"&gt; T &lt;/td&gt;
+  &lt;/tr&gt;
+&lt;/tbody&gt;
+&lt;/table&gt;
+
+Additional controls slightly increase precision.
+---
+layout: true
+
+# .mono[R]
+---
+class: inverse, middle
+---
+name: types
+
+## Object types/classes
+
+As we discussed last class, .mono[R] revolves around objects, _e.g._, `test &lt;- 123`.
+
+
+Objects have types/classes.
+
+
+- `1`, `2/3`, and  are `numeric`.
+
+
+- `"Hello"` and `'cruel world'` are both `character`.
+
+
+- `TRUE`, `T`, `FALSE`, and `F` are `logical` (as is the result of `3 &gt; 2`).
+
+
+The `class(x)` function tells you the class of object `x`.
+
+---
+
+## Structure
+
+In addition to having types/classes, objects have some type of structure.
+
+- `1:3`, `c(1, 2)`, and `seq(2, 8, 2)` each produce a `numeric`-class `vector`.
+
+
+- `c("Alright", "already")` produces a `vector` of `character` class.
+
+
+- `c(1, 3, T, "Hello")` produces a `vector` of `character` class.
+
+
+- `matrix(data = 1:15, ncol = 5)
+` creates a `matrix` with class from `data`.
+
+
+- `data.frame(x = 1:2, y = c("a", "b"), z = T)` produces a `data.frame` with three columns and two rows. The first column (`x`) is `numeric`; the second column (`y`) is `character`, and the third column (`z`) is logical.
+---
+
+.pull-left[
+
+Our `matrix`
+
+
+```r
+matrix(data = 1:15, ncol = 5)
+```
+
+```
+#&gt;      [,1] [,2] [,3] [,4] [,5]
+#&gt; [1,]    1    4    7   10   13
+#&gt; [2,]    2    5    8   11   14
+#&gt; [3,]    3    6    9   12   15
+```
+
+
+]
+
+
+.pull-right[
+
+Our first `data.frame`!
+
+
+```r
+data.frame(x = 1:2, y = c("a", "b"), z = T)
+```
+
+```
+#&gt;   x y    z
+#&gt; 1 1 a TRUE
+#&gt; 2 2 b TRUE
+```
+
+]
+
+
+Notice how .mono[R] helps 'fill' out the columns when lengths don't match.
+---
+name: packages
+
+## Packages
+
+Straight out of the box, .mono[R] has a ton of useful features, but it really gets its power from the additional packages (libraries) that users create.
+
+- .hi-slate[Open-source greatness] Users find needs and create amazing solutions.
+
+- .hi-slate[*Caveat utilitor*] There are a lot of packages, each with a lot of functions. Mistakes can happen.
+
+- .hi-slate[Open-source greatness.sub[2]] Again, .mono[R] is open source: Check the code!
+&lt;br&gt;(Maybe. Sometimes it's very hard.)
+
+
+.hi-slate[Examples] `ggplot2` (plotting), `dplyr` (data work that can link with SQL), `sf` and `raster` (geospatial work), `lfe` (high-dimensional fixed-effect regression), `data.table` (fast and efficient data work)
+
+---
+
+## Installing packages
+
+
+Once you find a function/package that you need to install,.super[.pink[†]] you'll typically install it via `install.packages("newAmazingPackage")`..super[.pink[††]]
+
+.footnote[.pink[†] Tool \#1: Google.  .pink[††] The quotation marks are important.]
+
+We'll use the package `dplyr` throughout the course. Let's install it.
+
+
+```r
+# Install 'dplyr' package
+install.packages("dplyr")
+```
+
+.hi-slate[*Aside*] Notice the comment above the actual code (.mono[R] uses `#` for comments).
+&lt;br&gt;While not necessary for .mono[R] to work, comments are necessary for research.
+---
+
+## Using packages
+
+Once you install a package, it is on your machine.
+
+You don't need to install it again—though you probably should update them from time to time.
+
+
+To .hi-slate[load a package], use the `library(package)` function.super[.pink[†]], _e.g._, to load `dplyr`
+
+.footnote[.pink[†] Notice `library()` doesn't *need* quotation marks. I know...]
+
+
+```r
+# Load 'dplyr'
+library(dplyr)
+```
+
+
+Now all functions contained in `dplyr` are available (until you close .mono[R]).
+---
+
+## Package management
+
+All of this installing, loading, updating, checking-for-existance-and-then-loading can get old.
+
+
+As can typing `library(pacakge1)`, `library(package2)`, ...
+
+
+.slate[*[Enter]*] The `pacman` package... for package management, of course.
+
+
+After installing (`install.packages("pacman")`), you can
+
+- Install and load packages via `p_load(package1, ..., packageN)`
+
+- Update packages via `p_update()`
+
+The `p_load` paradigm is especially helpful for collaboarations or projects across multiple machines.
+
+---
+layout: false
+# Table of contents
+
+.pull-left[
+### Admin
+.smaller[
+
+1. [Schedule](#schedule)
+1. [Review](#review)
+]
+
+### .mono[R]
+.smaller[
+
+1. [Object types/classes](#types)
+1. [Packages](#packages)
+]
+
+
+]
+
+.pull-right[
+### Experimental ideal
+.smaller[
+
+1. [Neyman/Rubin framework](#framework)
+1. [Selection](#selection)
+1. [Experiments](#experiments)
+1. [Example: Training programs](#ex_training)
+1. [Example: STAR experiment](#ex_star)
+  - [Mean differences](#mean_diff)
+  - [Dummy variables](#dummies)
+  - [Regression analysis](#reg)
+  - [Covariates](#covariates)
+]
+
+]
+---
+exclude: true
+    </textarea>
+<script src="https://remarkjs.com/downloads/remark-latest.min.js"></script>
+<script>var slideshow = remark.create({
+"highlightStyle": "github",
+"highlightLines": true,
+"countIncrementalSlides": false
+});
+if (window.HTMLWidgets) slideshow.on('afterShowSlide', function (slide) {
+  window.dispatchEvent(new Event('resize'));
+});
+(function() {
+  var d = document, s = d.createElement("style"), r = d.querySelector(".remark-slide-scaler");
+  if (!r) return;
+  s.type = "text/css"; s.innerHTML = "@page {size: " + r.style.width + " " + r.style.height +"; }";
+  d.head.appendChild(s);
+})();</script>
+
+<script>
+(function() {
+  var i, text, code, codes = document.getElementsByTagName('code');
+  for (i = 0; i < codes.length;) {
+    code = codes[i];
+    if (code.parentNode.tagName !== 'PRE' && code.childElementCount === 0) {
+      text = code.textContent;
+      if (/^\\\((.|\s)+\\\)$/.test(text) || /^\\\[(.|\s)+\\\]$/.test(text) ||
+          /^\$\$(.|\s)+\$\$$/.test(text) ||
+          /^\\begin\{([^}]+)\}(.|\s)+\\end\{[^}]+\}$/.test(text)) {
+        code.outerHTML = code.innerHTML;  // remove <code></code>
+        continue;
+      }
+    }
+    i++;
+  }
+})();
+</script>
+<!-- dynamically load mathjax for compatibility with self-contained -->
+<script>
+(function () {
+  var script = document.createElement('script');
+  script.type = 'text/javascript';
+  script.src  = 'https://mathjax.rstudio.com/latest/MathJax.js?config=TeX-MML-AM_CHTML';
+  if (location.protocol !== 'file:' && /^https?:/.test(script.src))
+    script.src  = script.src.replace(/^https?:/, '');
+  document.getElementsByTagName('head')[0].appendChild(script);
+})();
+</script>
+  </body>
+</html>

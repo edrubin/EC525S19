@@ -380,7 +380,7 @@ Accordingly, our methods try to address the related question
 .hi-slate[Proposed solution]
 <br>
 Compare .pink[outcomes for people who visited the hospital] $\left( \color{#e64173}{\text{Y}_{1i}\mid \color{#e64173}{\text{D}_{i}=1}} \right)$
-<br>to .purple[outcomes for people who did not visit the hospital] $\left( \color{#6A5ACD}{\text{Y}_{0j}\mid \color{#6A5ACD}{\text{D}_{i}=0}} \right)$.
+<br>to .purple[outcomes for people who did not visit the hospital] $\left( \color{#6A5ACD}{\text{Y}_{0j}\mid \color{#6A5ACD}{\text{D}_{j}=0}} \right)$.
 
 --
 
@@ -720,7 +720,7 @@ name: reg
 
 Assume for the moment that the treatment effect is constant<sup>.pink[†]</sup>, _i.e._,
 
-.footnote[You'll often hear econometricians say "homogeneous" (*vs.* "hetergeneous").]
+.footnote[.pink[†]You'll often hear econometricians say "homogeneous" (*vs.* "hetergeneous").]
 
 $$
 \begin{align}
@@ -1102,5 +1102,6 @@ layout: false
 exclude: true
 
 ```{R, generate pdfs, include = F, eval = T}
-system("decktape remark 02Ideal.html 02Ideal.pdf --chrome-arg=--allow-file-access-from-files")
+source("../../ScriptsR/unpause.R")
+unpause("02Ideal.Rmd", ".", T, T)
 ```

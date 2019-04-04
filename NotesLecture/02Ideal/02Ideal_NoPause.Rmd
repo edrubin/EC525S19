@@ -1,0 +1,1021 @@
+---
+title: "The Experimental Ideal"
+subtitle: "EC 425/525, Set 2"
+author: "Edward Rubin"
+date: "`r format(Sys.time(), '%d %B %Y')`"
+output:
+  xaringan::moon_reader:
+    css: ['default', 'metropolis', 'metropolis-fonts', 'my-css.css']
+    # self_contained: true
+    nature:
+      highlightStyle: github
+      highlightLines: true
+      countIncrementalSlides: false
+---
+class: inverse, middle
+
+```{R, setup, include = F}
+# devtools::install_github("dill/emoGG")
+library(pacman)
+p_load(
+  broom, tidyverse,
+  latex2exp, ggplot2, ggthemes, ggforce, viridis, extrafont, gridExtra,
+  kableExtra, snakecase, janitor,
+  data.table, dplyr, estimatr,
+  lubridate, knitr, parallel,
+  lfe,
+  here, magrittr
+)
+# Define pink color
+red_pink <- "#e64173"
+turquoise <- "#20B2AA"
+orange <- "#FFA500"
+red <- "#fb6107"
+blue <- "#3b3b9a"
+green <- "#8bb174"
+grey_light <- "grey70"
+grey_mid <- "grey50"
+grey_dark <- "grey20"
+purple <- "#6A5ACD"
+slate <- "#314f4f"
+# Dark slate grey: #314f4f
+# Knitr options
+opts_chunk$set(
+  comment = "#>",
+  fig.align = "center",
+  fig.height = 7,
+  fig.width = 10.5,
+  warning = F,
+  message = F
+)
+opts_chunk$set(dev = "svg")
+options(device = function(file, width, height) {
+  svg(tempfile(), width = width, height = height)
+})
+options(crayon.enabled = F)
+options(knitr.table.format = "html")
+# A blank theme for ggplot
+theme_empty <- theme_bw() + theme(
+  line = element_blank(),
+  rect = element_blank(),
+  strip.text = element_blank(),
+  axis.text = element_blank(),
+  plot.title = element_blank(),
+  axis.title = element_blank(),
+  plot.margin = structure(c(0, 0, -0.5, -1), unit = "lines", valid.unit = 3L, class = "unit"),
+  legend.position = "none"
+)
+theme_simple <- theme_bw() + theme(
+  line = element_blank(),
+  panel.grid = element_blank(),
+  rect = element_blank(),
+  strip.text = element_blank(),
+  axis.text.x = element_text(size = 18, family = "STIXGeneral"),
+  axis.text.y = element_blank(),
+  axis.ticks = element_blank(),
+  plot.title = element_blank(),
+  axis.title = element_blank(),
+  # plot.margin = structure(c(0, 0, -1, -1), unit = "lines", valid.unit = 3L, class = "unit"),
+  legend.position = "none"
+)
+theme_axes_math <- theme_void() + theme(
+  text = element_text(family = "MathJax_Math"),
+  axis.title = element_text(size = 22),
+  axis.title.x = element_text(hjust = .95, margin = margin(0.15, 0, 0, 0, unit = "lines")),
+  axis.title.y = element_text(vjust = .95, margin = margin(0, 0.15, 0, 0, unit = "lines")),
+  axis.line = element_line(
+    color = "grey70",
+    size = 0.25,
+    arrow = arrow(angle = 30, length = unit(0.15, "inches")
+  )),
+  plot.margin = structure(c(1, 0, 1, 0), unit = "lines", valid.unit = 3L, class = "unit"),
+  legend.position = "none"
+)
+theme_axes_serif <- theme_void() + theme(
+  text = element_text(family = "MathJax_Main"),
+  axis.title = element_text(size = 22),
+  axis.title.x = element_text(hjust = .95, margin = margin(0.15, 0, 0, 0, unit = "lines")),
+  axis.title.y = element_text(vjust = .95, margin = margin(0, 0.15, 0, 0, unit = "lines")),
+  axis.line = element_line(
+    color = "grey70",
+    size = 0.25,
+    arrow = arrow(angle = 30, length = unit(0.15, "inches")
+  )),
+  plot.margin = structure(c(1, 0, 1, 0), unit = "lines", valid.unit = 3L, class = "unit"),
+  legend.position = "none"
+)
+theme_axes <- theme_void() + theme(
+  text = element_text(family = "Fira Sans Book"),
+  axis.title = element_text(size = 18),
+  axis.title.x = element_text(hjust = .95, margin = margin(0.15, 0, 0, 0, unit = "lines")),
+  axis.title.y = element_text(vjust = .95, margin = margin(0, 0.15, 0, 0, unit = "lines")),
+  axis.line = element_line(
+    color = grey_light,
+    size = 0.25,
+    arrow = arrow(angle = 30, length = unit(0.15, "inches")
+  )),
+  plot.margin = structure(c(1, 0, 1, 0), unit = "lines", valid.unit = 3L, class = "unit"),
+  legend.position = "none"
+)
+theme_set(theme_gray(base_size = 20))
+# Column names for regression results
+reg_columns <- c("Term", "Est.", "S.E.", "t stat.", "p-Value")
+# Function for formatting p values
+format_pvi <- function(pv) {
+  return(ifelse(
+    pv < 0.0001,
+    "<0.0001",
+    round(pv, 4) %>% format(scientific = F)
+  ))
+}
+format_pv <- function(pvs) lapply(X = pvs, FUN = format_pvi) %>% unlist()
+# Tidy regression results table
+tidy_table <- function(x, terms, highlight_row = 1, highlight_color = "black", highlight_bold = T, digits = c(NA, 3, 3, 2, 5), title = NULL) {
+  x %>%
+    tidy() %>%
+    select(1:5) %>%
+    mutate(
+      term = terms,
+      p.value = p.value %>% format_pv()
+    ) %>%
+    kable(
+      col.names = reg_columns,
+      escape = F,
+      digits = digits,
+      caption = title
+    ) %>%
+    kable_styling(font_size = 20) %>%
+    row_spec(1:nrow(tidy(x)), background = "white") %>%
+    row_spec(highlight_row, bold = highlight_bold, color = highlight_color)
+}
+```
+
+# Prologue
+
+---
+name: schedule
+
+# Schedule
+
+## Last time
+
+Research basics, our class, and .mono[R]
+
+## Today
+
+.hi-slate[Admin:] Canvas exists. Updated class [website](https://github.com/edrubin/EC525S19).
+<br>.hi-slate[Material:] The Rubin causal model (not mine), .orange[Chapter 2 MHE]. .mono[R] basics.
+<br>.hi-purple[Assignment.sub[1]] Install [.mono[R]](https://www.r-project.org/) and [.mono[RStudio]](https://www.rstudio.com/products/rstudio/download/#download) on your computer.
+<br>.hi-purple[Assignment.sub[2]] Take 15 minutes to quietly think about your interests.
+
+
+## Future
+
+.hi-slate[Lab:] Matrix work, regression, functions, simulation
+<br>.hi[Long run:] Deepen understandings/intuitions for causality and inference.
+---
+layout: false
+class: inverse, middle
+name: review
+
+# Review
+## Research fundamentals
+---
+
+# Review
+## Research fundamentals
+
+Angrist and Pischke provide four .hi-slate[fundamental questions for research:]
+
+1. What is the .hi[causal relationship of interest]?
+
+2. How would an .hi[ideal experiment] capture this causal effect of interest?
+
+3. What is your .hi[identification strategy]?
+
+4. What is your .hi[mode of inference]?
+
+
+Seemingly straightforward questions can be fundamentally unanswerable.
+---
+
+# Review
+## General research recommendations
+
+More unsolicited advice:
+
+- Be curious.
+
+- Ask questions.
+
+- Attend seminars.
+
+- Meet faculty (UO + visitors).
+
+- Focus on learning—especially intuition.<sup>.pink[†]</sup>
+
+- .hi-pink[Be kind and constructive.]
+
+.footnote[
+.pink[†] *Learning* is not always the same as getting good grades.
+]
+
+---
+layout: true
+# The experimental ideal
+---
+class: inverse, middle
+---
+
+## What's so great about experiments?
+
+Science widely regards .hi[experiments as the gold standard] for research.
+
+*But why?* The costs can be substantial.
+
+.hi-slate[Costs]
+
+- slow and expensive
+- heavily regulated by review boards
+- can abstract away from the actual question/setting
+
+.hi-slate[Benefits]
+
+So the benefits need to be pretty large, right?
+---
+
+## Example: Hospitals and health
+
+Imagine we want to know the .hi[causal effect of hospitals on health].
+
+
+.hi-slate[Research question]
+
+Within the population of poor, elderly individuals, does visiting the emergency room for primary care improve health?
+
+
+.hi-slate[Empirical exercise]
+
+1. Collect data on *health status* and *hospital visits*.
+1. Summarize health status by hospital-visit group.
+
+---
+
+## Example: Hospitals and health
+
+Our empirical exercise from the 2005 National Health Inteview Survey:
+
+```{R, table1, echo = F}
+data.frame(
+  v1 = c("Hospital", "No hospital"),
+  v2 = c("7,774", "90,049"),
+  v3 = c(3.21, 3.93),
+  v4 = c(0.014, 0.003)
+) %>% kable(
+  col.names = c("Group", "Sample Size", "Mean Health Status", "Std. Error"),
+  align = c("l", "c", "c", "c")
+) %>%
+kable_styling(font_size = 22) %>%
+row_spec(1:2, background = "white", color = slate)
+```
+
+
+We get a $t$ statistic of 58.9 when testing a difference in groups' means (0.72).
+
+
+.hi[Conclusion?] Hospitals make folks worse. Hospitals make sick people sicker.
+
+
+.hi[Alternative conclusion:] Perhaps we're making a mistake in our analysis...
+<br>maybe sick people go to hospitals?
+---
+name: framework
+
+## Potential outcomes framework
+
+Let's develop a framework to better discuss the problem here.
+
+
+- Binary treatment variable (_e.g._, hospitalized): $\text{D}_i = {0,1}$
+- Outcome for individual $i$ (_e.g._, health): $\text{Y}_i$
+
+This framework has a few names...
+
+- Neyman potential outcomes framework
+- Rubin causal model
+- Neyman-Rubin .pseudocode-small["potential outcome"|"causal" "framework"|"model"]
+
+---
+
+## Potential outcomes framework
+
+.hi-slate[Research question:] Does $\text{D}_i$ affect $\text{Y}_i$?
+
+
+For each individual $i$, there are two .b[potential outcomes] (w/ binary $\text{D}_i$)
+
+
+1. $\color{#e64173}{\text{Y}_{1i}}$ .pink[if] $\color{#e64173}{\text{D}_i = 1}$
+<br> $\color{#e64173}{i}$.pink['s health outcome if she went to the hospital]
+
+
+1. $\color{#6A5ACD}{\text{Y}_{0i}}$ .purple[if] $\color{#6A5ACD}{\text{D}_i = 0}$
+<br> $\color{#6A5ACD}{i}$.purple['s health outcome if she did not go to the hospital]
+
+
+The difference between these two outcomes gives us the .hi-orange[causal effect of hospital treatment], _i.e._,
+
+$$
+\begin{align}
+  \color{#FFA500}{\tau_i} = \color{#e64173}{\text{Y}_{1i}} - \color{#6A5ACD}{\text{Y}_{0i}}
+\end{align}
+$$
+---
+
+## #problems
+
+This simple equation
+$$
+\begin{align}
+  \color{#FFA500}{\tau_i} = \color{#e64173}{\text{Y}_{1i}} - \color{#6A5ACD}{\text{Y}_{0i}}
+\end{align}
+$$
+leads us to .hi-slate[*the fundamental problem of causal inference.*]
+
+
+> We can never simultaneously observe $\color{#e64173}{\text{Y}_{1i}}$ and $\color{#6A5ACD}{\text{Y}_{0i}}$.
+
+
+Most of applied econometrics focuses on addressing this simple problem.
+
+
+Accordingly, our methods try to address the related question
+> For each $\color{#e64173}{\text{Y}_{1i}}$, what is a (reasonably) good counterfactual?
+---
+
+## Solutions?
+
+.hi-slate[Problem] We cannot directly calculate $\color{#FFA500}{\tau_i} = \color{#e64173}{\text{Y}_{1i}} - \color{#6A5ACD}{\text{Y}_{0i}}$.
+
+
+.hi-slate[Proposed solution]
+<br>
+Compare .pink[outcomes for people who visited the hospital] $\left( \color{#e64173}{\text{Y}_{1i}\mid \color{#e64173}{\text{D}_{i}=1}} \right)$
+<br>to .purple[outcomes for people who did not visit the hospital] $\left( \color{#6A5ACD}{\text{Y}_{0j}\mid \color{#6A5ACD}{\text{D}_{j}=0}} \right)$.
+
+
+$$
+\begin{align}
+  \mathop{E}\left[ \text{Y}_{i} \mid \color{#e64173}{\text{D}_{i}=1} \right] - \mathop{E}\left[ \text{Y}_{i}\mid \color{#6A5ACD}{\text{D}_{i}=0} \right]
+\end{align}
+$$
+which gives us the *observed difference in health outcomes*.
+
+
+.hi-slate[Q] This comparison will return *an* answer, but is it *the* answer we want?
+---
+name: selection
+
+## Selection
+
+.hi-slate[Q] What does $\mathop{E}\left[ \text{Y}_{i} \mid \color{#e64173}{\text{D}_{i}=1} \right] - \mathop{E}\left[ \text{Y}_{i}\mid \color{#6A5ACD}{\text{D}_{i}=0} \right]$ actually tell us?
+
+
+.hi-slate[A] First notice that we can write $i$'s outcome $\text{Y}_{i}$ as
+$$
+\begin{align}
+  \text{Y}_{i}
+  &= \color{#6A5ACD}{\text{Y}_{0i}} + \text{D}_{i} \underbrace{\left( \color{#e64173}{\text{Y}_{1i}} - \color{#6A5ACD}{\text{Y}_{0i}} \right)}_\color{#FFA500}{\tau_i}
+\end{align}
+$$
+
+
+Now write out our expectation, apply this definition, do creative math.
+
+$\mathop{E}\left[ \text{Y}_{i} \mid \color{#e64173}{\text{D}_{i}=1} \right] - \mathop{E}\left[ \text{Y}_{i}\mid \color{#6A5ACD}{\text{D}_{i}=0} \right]$
+<br>  $= \mathop{E}\left[ \color{#e64173}{\text{Y}_{1i}}\mid \color{#e64173}{\text{D}_{i}=1} \right] - \mathop{E}\left[ \color{#6A5ACD}{\text{Y}_{0i}}\mid \color{#6A5ACD}{\text{D}_{i}=0} \right]$
+<br>  $= \mathop{E}\left[ \color{#e64173}{\text{Y}_{1i}}\mid \color{#e64173}{\text{D}_{i}=1} \right] - \mathop{E}\left[ \color{#6A5ACD}{\text{Y}_{0i}}\mid \color{#e64173}{\text{D}_{i}=1} \right] + \mathop{E}\left[ \color{#6A5ACD}{\text{Y}_{0i}}\mid \color{#e64173}{\text{D}_{i}=1} \right] - \mathop{E}\left[ \color{#6A5ACD}{\text{Y}_{0i}}\mid \color{#6A5ACD}{\text{D}_{i}=0} \right]$
+---
+count: false
+
+## Selection
+
+.hi-slate[Q] What does $\mathop{E}\left[ \text{Y}_{i} \mid \color{#e64173}{\text{D}_{i}=1} \right] - \mathop{E}\left[ \text{Y}_{i}\mid \color{#6A5ACD}{\text{D}_{i}=0} \right]$ actually tell us?
+
+.hi-slate[A] First notice that we can write $i$'s outcome $\text{Y}_{i}$ as
+$$
+\begin{align}
+  \text{Y}_{i}
+  &= \color{#6A5ACD}{\text{Y}_{0i}} + \text{D}_{i} \underbrace{\left( \color{#e64173}{\text{Y}_{1i}} - \color{#6A5ACD}{\text{Y}_{0i}} \right)}_\color{#FFA500}{\tau_i}
+\end{align}
+$$
+
+Now write out our expectation, apply this definition, do creative math.
+
+$\mathop{E}\left[ \text{Y}_{i} \mid \color{#e64173}{\text{D}_{i}=1} \right] - \mathop{E}\left[ \text{Y}_{i}\mid \color{#6A5ACD}{\text{D}_{i}=0} \right]$
+<br>  $= \mathop{E}\left[ \color{#e64173}{\text{Y}_{1i}}\mid \color{#e64173}{\text{D}_{i}=1} \right] - \mathop{E}\left[ \color{#6A5ACD}{\text{Y}_{0i}}\mid \color{#6A5ACD}{\text{D}_{i}=0} \right]$
+<br>  $= \underbrace{\mathop{E}\left[ \color{#e64173}{\text{Y}_{1i}}\mid \color{#e64173}{\text{D}_{i}=1} \right] - \mathop{E}\left[ \color{#6A5ACD}{\text{Y}_{0i}}\mid \color{#e64173}{\text{D}_{i}=1} \right]}_\text{Average treatment effect on the treated 😀} + \mathop{E}\left[ \color{#6A5ACD}{\text{Y}_{0i}}\mid \color{#e64173}{\text{D}_{i}=1} \right] - \mathop{E}\left[ \color{#6A5ACD}{\text{Y}_{0i}}\mid \color{#6A5ACD}{\text{D}_{i}=0} \right]$
+---
+count: false
+
+## Selection
+
+.hi-slate[Q] What does $\mathop{E}\left[ \text{Y}_{i} \mid \color{#e64173}{\text{D}_{i}=1} \right] - \mathop{E}\left[ \text{Y}_{i}\mid \color{#6A5ACD}{\text{D}_{i}=0} \right]$ actually tell us?
+
+.hi-slate[A] First notice that we can write $i$'s outcome $\text{Y}_{i}$ as
+$$
+\begin{align}
+  \text{Y}_{i}
+  &= \color{#6A5ACD}{\text{Y}_{0i}} + \text{D}_{i} \underbrace{\left( \color{#e64173}{\text{Y}_{1i}} - \color{#6A5ACD}{\text{Y}_{0i}} \right)}_\color{#FFA500}{\tau_i}
+\end{align}
+$$
+
+Now write out our expectation, apply this definition, do creative math.
+
+$\mathop{E}\left[ \text{Y}_{i} \mid \color{#e64173}{\text{D}_{i}=1} \right] - \mathop{E}\left[ \text{Y}_{i}\mid \color{#6A5ACD}{\text{D}_{i}=0} \right]$
+<br>  $= \mathop{E}\left[ \color{#e64173}{\text{Y}_{1i}}\mid \color{#e64173}{\text{D}_{i}=1} \right] - \mathop{E}\left[ \color{#6A5ACD}{\text{Y}_{0i}}\mid \color{#6A5ACD}{\text{D}_{i}=0} \right]$
+<br>  $= \underbrace{\mathop{E}\left[ \color{#e64173}{\text{Y}_{1i}}\mid \color{#e64173}{\text{D}_{i}=1} \right] - \mathop{E}\left[ \color{#6A5ACD}{\text{Y}_{0i}}\mid \color{#e64173}{\text{D}_{i}=1} \right]}_\text{Average treatment effect on the treated 😀} + \underbrace{\mathop{E}\left[ \color{#6A5ACD}{\text{Y}_{0i}}\mid \color{#e64173}{\text{D}_{i}=1} \right] - \mathop{E}\left[ \color{#6A5ACD}{\text{Y}_{0i}}\mid \color{#6A5ACD}{\text{D}_{i}=0} \right]}_\text{Selection bias 😞}$
+---
+
+## Selection
+
+The .b[first term] is *good variation*—essentially the answer that we want.
+<br>
+  $\mathop{E}\left[ \color{#e64173}{\text{Y}_{1i}}\mid \color{#e64173}{\text{D}_{i}=1} \right] - \mathop{E}\left[ \color{#6A5ACD}{\text{Y}_{0i}}\mid \color{#e64173}{\text{D}_{i}=1} \right]$
+<br>   $=\mathop{E}\left[ \color{#e64173}{\text{Y}_{1i}} - \color{#6A5ACD}{\text{Y}_{0i}} \mid \color{#e64173}{\text{D}_{i}=1} \right]$
+<br>   $=\mathop{E}\left[ \color{#FFA500}{\tau_i} \mid \color{#e64173}{\text{D}_{i}=1} \right]$
+<br>The .hi-orange[average causal effect] of hospitalization *for hospitalized individuals*.
+
+
+The .b[second term] is bad variation—preventing us from knowing the answer.
+<br>
+  $\mathop{E}\left[ \color{#6A5ACD}{\text{Y}_{0i}}\mid \color{#e64173}{\text{D}_{i}=1} \right] - \mathop{E}\left[ \color{#6A5ACD}{\text{Y}_{0i}}\mid \color{#6A5ACD}{\text{D}_{i}=0} \right]$
+<br>The difference in the average untreated outcome between the treatment and control groups.
+
+
+.hi-slate[*Selection bias*] The extent to which the "control group" provides a bad counterfactual for the treated individuals.
+---
+
+## Selection
+
+Angrist and Pischke (MHE, p. 15),
+> The goal of most empirical economic research is to overcome selection bias, and therefore to say something about the causal effect of a variable like $\text{D}_{i}$.
+
+
+.hi-slate[Q] So how do experiments—the gold standard of empirical economic (and scientific) research—accomplish this goal and overcome selection bias?
+
+---
+name: experiments
+
+## Back to experiments
+
+.hi-slate[Q] How do experiments overcome selection bias?
+<br>.hi-slate[A] Experiments break the link between potential outcomes and treatment.
+
+*In other words:* Randomly assigning $\text{D}_{i}$ makes $\text{D}_{i}$ independent of which outcome we observe (meaning $\color{#e64173}{\text{Y}_{1i}}$ or $\color{#6A5ACD}{\text{Y}_{0i}}$).
+
+
+.hi-slate[Difference in means] with random assignment of $\text{D}_{i}$
+<br>
+$\mathop{E}\left[ \text{Y}_{i} \mid \color{#e64173}{\text{D}_{i}=1} \right] - \mathop{E}\left[ \text{Y}_{i}\mid \color{#6A5ACD}{\text{D}_{i}=0} \right]$
+<br>  $= \mathop{E}\left[ \color{#e64173}{\text{Y}_{1i}}\mid \color{#e64173}{\text{D}_{i}=1} \right] - \mathop{E}\left[ \color{#6A5ACD}{\text{Y}_{0i}}\mid \color{#6A5ACD}{\text{D}_{i}=0} \right]$
+<br>  $= \mathop{E}\left[ \color{#e64173}{\text{Y}_{1i}}\mid \color{#e64173}{\text{D}_{i}=1} \right] - \mathop{E}\left[ \color{#6A5ACD}{\text{Y}_{0i}}\mid \color{#e64173}{\text{D}_{i}=1} \right]$
+  from random assignment of ${\text{D}_{i}}$
+<br>  $= \mathop{E}\left[ \color{#e64173}{\text{Y}_{1i}} - \color{#6A5ACD}{\text{Y}_{0i}}\mid \color{#e64173}{\text{D}_{i}=1} \right]$
+<br>  $= \mathop{E}\left[ \color{#FFA500}{\tau_i}\mid \color{#e64173}{\text{D}_{i}=1} \right]$
+<br>  $= \mathop{E}\left[ \color{#FFA500}{\tau_i} \right]$
+       Random assignment of $\text{D}_{i}$ breaks selection bias.
+---
+name: ex_training
+
+## Example: Training programs
+
+Governments subsidize training programs to assist disadvantaged workers.
+
+
+.hi-slate[Q] Do these programs have the desired effects (_i.e._, increase wages)?
+
+
+.hi-slate[A] Observational studies—comparing wage data from participants and non-participants—often find that people who complete these programs actually make .pink[lower wages].
+
+
+.hi-slate[Challenges] Participants self select. .hi-slate[+] Programs target lower-wage workers.
+
+---
+
+## Example: Training programs
+
+How do we formalize these concerns in our framework?
+
+
+.hi-slate[Observational program evaluations]
+<br>
+$\quad\mathop{E}\left[ \text{Wage}_{i}\mid \color{#e64173}{\text{Program}_{i}=1} \right] - \mathop{E}\left[ \text{Wage}_i \mid \color{#6A5ACD}{\text{Program}_{i}=0} \right]=$
+$$
+\begin{align}
+&\underbrace{\mathop{E}\left[ \color{#e64173}{\text{Wage}_{1i}}\mid \color{#e64173}{\text{Program}_{i}=1} \right] - \mathop{E}\left[ \color{#6A5ACD}{\text{Wage}_{0i}}\mid \color{#e64173}{\text{Program}_{i}=1} \right]}_{\text{Average causal effect of training program on wages for participants, }\mathit{i.e.} \text{, } \overline{\tau}_{1}} \, + \\[0.5em]
+&\underbrace{\mathop{E}\left[ \color{#6A5ACD}{\text{Wage}_{0i}}\mid \color{#e64173}{\text{Program}_{i}=1} \right] - \mathop{E}\left[ \color{#6A5ACD}{\text{Wage}_{0i}}\mid \color{#6A5ACD}{\text{Program}_{i}=0} \right]}_\text{Selection bias}
+\end{align}
+$$
+
+
+If the program attracts/selects individuals who, on average, have lower wages without the program (sort of the point of the program), then we have negative selection bias.
+---
+
+## Example: Training programs
+
+$\quad\mathop{E}\left[ \text{Wage}_{i}\mid \color{#e64173}{\text{Program}_{i}=1} \right] - \mathop{E}\left[ \text{Wage}_i \mid \color{#6A5ACD}{\text{Program}_{i}=0} \right] =$
+$$
+\begin{align}
+&\mathop{E}\left[ \color{#e64173}{\text{Wage}_{1i}}\mid \color{#e64173}{\text{Program}_{i}=1} \right] - \mathop{E}\left[ \color{#6A5ACD}{\text{Wage}_{0i}}\mid \color{#e64173}{\text{Program}_{i}=1} \right] \, + \\[0.5em]
+&\mathop{E}\left[ \color{#6A5ACD}{\text{Wage}_{0i}}\mid \color{#e64173}{\text{Program}_{i}=1} \right] - \mathop{E}\left[ \color{#6A5ACD}{\text{Wage}_{0i}}\mid \color{#6A5ACD}{\text{Program}_{i}=0} \right] \\[0.5em]
+\end{align}
+$$
+
+So even if the program, on average, has an positive wage effect (in the participant group), _i.e._, $\overline{\tau}_1>0$, we will detect a lower effect due to the negative selection bias.
+
+
+If the bias is sufficiently large (relative to the treatment effect), our estimate will even get the sign of the effect wrong.
+
+
+.hi-slate[Related] While observational studies typically found negative program effects, several experiments found positive program effects.
+---
+layout: true
+# The experimental ideal
+## Example: The STAR experiment
+---
+name: ex_star
+
+The Tennessee STAR experiment is a famous/popular example of an experiment that allows us to answer an important social/policy question.
+
+.hi-slate[Research question] Do classroom resources affect student performance?
+
+
+- Statewide(-ish) in Tennessee for the 1985–1986 kindergarten cohort
+- Ran for 4 years with ∼11,600 children. Cost ∼$12 million.
+
+
+.hi-slate[Treatments]
+  1. *Small* classes (13–17 students)
+  1. *Regular* classes (22–35 students) plus part-time teacher's aide
+  1. *Regular* classes (22–35 students) plus full-time teacher's aide
+---
+
+.hi-slate[First question] Did the randomization balance participants' characteristics across the treatment groups?
+
+
+Ideally, we would have pre-experiment data on outcome variable.
+
+Unfortunately, we only have a few demographic attributes.
+
+---
+name: mean_diff
+layout: false
+class: clear, middle
+
+```{R, table221, echo = F, escape = F}
+tab221 <- data.frame(
+  v1 = c("Free lunch", "White/Asian", "Age in 1985", "Attrition rate",
+    "K. class size", "K. test percentile"),
+  v2 = c(0.47, 0.68, 5.44, 0.49, 15.10, 54.70),
+  v3 = c(0.48, 0.67, 5.43, 0.52, 22.40, 48.90),
+  v4 = c(0.50, 0.66, 5.42, 0.53, 22.80, 50.00),
+  v5 = c(0.09, 0.26, 0.32, 0.02, 0.00, 0.00)
+) %>% kable(
+  escape = F,
+  digits = 2,
+  col.names = c("Variable", "Small", "Regular", "Regular + Aide", "P-value"),
+  align = c("l", rep("c", 4)),
+  caption = "Table 2.2.1, MHE"
+) %>%
+row_spec(1:6, background = "white", color = slate) %>%
+column_spec(1, color = "black", italic = T) %>%
+add_header_above(c(" " = 1, "Treatment: Class Size" = 3, " " = 1))
+tab221
+```
+
+.white[space]
+---
+class: clear, middle
+
+```{R, table221_2, echo = F, escape = F}
+tab221 %>% row_spec(1:3, color = red_pink, bold = T)
+```
+
+Demographics appear balanced across the three treatment groups.
+---
+class: clear, middle
+
+```{R, table221_3, echo = F, escape = F}
+tab221 %>% row_spec(4, color = red_pink, bold = T)
+```
+
+The three groups differ significantly on attrition rate.
+---
+class: clear, middle
+
+```{R, table221_4, echo = F, escape = F}
+tab221 %>% row_spec(5, color = red_pink, bold = T)
+```
+
+The randomization generated variation in the treatment.
+---
+class: clear, middle
+
+```{R, table221_5, echo = F, escape = F}
+tab221 %>% row_spec(6, color = red_pink, bold = T)
+```
+
+The small-class treatment significantly increased test scores.
+---
+layout: true
+# The experimental ideal
+
+---
+
+## The STAR experiment
+
+The previous table estimated/compared the treatment effects using simple differences in means.
+
+We can make the same comparisons using regressions.
+
+Specifically, we regress our outcome (test percentile) on dummy variables (binary indicator variables) for each treatment group.
+
+---
+name: dummies
+
+Example of our three treatment dummies.
+
+$$
+\begin{matrix}
+\color{#c2bebe}{i} & \color{#c2bebe}{y_i} & \color{#c2bebe}{\text{Trt}_{1i}} & \color{#c2bebe}{\text{Trt}_{2i}} & \color{#c2bebe}{\text{Trt}_{3i}} \\
+\color{#c2bebe}{1       } & y_1        & 1      & 0      & 0\\
+\color{#c2bebe}{2       } & y_2        & 1      & 0      & 0\\
+\color{#c2bebe}{\vdots  } & \vdots     & \vdots & \vdots & \vdots\\
+\color{#c2bebe}{\ell    } & y_\ell     & 1      & 0      & 0\\
+\color{#c2bebe}{\ell + 1} & y_{\ell-1} & 0      & 1      & 0\\
+\color{#c2bebe}{\vdots  } & \vdots     & \vdots & \vdots & \vdots\\
+\color{#c2bebe}{p       } & y_p        & 0      & 1      & 0\\
+\color{#c2bebe}{p+1     } & y_{p+1}    & 0      & 0      & 1\\
+\color{#c2bebe}{\vdots  } & \vdots     & \vdots & \vdots & \vdots\\
+\color{#c2bebe}{N       } & y_N        & 0      & 0      & 1
+\end{matrix}
+$$
+
+---
+name: reg
+
+## Regression analysis
+
+Assume for the moment that the treatment effect is constant<sup>.pink[†]</sup>, _i.e._,
+
+.footnote[.pink[†]You'll often hear econometricians say "homogeneous" (*vs.* "hetergeneous").]
+
+$$
+\begin{align}
+  \color{#e64173}{\text{Y}_{1i}} - \color{#6A5ACD}{\text{Y}_{0i}} = \color{#FFA500}{\rho} \quad \forall i
+\end{align}
+$$
+then we can rewrite
+$$
+\begin{align}
+  \text{Y}_{i} = \color{#6A5ACD}{\text{Y}_{0i}} + \text{D}_{i}\left( \color{#e64173}{\text{Y}_{1i}} - \color{#6A5ACD}{\text{Y}_{0i}} \right)
+\end{align}
+$$
+as
+$$
+\begin{align}
+  \text{Y}_{i} = \underbrace{\alpha}_{=\mathop{E}\left[ \color{#6A5ACD}{\text{Y}_{0i}} \right]} + \text{D}_{i} \underbrace{\color{#FFA500}{\rho}}_{\color{#e64173}{\text{Y}_{1i}} - \color{#6A5ACD}{\text{Y}_{0i}}} + \underbrace{\eta_i}_{\color{#6A5ACD}{\text{Y}_{0i}} - \mathop{E}\left[ \color{#6A5ACD}{\text{Y}_{0i}} \right]}
+\end{align}
+$$
+---
+
+## Regression analysis
+
+$$
+\begin{align}
+  \text{Y}_{i} = \alpha + \text{D}_{i} \color{#FFA500}{\rho} + \eta_i
+\end{align}
+$$
+
+
+Now write out the conditional expectation of $\text{Y}_{i}$ for both levels of $\text{D}_{i}$
+
+
+  $\mathop{E}\left[ \text{Y}_{i} \mid \color{#e64173}{\text{D}_{i}=1} \right] =$
+ $\mathop{E}\left[ \alpha + \color{#FFA500}{\rho} + \eta_i \mid \color{#e64173}{\text{D}_{i}=1} \right]$
+ $=\alpha + \color{#FFA500}{\rho} + \mathop{E}\left[ \eta_i | \color{#e64173}{\text{D}_{i}=1} \right]$
+
+
+  $\mathop{E}\left[ \text{Y}_{i} \mid \color{#6A5ACD}{\text{D}_{i}=0} \right]$
+ $= \mathop{E}\left[ \alpha + \eta_i \mid \color{#6A5ACD}{\text{D}_{i}=0} \right]$
+ $= \alpha + \mathop{E}\left[ \eta_i \mid \color{#6A5ACD}{\text{D}_{i}=0} \right]$
+
+
+Take the difference...
+
+  $\mathop{E}\left[ \text{Y}_{i} \mid \color{#e64173}{\text{D}_{i}=1} \right] - \mathop{E}\left[ \text{Y}_{i} \mid \color{#6A5ACD}{\text{D}_{i}=0} \right]$
+<br>   $= \color{#FFA500}{\rho} + \underbrace{\mathop{E}\left[ \eta_i | \color{#e64173}{\text{D}_{i}=1} \right] - \mathop{E}\left[ \eta_i \mid \color{#6A5ACD}{\text{D}_{i}=0} \right]}_\text{Selection bias}$
+
+---
+
+## Regression analysis
+
+$$
+\begin{align}
+  \mathop{E}\left[ \text{Y}_{i} \mid \color{#e64173}{\text{D}_{i}=1} \right] - \mathop{E}\left[ \text{Y}_{i} \mid \color{#6A5ACD}{\text{D}_{i}=0} \right] = \mathop{E}\left[ \eta_i | \color{#e64173}{\text{D}_{i}=1} \right] - \mathop{E}\left[ \eta_i \mid \color{#6A5ACD}{\text{D}_{i}=0} \right]
+\end{align}
+$$
+
+Again, our estimate of the .hi-orange[treatment effect] $\left( \color{#FFA500}{\rho} \right)$ is only going to be as good as our ability to shut down the .hi-slate[selection bias].
+
+.hi-slate[*Selection bias in regression model:*] $\mathop{E}\left[ \eta_i | \color{#e64173}{\text{D}_{i}=1} \right] - \mathop{E}\left[ \eta_i \mid \color{#6A5ACD}{\text{D}_{i}=0} \right]$
+
+Selection bias here should remind you a lot of
+ .hi-slate[omitted-variable bias.]
+
+There is something in our disturbance $\eta_i$ that is affecting $\text{Y}_{i}$ and is also correlated with $\text{D}_{i}$.
+
+
+In other metrics-*y* words: Our treatment $\text{D}_{i}$ is endogenous.
+---
+name: covariates
+
+## Solutions and covariates
+
+.hi-slate[*Selection bias in regression model:*] $\mathop{E}\left[ \eta_i | \color{#e64173}{\text{D}_{i}=1} \right] - \mathop{E}\left[ \eta_i \mid \color{#6A5ACD}{\text{D}_{i}=0} \right]$
+
+
+As before, if we randomly assign $\text{D}_{i}$, then selection bias disappears.
+
+
+Another potential route to identification is to condition on covariates in the hopes that they "take care of" the relationship between $\text{D}_{i}$ and whatever is in our disturbance $\eta_i$.
+
+
+Without very clear reasons explaining how you know you've controlled for the "bad variation", clean and convincing identification on this path is going to be challenging.
+
+---
+
+## Covariates
+
+That said, covariates can help with two things:
+
+1. Even experiments may need .hi-slate[conditioning/controls]: The STAR experiment was random *within school*—not across schools.
+
+1. Covariates can soak up unexplained variation—.hi-slate[increasing precision.]
+
+
+Now that we've seen regression can analyze experiments, let's estimate the STAR example...
+
+---
+layout: false
+class: clear, middle
+
+```{R, table222, echo = F, escape = F}
+tab222 <- data.frame(
+  v1 = c("Small class", "", "Regular + aide", "", "White/Asian", "", "Female", "",
+    "Free lunch", "", "School F.E."),
+  v2 = rbind(
+    c(4.82, 0.12, "", "", ""),
+    c("(2.19)", "(2.23)", "", "", "")
+  ) %>% as.vector() %>% c("F"),
+  v3 = rbind(
+    c(5.37, 0.29, "", "", ""),
+    c("(1.26)", "(1.13)", "", "", "")
+  ) %>% as.vector() %>% c("T"),
+  v4 = rbind(
+    c(5.36, 0.53, 8.35, 4.48, -13.15),
+    c("(1.21)", "(1.09)", "(1.35)", "(0.63)", "(0.77)")
+  ) %>% as.vector() %>% c("T")
+) %>% kable(
+  escape = F,
+  col.names = c("Explanatory variable", "1", "2", "3"),
+  align = c("l", rep("c", 4)),
+  caption = "Table 2.2.2, MHE"
+) %>%
+row_spec(1:11, color = slate) %>%
+row_spec(seq(2,11,2), color = "#c2bebe") %>%
+row_spec(1:11, extra_css = "line-height: 110%;") %>%
+column_spec(1, color = "black", italic = T)
+tab222
+```
+
+The omitted level is *Regular* (with part-time aide).
+---
+class: clear, middle
+
+```{R, table222_2, echo = F}
+tab222 %>% column_spec(2, bold = T)
+```
+
+Results without other controls are very similar to the difference in means.
+---
+class: clear, middle
+
+```{R, table222_3, echo = F}
+tab222 %>% column_spec(3, bold = T)
+```
+
+School FEs enforce the experiment's design and increase precision.
+---
+class: clear, middle
+
+```{R, table222_4, echo = F}
+tab222 %>% column_spec(4, bold = T)
+```
+
+Additional controls slightly increase precision.
+---
+layout: true
+
+# .mono[R]
+---
+class: inverse, middle
+---
+name: types
+
+## Object types/classes
+
+As we discussed last class, .mono[R] revolves around objects, _e.g._, `test <- 123`.
+
+
+Objects have types/classes.
+
+
+- `1`, `2/3`, and  are `numeric`.
+
+
+- `"Hello"` and `'cruel world'` are both `character`.
+
+
+- `TRUE`, `T`, `FALSE`, and `F` are `logical` (as is the result of `3 > 2`).
+
+
+The `class(x)` function tells you the class of object `x`.
+
+---
+
+## Structure
+
+In addition to having types/classes, objects have some type of structure.
+
+- `1:3`, `c(1, 2)`, and `seq(2, 8, 2)` each produce a `numeric`-class `vector`.
+
+
+- `c("Alright", "already")` produces a `vector` of `character` class.
+
+
+- `c(1, 3, T, "Hello")` produces a `vector` of `character` class.
+
+
+- `matrix(data = 1:15, ncol = 5)
+` creates a `matrix` with class from `data`.
+
+
+- `data.frame(x = 1:2, y = c("a", "b"), z = T)` produces a `data.frame` with three columns and two rows. The first column (`x`) is `numeric`; the second column (`y`) is `character`, and the third column (`z`) is logical.
+---
+
+.pull-left[
+
+Our `matrix`
+
+```{R, ex_matrix}
+matrix(data = 1:15, ncol = 5)
+```
+
+
+]
+
+
+.pull-right[
+
+Our first `data.frame`!
+
+```{R, ex_df}
+data.frame(x = 1:2, y = c("a", "b"), z = T)
+```
+
+]
+
+
+Notice how .mono[R] helps 'fill' out the columns when lengths don't match.
+---
+name: packages
+
+## Packages
+
+Straight out of the box, .mono[R] has a ton of useful features, but it really gets its power from the additional packages (libraries) that users create.
+
+- .hi-slate[Open-source greatness] Users find needs and create amazing solutions.
+
+- .hi-slate[*Caveat utilitor*] There are a lot of packages, each with a lot of functions. Mistakes can happen.
+
+- .hi-slate[Open-source greatness.sub[2]] Again, .mono[R] is open source: Check the code!
+<br>(Maybe. Sometimes it's very hard.)
+
+
+.hi-slate[Examples] `ggplot2` (plotting), `dplyr` (data work that can link with SQL), `sf` and `raster` (geospatial work), `lfe` (high-dimensional fixed-effect regression), `data.table` (fast and efficient data work)
+
+---
+
+## Installing packages
+
+
+Once you find a function/package that you need to install,.super[.pink[†]] you'll typically install it via `install.packages("newAmazingPackage")`..super[.pink[††]]
+
+.footnote[.pink[†] Tool \#1: Google.  .pink[††] The quotation marks are important.]
+
+We'll use the package `dplyr` throughout the course. Let's install it.
+
+```{R, ex_install_dplyr, eval = F}
+# Install 'dplyr' package
+install.packages("dplyr")
+```
+
+.hi-slate[*Aside*] Notice the comment above the actual code (.mono[R] uses `#` for comments).
+<br>While not necessary for .mono[R] to work, comments are necessary for research.
+---
+
+## Using packages
+
+Once you install a package, it is on your machine.
+
+You don't need to install it again—though you probably should update them from time to time.
+
+
+To .hi-slate[load a package], use the `library(package)` function.super[.pink[†]], _e.g._, to load `dplyr`
+
+.footnote[.pink[†] Notice `library()` doesn't *need* quotation marks. I know...]
+
+```{R, eval = F}
+# Load 'dplyr'
+library(dplyr)
+```
+
+
+Now all functions contained in `dplyr` are available (until you close .mono[R]).
+---
+
+## Package management
+
+All of this installing, loading, updating, checking-for-existance-and-then-loading can get old.
+
+
+As can typing `library(pacakge1)`, `library(package2)`, ...
+
+
+.slate[*[Enter]*] The `pacman` package... for package management, of course.
+
+
+After installing (`install.packages("pacman")`), you can
+
+- Install and load packages via `p_load(package1, ..., packageN)`
+
+- Update packages via `p_update()`
+
+The `p_load` paradigm is especially helpful for collaboarations or projects across multiple machines.
+
+---
+layout: false
+# Table of contents
+
+.pull-left[
+### Admin
+.smaller[
+
+1. [Schedule](#schedule)
+1. [Review](#review)
+]
+
+### .mono[R]
+.smaller[
+
+1. [Object types/classes](#types)
+1. [Packages](#packages)
+]
+
+
+]
+
+.pull-right[
+### Experimental ideal
+.smaller[
+
+1. [Neyman/Rubin framework](#framework)
+1. [Selection](#selection)
+1. [Experiments](#experiments)
+1. [Example: Training programs](#ex_training)
+1. [Example: STAR experiment](#ex_star)
+  - [Mean differences](#mean_diff)
+  - [Dummy variables](#dummies)
+  - [Regression analysis](#reg)
+  - [Covariates](#covariates)
+]
+
+]
+---
+exclude: true
+
+```{R, generate pdfs, include = F, eval = T}
+source("../../ScriptsR/unpause.R")
+```
