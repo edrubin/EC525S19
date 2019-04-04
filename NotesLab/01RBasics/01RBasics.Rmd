@@ -1,0 +1,555 @@
+---
+title: "Getting to know .mono[R]"
+subtitle: "EC 425/525, Lab 1"
+author: "Edward Rubin"
+date: "`r format(Sys.time(), '%d %B %Y')`"
+output:
+  xaringan::moon_reader:
+    css: ['default', 'metropolis', 'metropolis-fonts', 'my-css.css']
+    # self_contained: true
+    nature:
+      highlightStyle: github
+      highlightLines: true
+      countIncrementalSlides: false
+---
+class: inverse, middle
+
+```{R, setup, include = F}
+# devtools::install_github("dill/emoGG")
+library(pacman)
+p_load(
+  broom, tidyverse,
+  latex2exp, ggplot2, ggthemes, ggforce, viridis, extrafont, gridExtra,
+  kableExtra, snakecase, janitor,
+  data.table, dplyr, estimatr,
+  lubridate, knitr, parallel,
+  lfe,
+  here, magrittr
+)
+# Define pink color
+red_pink <- "#e64173"
+turquoise <- "#20B2AA"
+orange <- "#FFA500"
+red <- "#fb6107"
+blue <- "#3b3b9a"
+green <- "#8bb174"
+grey_light <- "grey70"
+grey_mid <- "grey50"
+grey_dark <- "grey20"
+purple <- "#6A5ACD"
+slate <- "#314f4f"
+# Dark slate grey: #314f4f
+# Knitr options
+opts_chunk$set(
+  comment = "#>",
+  fig.align = "center",
+  fig.height = 7,
+  fig.width = 10.5,
+  warning = F,
+  message = F
+)
+opts_chunk$set(dev = "svg")
+options(device = function(file, width, height) {
+  svg(tempfile(), width = width, height = height)
+})
+options(knitr.table.format = "html")
+```
+
+# Prologue
+
+---
+name: schedule
+
+# Schedule
+
+## Today
+
+Get to know .mono[R]
+
+1. Basic features of .mono[R]
+2. Fun with functions
+3. OLS (canned and custom)
+4. Simulations
+---
+layout: true
+# .mono[R] intro
+---
+name: types
+
+## Object types/classes
+
+As we discussed in class, .mono[R] revolves around objects, _e.g._, `test <- 123`.
+--
+
+<br>.hi-slate[*Note*] You can also assign values to objects via `=`, _e.g._, `test = 123`.
+
+--
+
+Objects have types/classes.
+
+--
+
+- `1`, `2/3`, and  are `numeric`.
+
+--
+
+- `"Hello"` and `'cruel world'` are both `character`.
+
+--
+
+- `TRUE`, `T`, `FALSE`, and `F` are `logical` (as is the result of `3 > 2`).
+
+--
+
+The `class(x)` function tells you the class of object `x`.
+---
+
+## Object types/classes
+
+.pull-left[
+```{R, ex_class, split = T}
+1
+"Clever/funny example words?"
+3 < 2
+"Warriors" > "Bucks"
+```
+]
+--
+.pull-right[
+```{R, ex_class2, split = T}
+class(1)
+class("Clever/funny example words?")
+class(3 < 2)
+class("Warriors" > "Bucks")
+```
+]
+---
+
+## Structure
+
+In addition to having types/classes, objects have some type of structure.
+
+- `1:3`, `c(1, 2)`, and `seq(2, 8, 2)` each produce a `numeric`-class `vector`.
+
+--
+
+- `c("Alright", "already")` produces a `vector` of `character` class.
+
+--
+
+- `c(1, 3, T, "Hello")` produces a `vector` of `character` class.
+
+--
+
+- `matrix(data = 1:15, ncol = 5)
+` creates a `matrix` with class from `data`.
+
+--
+
+- `data.frame(x = 1:2, y = c("a", "b"), z = T)` produces a `data.frame` with three columns and two rows. The first column (`x`) is `numeric`; the second column (`y`) is `character`, and the third column (`z`) is logical.
+---
+
+## Object types
+
+.pull-left[
+
+Our `matrix`
+
+```{R, ex_matrix}
+matrix(data = 1:15, ncol = 5)
+```
+
+
+]
+
+--
+
+.pull-right[
+
+Our first `data.frame`!
+
+```{R, ex_df}
+data.frame(x = 1:3, y = T)
+```
+
+]
+
+--
+
+Notice how .mono[R] helps 'fill' out the columns when lengths don't match.
+---
+
+## Object types
+
+.mono[R] can help you check object's type.
+
+.pull-left[
+```{R, ex_matrix2}
+class(matrix(1:9, ncol = 3))
+is.matrix(matrix(1:9, ncol = 3))
+is.data.frame(matrix(1:9, ncol = 3))
+```
+]
+--
+.pull-right[
+```{R, ex_df2}
+class(data.frame(x = 1:3))
+is.matrix(data.frame(x = 1:3))
+is.data.frame(data.frame(x = 1:3))
+```
+]
+---
+
+## Object types/classes
+
+.hi-slate[Q] What happens when we mix classes, _e.g._, `c(12, "B", F)`?
+
+--
+
+.hi-slate[A] .mono[R] applies the class that can apply to all objects.
+
+.pull-left[
+```{R, ex_type1}
+c(12, "B")
+c(12, F)
+```
+]
+.pull-right[
+```{R, ex_type2}
+c("B", F)
+c(12, "B", F)
+```
+]
+---
+
+## Changing types and classes
+
+.pull-left[
+Change numbers to characters.
+```{R, num2chr}
+as.character(1:3)
+```
+]
+.pull-right[
+Change logical to numeric.
+```{R, log2num}
+as.numeric(c(T, F))
+```
+]
+
+.pull-left[
+Change vector to matrix.
+```{R, vec2mat}
+as.matrix(1:3)
+```
+]
+---
+name: packages
+
+## Packages
+
+Straight out of the box, .mono[R] has a ton of useful features, but it really gets its power from the additional packages (libraries) that users create.
+
+- .hi-slate[Open-source greatness] Users find needs and create amazing solutions.
+
+- .hi-slate[*Caveat utilitor*] There are a lot of packages, each with a lot of functions. Mistakes can happen.
+
+- .hi-slate[Open-source greatness.sub[2]] Again, .mono[R] is open source: Check the code!
+--
+<br>(Maybe. Sometimes it's very hard.)
+
+--
+
+.hi-slate[Examples] `ggplot2` (plotting), `dplyr` (data work that can link with SQL), `sf` and `raster` (geospatial work), `lfe` (high-dimensional fixed-effect regression), `data.table` (fast and efficient data work)
+
+---
+
+## Installing packages
+
+
+Once you find a function/package that you need to install,.super[.pink[†]] you'll typically install it via `install.packages("newAmazingPackage")`..super[.pink[††]]
+
+.footnote[.pink[†] Tool \#1: Google.  .pink[††] The quotation marks are important.]
+
+We'll use the package `dplyr` throughout the course. Let's install it.
+
+```{R, ex_install_dplyr, eval = F}
+# Install 'dplyr' package
+install.packages("dplyr")
+```
+--
+.hi-slate[*Aside*] Notice the comment above the actual code (.mono[R] uses `#` for comments).
+--
+<br>While not necessary for .mono[R] to work, comments are necessary for research.
+---
+
+## Using packages
+
+Once you install a package, it is on your machine.
+
+You don't need to install it again—though you probably should update them from time to time.
+
+--
+
+To .hi-slate[load a package], use the `library(package)` function.super[.pink[†]], _e.g._, to load `dplyr`
+
+.footnote[.pink[†] Notice `library()` doesn't *need* quotation marks. I know...]
+
+```{R, eval = F}
+# Load 'dplyr'
+library(dplyr)
+```
+
+--
+
+Now all functions contained in `dplyr` are available (until you close .mono[R]).
+---
+
+## Package management
+
+All of this installing, loading, updating, checking-for-existance-and-then-loading can get old.
+
+
+As can typing `library(pacakge1)`, `library(package2)`, ...
+
+--
+
+.slate[*[Enter]*] The `pacman` package... for package management, of course.
+
+--
+
+After installing (`install.packages("pacman")`), you can
+
+- Install and load packages via `p_load(package1, ..., packageN)`
+
+- Update packages via `p_update()`
+
+The `p_load` paradigm is especially helpful for collaboarations or projects across multiple machines.
+---
+
+## Math in .mono[R]
+
+.pull-left[
+.hi-slate[Basic algebra:] scalars `a` and `b`
+```{R, math_algebra, eval = F}
+# Addition
+a + b
+# Subtraction
+a - b
+# Multiplication
+a * b
+# Division
+a / b
+# Mod
+a %% b
+# Integer division
+a %/% b
+# Exponents
+a^b
+```
+]
+--
+.pull-right[
+.hi-pink[Matrix algebra:] matrices `A` and `B`
+```{R, matrix_algebra, eval = F}
+# Addition
+A + B
+# Subtraction
+A - B
+# Multiplication
+A %*% B
+# Inverse
+solve(A)
+# Transpose
+t(A)
+# Diagonal
+diag(A)
+# Dimensions
+dim(A); nrow(A); ncol(A)
+```
+]
+---
+
+## Vectorization
+
+One **great** feature in .mono[R]: vectorization.
+
+With vectorization, .mono[R] automatically applies functions to each element of a vector—no iteration required.
+
+---
+
+## Vectorization
+
+.pull-left[
+```{R, ex_vec}
+# Multiply a scalar by a scalar
+3 * 4
+# Multiply a scalar by a vector
+3 * c(4, 5, 6)
+# Multiply a vector by a vector
+1:3 * c(4, 5, 6)
+```
+]
+.pull-right[
+Vectorization can be confusing.
+```{R, ex_vec_error}
+c(0.5, 0.9) + c(1, 2, 3)
+```
+.mono[R] will send you a warning, but it won't stop you.
+]
+---
+
+## Statistics in .mono[R]
+
+.pull-left[
+.hi-slate[Summaries] for samples `x` and `y`
+```{R, stat_functions, eval = F}
+# Mean
+mean(x)
+# Median
+median(x)
+# Std. dev. and variance
+sd(x)
+var(x)
+# Min. and max.
+min(x)
+max(x)
+# Correlation/covariance
+cor(x, y)
+cov(x, y)
+# Quartiles and mean
+summary(x)
+```
+]
+--
+.pull-right[
+.hi-pink[Sampling]
+```{R, sampling_functions, eval = F}
+# Set the seed
+set.seed(246)
+# 4 random draws from N(3,5)
+rnorm(n = 4, mean = 3, sd = sqrt(5))
+# CDF for N(0,1) at z=1.96
+pnorm(q = 1.96, mean = 0, sd = 1)
+# Sample 5 draws from x w/ repl.
+sample(
+  x = x,
+  size = 5,
+  replace = T
+)
+# First and last 3
+head(x, 3)
+tail(x, 3)
+```
+]
+---
+
+## Indexing vectors
+
+Because vectors are so central to .mono[R], being able to index your vectors is important. *Note:* Vectors have one dimension.
+
+Take the vector `x` (_e.g._, `x <- c(2, 4, 6, 9)`).
+
+- `x[3]` will give us the third element of the vector—_i.e._, `6`.
+- `x[2:3]` will give us the second *and* third elements—_i.e._, `c(4, 6)`.
+- `x[-1]` returns all elements *except the first*—_i.e._, `c(4, 6, 9)`.
+- `x[2] <- 0` replaces the second element with `0`—_i.e._, `c(2, 0, 6, 9)`.
+
+--
+
+Lists, _e.g._, `list(1, 2, 3)`, are similar but use double brackets, _e.g._, `y[[3]]`.
+
+---
+
+## Indexing matrices
+
+Because matrices (and data frames) have two dimensions, we need to index both dimensions.
+
+For matrix `A` (_e.g._, `A <- matrix(1:9, ncol = 3)`)
+
+- `A[3,1]` references the element in the 3.super[rd] row and 1.super[st] column.
+- `A[3,]` references all elements in the 3.super[rd] row (across all columns).
+- `A[,1]` references all elements in the 1.super[st] column (across all rows).
+- `A[-2,]` returns all elements in `A` except for the 2.super[nd] row.
+- `A[2,3] <- 0` replaces the element `A[2,3]` with zero.
+
+--
+
+You can also name rows/columns in matrices—and can use these names for referencing.
+---
+
+## Other
+
+.pull-left[
+"Special" values
+
+- `Inf` is ∞, _i.e._, 1/0. `-Inf` is -∞.
+- `NA` is missing.
+- `NaN` is *not a number*.
+- `NULL` is null.
+]
+--
+.pull-right[
+Standard logical operators
+
+- `==` for equality
+- `!=` is not equal.
+- `>`, `>=`, `<`, `<=`
+- `&` is *and*; `|` is *or*.
+]
+
+--
+
+.mono[R] orders by number, lowercase, then uppercase.
+```{R, ex_order}
+# Ordering
+1 < "a"
+```
+---
+
+## `NA`
+
+Finally, `NA` contains no information in .mono[R]
+
+.pull-left[
+```{R, ex_na}
+NA == NA
+NA != NA
+NA > 0
+```
+]
+.pull-right[
+```{R, ex_na2}
+NA + 0
+is.vector(NA)
+```
+]
+---
+
+## Exercises
+
+1. Using the tools we've covered, generate a dataset $\left( n=50 \right)$ such that
+$$
+\begin{align}
+  y_i = 12 + 1.5 x_i + \varepsilon_i
+\end{align}
+$$
+where $x_i\sim N(3,7)$ and $\varepsilon_i\sim N(0,1)$.
+
+2. Estimate the relationship via OLS using only matrix algebra. Recall
+$$
+\begin{align}
+  \hat{\beta}_\text{OLS} = \left( {X}^\prime {X} \right)^{-1} {X}^\prime {y}
+\end{align}
+$$
+
+3. .hi-slate[*Harder*] Write a function that estimates OLS coefficients using matrix algebra. Compare your results with the canned function from .mono[R] (`lm`).
+
+4. .hi-slate[*Hardest*] Bring it all together: Use your DGP (1) and function (3) to run a simulation that illustrates the unbiasedness of OLS.
+---
+exclude: true
+
+```{R, generate pdfs, include = F, eval = T}
+source("../../ScriptsR/unpause.R")
+unpause("01RBasics.Rmd", ".", T, T)
+```

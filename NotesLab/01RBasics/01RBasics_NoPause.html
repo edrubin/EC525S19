@@ -1,0 +1,753 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <title>Getting to know .mono[R]</title>
+    <meta charset="utf-8">
+    <meta name="author" content="Edward Rubin" />
+    <meta name="date" content="2019-04-04" />
+    <link href="01RBasics_NoPause_files/remark-css-0.0.1/default.css" rel="stylesheet" />
+    <link href="01RBasics_NoPause_files/remark-css-0.0.1/metropolis.css" rel="stylesheet" />
+    <link href="01RBasics_NoPause_files/remark-css-0.0.1/metropolis-fonts.css" rel="stylesheet" />
+    <link rel="stylesheet" href="my-css.css" type="text/css" />
+  </head>
+  <body>
+    <textarea id="source">
+class: center, middle, inverse, title-slide
+
+# Getting to know .mono[R]
+## EC 425/525, Lab 1
+### Edward Rubin
+### 04 April 2019
+
+---
+
+class: inverse, middle
+
+
+
+# Prologue
+
+---
+name: schedule
+
+# Schedule
+
+## Today
+
+Get to know .mono[R]
+
+1. Basic features of .mono[R]
+2. Fun with functions
+3. OLS (canned and custom)
+4. Simulations
+---
+layout: true
+# .mono[R] intro
+---
+name: types
+
+## Object types/classes
+
+As we discussed in class, .mono[R] revolves around objects, _e.g._, `test &lt;- 123`.
+
+&lt;br&gt;.hi-slate[*Note*] You can also assign values to objects via `=`, _e.g._, `test = 123`.
+
+
+Objects have types/classes.
+
+
+- `1`, `2/3`, and  are `numeric`.
+
+
+- `"Hello"` and `'cruel world'` are both `character`.
+
+
+- `TRUE`, `T`, `FALSE`, and `F` are `logical` (as is the result of `3 &gt; 2`).
+
+
+The `class(x)` function tells you the class of object `x`.
+---
+
+## Object types/classes
+
+.pull-left[
+
+```r
+1
+```
+
+```
+#&gt; [1] 1
+```
+
+```r
+"Clever/funny example words?"
+```
+
+```
+#&gt; [1] "Clever/funny example words?"
+```
+
+```r
+3 &lt; 2
+```
+
+```
+#&gt; [1] FALSE
+```
+
+```r
+"Warriors" &gt; "Bucks"
+```
+
+```
+#&gt; [1] TRUE
+```
+]
+.pull-right[
+
+```r
+class(1)
+```
+
+```
+#&gt; [1] "numeric"
+```
+
+```r
+class("Clever/funny example words?")
+```
+
+```
+#&gt; [1] "character"
+```
+
+```r
+class(3 &lt; 2)
+```
+
+```
+#&gt; [1] "logical"
+```
+
+```r
+class("Warriors" &gt; "Bucks")
+```
+
+```
+#&gt; [1] "logical"
+```
+]
+---
+
+## Structure
+
+In addition to having types/classes, objects have some type of structure.
+
+- `1:3`, `c(1, 2)`, and `seq(2, 8, 2)` each produce a `numeric`-class `vector`.
+
+
+- `c("Alright", "already")` produces a `vector` of `character` class.
+
+
+- `c(1, 3, T, "Hello")` produces a `vector` of `character` class.
+
+
+- `matrix(data = 1:15, ncol = 5)
+` creates a `matrix` with class from `data`.
+
+
+- `data.frame(x = 1:2, y = c("a", "b"), z = T)` produces a `data.frame` with three columns and two rows. The first column (`x`) is `numeric`; the second column (`y`) is `character`, and the third column (`z`) is logical.
+---
+
+## Object types
+
+.pull-left[
+
+Our `matrix`
+
+
+```r
+matrix(data = 1:15, ncol = 5)
+```
+
+```
+#&gt;      [,1] [,2] [,3] [,4] [,5]
+#&gt; [1,]    1    4    7   10   13
+#&gt; [2,]    2    5    8   11   14
+#&gt; [3,]    3    6    9   12   15
+```
+
+
+]
+
+
+.pull-right[
+
+Our first `data.frame`!
+
+
+```r
+data.frame(x = 1:3, y = T)
+```
+
+```
+#&gt;   x    y
+#&gt; 1 1 TRUE
+#&gt; 2 2 TRUE
+#&gt; 3 3 TRUE
+```
+
+]
+
+
+Notice how .mono[R] helps 'fill' out the columns when lengths don't match.
+---
+
+## Object types
+
+.mono[R] can help you check object's type.
+
+.pull-left[
+
+```r
+class(matrix(1:9, ncol = 3))
+```
+
+```
+#&gt; [1] "matrix"
+```
+
+```r
+is.matrix(matrix(1:9, ncol = 3))
+```
+
+```
+#&gt; [1] TRUE
+```
+
+```r
+is.data.frame(matrix(1:9, ncol = 3))
+```
+
+```
+#&gt; [1] FALSE
+```
+]
+.pull-right[
+
+```r
+class(data.frame(x = 1:3))
+```
+
+```
+#&gt; [1] "data.frame"
+```
+
+```r
+is.matrix(data.frame(x = 1:3))
+```
+
+```
+#&gt; [1] FALSE
+```
+
+```r
+is.data.frame(data.frame(x = 1:3))
+```
+
+```
+#&gt; [1] TRUE
+```
+]
+---
+
+## Object types/classes
+
+.hi-slate[Q] What happens when we mix classes, _e.g._, `c(12, "B", F)`?
+
+
+.hi-slate[A] .mono[R] applies the class that can apply to all objects.
+
+.pull-left[
+
+```r
+c(12, "B")
+```
+
+```
+#&gt; [1] "12" "B"
+```
+
+```r
+c(12, F)
+```
+
+```
+#&gt; [1] 12  0
+```
+]
+.pull-right[
+
+```r
+c("B", F)
+```
+
+```
+#&gt; [1] "B"     "FALSE"
+```
+
+```r
+c(12, "B", F)
+```
+
+```
+#&gt; [1] "12"    "B"     "FALSE"
+```
+]
+---
+
+## Changing types and classes
+
+.pull-left[
+Change numbers to characters.
+
+```r
+as.character(1:3)
+```
+
+```
+#&gt; [1] "1" "2" "3"
+```
+]
+.pull-right[
+Change logical to numeric.
+
+```r
+as.numeric(c(T, F))
+```
+
+```
+#&gt; [1] 1 0
+```
+]
+
+.pull-left[
+Change vector to matrix.
+
+```r
+as.matrix(1:3)
+```
+
+```
+#&gt;      [,1]
+#&gt; [1,]    1
+#&gt; [2,]    2
+#&gt; [3,]    3
+```
+]
+---
+name: packages
+
+## Packages
+
+Straight out of the box, .mono[R] has a ton of useful features, but it really gets its power from the additional packages (libraries) that users create.
+
+- .hi-slate[Open-source greatness] Users find needs and create amazing solutions.
+
+- .hi-slate[*Caveat utilitor*] There are a lot of packages, each with a lot of functions. Mistakes can happen.
+
+- .hi-slate[Open-source greatness.sub[2]] Again, .mono[R] is open source: Check the code!
+&lt;br&gt;(Maybe. Sometimes it's very hard.)
+
+
+.hi-slate[Examples] `ggplot2` (plotting), `dplyr` (data work that can link with SQL), `sf` and `raster` (geospatial work), `lfe` (high-dimensional fixed-effect regression), `data.table` (fast and efficient data work)
+
+---
+
+## Installing packages
+
+
+Once you find a function/package that you need to install,.super[.pink[†]] you'll typically install it via `install.packages("newAmazingPackage")`..super[.pink[††]]
+
+.footnote[.pink[†] Tool \#1: Google.  .pink[††] The quotation marks are important.]
+
+We'll use the package `dplyr` throughout the course. Let's install it.
+
+
+```r
+# Install 'dplyr' package
+install.packages("dplyr")
+```
+.hi-slate[*Aside*] Notice the comment above the actual code (.mono[R] uses `#` for comments).
+&lt;br&gt;While not necessary for .mono[R] to work, comments are necessary for research.
+---
+
+## Using packages
+
+Once you install a package, it is on your machine.
+
+You don't need to install it again—though you probably should update them from time to time.
+
+
+To .hi-slate[load a package], use the `library(package)` function.super[.pink[†]], _e.g._, to load `dplyr`
+
+.footnote[.pink[†] Notice `library()` doesn't *need* quotation marks. I know...]
+
+
+```r
+# Load 'dplyr'
+library(dplyr)
+```
+
+
+Now all functions contained in `dplyr` are available (until you close .mono[R]).
+---
+
+## Package management
+
+All of this installing, loading, updating, checking-for-existance-and-then-loading can get old.
+
+
+As can typing `library(pacakge1)`, `library(package2)`, ...
+
+
+.slate[*[Enter]*] The `pacman` package... for package management, of course.
+
+
+After installing (`install.packages("pacman")`), you can
+
+- Install and load packages via `p_load(package1, ..., packageN)`
+
+- Update packages via `p_update()`
+
+The `p_load` paradigm is especially helpful for collaboarations or projects across multiple machines.
+---
+
+## Math in .mono[R]
+
+.pull-left[
+.hi-slate[Basic algebra:] scalars `a` and `b`
+
+```r
+# Addition
+a + b
+# Subtraction
+a - b
+# Multiplication
+a * b
+# Division
+a / b
+# Mod
+a %% b
+# Integer division
+a %/% b
+# Exponents
+a^b
+```
+]
+.pull-right[
+.hi-pink[Matrix algebra:] matrices `A` and `B`
+
+```r
+# Addition
+A + B
+# Subtraction
+A - B
+# Multiplication
+A %*% B
+# Inverse
+solve(A)
+# Transpose
+t(A)
+# Diagonal
+diag(A)
+# Dimensions
+dim(A); nrow(A); ncol(A)
+```
+]
+---
+
+## Vectorization
+
+One **great** feature in .mono[R]: vectorization.
+
+With vectorization, .mono[R] automatically applies functions to each element of a vector—no iteration required.
+
+---
+
+## Vectorization
+
+.pull-left[
+
+```r
+# Multiply a scalar by a scalar
+3 * 4
+```
+
+```
+#&gt; [1] 12
+```
+
+```r
+# Multiply a scalar by a vector
+3 * c(4, 5, 6)
+```
+
+```
+#&gt; [1] 12 15 18
+```
+
+```r
+# Multiply a vector by a vector
+1:3 * c(4, 5, 6)
+```
+
+```
+#&gt; [1]  4 10 18
+```
+]
+.pull-right[
+Vectorization can be confusing.
+
+```r
+c(0.5, 0.9) + c(1, 2, 3)
+```
+
+```
+#&gt; [1] 1.5 2.9 3.5
+```
+.mono[R] will send you a warning, but it won't stop you.
+]
+---
+
+## Statistics in .mono[R]
+
+.pull-left[
+.hi-slate[Summaries] for samples `x` and `y`
+
+```r
+# Mean
+mean(x)
+# Median
+median(x)
+# Std. dev. and variance
+sd(x)
+var(x)
+# Min. and max.
+min(x)
+max(x)
+# Correlation/covariance
+cor(x, y)
+cov(x, y)
+# Quartiles and mean
+summary(x)
+```
+]
+.pull-right[
+.hi-pink[Sampling]
+
+```r
+# Set the seed
+set.seed(246)
+# 4 random draws from N(3,5)
+rnorm(n = 4, mean = 3, sd = sqrt(5))
+# CDF for N(0,1) at z=1.96
+pnorm(q = 1.96, mean = 0, sd = 1)
+# Sample 5 draws from x w/ repl.
+sample(
+  x = x,
+  size = 5,
+  replace = T
+)
+# First and last 3
+head(x, 3)
+tail(x, 3)
+```
+]
+---
+
+## Indexing vectors
+
+Because vectors are so central to .mono[R], being able to index your vectors is important. *Note:* Vectors have one dimension.
+
+Take the vector `x` (_e.g._, `x &lt;- c(2, 4, 6, 9)`).
+
+- `x[3]` will give us the third element of the vector—_i.e._, `6`.
+- `x[2:3]` will give us the second *and* third elements—_i.e._, `c(4, 6)`.
+- `x[-1]` returns all elements *except the first*—_i.e._, `c(4, 6, 9)`.
+- `x[2] &lt;- 0` replaces the second element with `0`—_i.e._, `c(2, 0, 6, 9)`.
+
+
+Lists, _e.g._, `list(1, 2, 3)`, are similar but use double brackets, _e.g._, `y[[3]]`.
+
+---
+
+## Indexing matrices
+
+Because matrices (and data frames) have two dimensions, we need to index both dimensions.
+
+For matrix `A` (_e.g._, `A &lt;- matrix(1:9, ncol = 3)`)
+
+- `A[3,1]` references the element in the 3.super[rd] row and 1.super[st] column.
+- `A[3,]` references all elements in the 3.super[rd] row (across all columns).
+- `A[,1]` references all elements in the 1.super[st] column (across all rows).
+- `A[-2,]` returns all elements in `A` except for the 2.super[nd] row.
+- `A[2,3] &lt;- 0` replaces the element `A[2,3]` with zero.
+
+
+You can also name rows/columns in matrices—and can use these names for referencing.
+---
+
+## Other
+
+.pull-left[
+"Special" values
+
+- `Inf` is ∞, _i.e._, 1/0. `-Inf` is -∞.
+- `NA` is missing.
+- `NaN` is *not a number*.
+- `NULL` is null.
+]
+.pull-right[
+Standard logical operators
+
+- `==` for equality
+- `!=` is not equal.
+- `&gt;`, `&gt;=`, `&lt;`, `&lt;=`
+- `&amp;` is *and*; `|` is *or*.
+]
+
+
+.mono[R] orders by number, lowercase, then uppercase.
+
+```r
+# Ordering
+1 &lt; "a"
+```
+
+```
+#&gt; [1] TRUE
+```
+---
+
+## `NA`
+
+Finally, `NA` contains no information in .mono[R]
+
+.pull-left[
+
+```r
+NA == NA
+```
+
+```
+#&gt; [1] NA
+```
+
+```r
+NA != NA
+```
+
+```
+#&gt; [1] NA
+```
+
+```r
+NA &gt; 0
+```
+
+```
+#&gt; [1] NA
+```
+]
+.pull-right[
+
+```r
+NA + 0
+```
+
+```
+#&gt; [1] NA
+```
+
+```r
+is.vector(NA)
+```
+
+```
+#&gt; [1] TRUE
+```
+]
+---
+
+## Exercises
+
+1. Using the tools we've covered, generate a dataset `\(\left( n=50 \right)\)` such that
+$$
+`\begin{align}
+  y_i = 12 + 1.5 x_i + \varepsilon_i
+\end{align}`
+$$
+where `\(x_i\sim N(3,7)\)` and `\(\varepsilon_i\sim N(0,1)\)`.
+
+2. Estimate the relationship via OLS using only matrix algebra. Recall
+$$
+`\begin{align}
+  \hat{\beta}_\text{OLS} = \left( {X}^\prime {X} \right)^{-1} {X}^\prime {y}
+\end{align}`
+$$
+
+3. .hi-slate[*Harder*] Write a function that estimates OLS coefficients using matrix algebra. Compare your results with the canned function from .mono[R] (`lm`).
+
+4. .hi-slate[*Hardest*] Bring it all together: Use your DGP (1) and function (3) to run a simulation that illustrates the unbiasedness of OLS.
+---
+exclude: true
+    </textarea>
+<script src="https://remarkjs.com/downloads/remark-latest.min.js"></script>
+<script>var slideshow = remark.create({
+"highlightStyle": "github",
+"highlightLines": true,
+"countIncrementalSlides": false
+});
+if (window.HTMLWidgets) slideshow.on('afterShowSlide', function (slide) {
+  window.dispatchEvent(new Event('resize'));
+});
+(function() {
+  var d = document, s = d.createElement("style"), r = d.querySelector(".remark-slide-scaler");
+  if (!r) return;
+  s.type = "text/css"; s.innerHTML = "@page {size: " + r.style.width + " " + r.style.height +"; }";
+  d.head.appendChild(s);
+})();</script>
+
+<script>
+(function() {
+  var i, text, code, codes = document.getElementsByTagName('code');
+  for (i = 0; i < codes.length;) {
+    code = codes[i];
+    if (code.parentNode.tagName !== 'PRE' && code.childElementCount === 0) {
+      text = code.textContent;
+      if (/^\\\((.|\s)+\\\)$/.test(text) || /^\\\[(.|\s)+\\\]$/.test(text) ||
+          /^\$\$(.|\s)+\$\$$/.test(text) ||
+          /^\\begin\{([^}]+)\}(.|\s)+\\end\{[^}]+\}$/.test(text)) {
+        code.outerHTML = code.innerHTML;  // remove <code></code>
+        continue;
+      }
+    }
+    i++;
+  }
+})();
+</script>
+<!-- dynamically load mathjax for compatibility with self-contained -->
+<script>
+(function () {
+  var script = document.createElement('script');
+  script.type = 'text/javascript';
+  script.src  = 'https://mathjax.rstudio.com/latest/MathJax.js?config=TeX-MML-AM_CHTML';
+  if (location.protocol !== 'file:' && /^https?:/.test(script.src))
+    script.src  = script.src.replace(/^https?:/, '');
+  document.getElementsByTagName('head')[0].appendChild(script);
+})();
+</script>
+  </body>
+</html>
