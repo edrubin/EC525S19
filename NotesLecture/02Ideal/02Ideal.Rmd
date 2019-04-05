@@ -164,7 +164,7 @@ Research basics, our class, and .mono[R]
 ## Today
 
 .hi-slate[Admin:] Canvas exists. Updated class [website](https://github.com/edrubin/EC525S19).
-<br>.hi-slate[Material:] The Rubin causal model (not mine), .orange[Chapter 2 MHE]. .mono[R] basics.
+<br>.hi-slate[Material:] The Rubin causal model (not mine), .orange[Chapter 2 MHE].
 --
 <br>.hi-purple[Assignment.sub[1]] Install [.mono[R]](https://www.r-project.org/) and [.mono[RStudio]](https://www.rstudio.com/products/rstudio/download/#download) on your computer.
 --
@@ -1071,14 +1071,6 @@ layout: false
 1. [Schedule](#schedule)
 1. [Review](#review)
 ]
-
-### .mono[R]
-.smaller[
-
-1. [Object types/classes](#types)
-1. [Packages](#packages)
-]
-
 
 ]
 

@@ -4,7 +4,7 @@
     <title>Getting to know .mono[R]</title>
     <meta charset="utf-8">
     <meta name="author" content="Edward Rubin" />
-    <meta name="date" content="2019-04-04" />
+    <meta name="date" content="2019-04-05" />
     <link href="01RBasics_NoPause_files/remark-css-0.0.1/default.css" rel="stylesheet" />
     <link href="01RBasics_NoPause_files/remark-css-0.0.1/metropolis.css" rel="stylesheet" />
     <link href="01RBasics_NoPause_files/remark-css-0.0.1/metropolis-fonts.css" rel="stylesheet" />
@@ -17,7 +17,7 @@ class: center, middle, inverse, title-slide
 # Getting to know .mono[R]
 ## EC 425/525, Lab 1
 ### Edward Rubin
-### 04 April 2019
+### 05 April 2019
 
 ---
 
@@ -139,6 +139,7 @@ class("Warriors" &gt; "Bucks")
 ```
 ]
 ---
+name: structure
 
 ## Structure
 
@@ -261,6 +262,7 @@ is.data.frame(data.frame(x = 1:3))
 ```
 ]
 ---
+name: mix
 
 ## Object types/classes
 
@@ -306,6 +308,7 @@ c(12, "B", F)
 ```
 ]
 ---
+name: change
 
 ## Changing types and classes
 
@@ -423,6 +426,7 @@ After installing (`install.packages("pacman")`), you can
 
 The `p_load` paradigm is especially helpful for collaboarations or projects across multiple machines.
 ---
+name: math
 
 ## Math in .mono[R]
 
@@ -467,6 +471,7 @@ dim(A); nrow(A); ncol(A)
 ```
 ]
 ---
+name: vectorization
 
 ## Vectorization
 
@@ -520,6 +525,7 @@ c(0.5, 0.9) + c(1, 2, 3)
 .mono[R] will send you a warning, but it won't stop you.
 ]
 ---
+name: stat
 
 ## Statistics in .mono[R]
 
@@ -566,6 +572,7 @@ tail(x, 3)
 ```
 ]
 ---
+name: indexing
 
 ## Indexing vectors
 
@@ -630,6 +637,7 @@ Standard logical operators
 #&gt; [1] TRUE
 ```
 ---
+name: more
 
 ## `NA`
 
@@ -680,6 +688,7 @@ is.vector(NA)
 ```
 ]
 ---
+name: exercise
 
 ## Exercises
 
@@ -701,6 +710,28 @@ $$
 3. .hi-slate[*Harder*] Write a function that estimates OLS coefficients using matrix algebra. Compare your results with the canned function from .mono[R] (`lm`).
 
 4. .hi-slate[*Hardest*] Bring it all together: Use your DGP (1) and function (3) to run a simulation that illustrates the unbiasedness of OLS.
+---
+layout: false
+
+# Table of contents
+
+.hi-slate[Introduction to .mono[R]]
+.smaller[
+
+1. [Schedule](#schedule)
+1. [Object types and classes](#types)
+  - [Data structures](#structure)
+  - [Mixing types/classes](#mix)
+  - [Changing](#change)
+1. [Packages](#packages)
+1. [Math in .mono[R]](#math)
+1. [Vectorization](#vectorization)
+1. [Statistics and simulation](#stat)
+1. [Indexing](#indexing)
+1. [`NA` and logical operators](#more)
+1. [Exercise](#exercise)
+
+]
 ---
 exclude: true
     </textarea>

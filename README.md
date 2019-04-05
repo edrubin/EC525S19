@@ -49,10 +49,14 @@ We will use two books.
 
 1. Object types/classes/structures
 1. Package management
-1. Math and stat in R
+1. Math and stat. in R
 1. Indexing
 
 **Note formats:** [.html](https://raw.githack.com/edrubin/EC525S19/master/NotesLab/01RBasics/01RBasics.html) | [.html (no pause)](https://raw.githack.com/edrubin/EC525S19/master/NotesLab/01RBasics/01RBasics_NoPause.html) | [.pdf](https://raw.githack.com/edrubin/EC525S19/master/NotesLab/01RBasics/01RBasics.pdf) | [.pdf (no pause)](https://raw.githack.com/edrubin/EC525S19/master/NotesLab/01RBasics/01RBasics_NoPause.pdf) | [.Rmd](https://raw.githack.com/edrubin/EC525S19/master/NotesLab/01RBasics/01RBasics.Rmd)
+<br>
+**Solutions:**
+ After lab.
+<!-- [.html](https://raw.githack.com/edrubin/EC525S19/master/NotesLab/01RBasics/01Solution.html) | [.pdf](https://raw.githack.com/edrubin/EC525S19/master/NotesLab/01RBasics/01Solution.pdf) -->
 
 ## Problem sets
 
@@ -64,7 +68,7 @@ Building a research project/proposal.
 
 Step 1: **Research question (causal relationship of interest) and motivation.**
 <br>Should be between 2 sentences and 2 paragraphs.
-<br>*Due 17 April 2019.*
+<br>*Due 15 April 2019.*
 
 ## Resources
 

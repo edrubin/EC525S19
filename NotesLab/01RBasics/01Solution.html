@@ -1,0 +1,232 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <title>Getting to know .mono[R]</title>
+    <meta charset="utf-8">
+    <meta name="author" content="Edward Rubin" />
+    <meta name="date" content="2019-04-05" />
+    <link href="01Solution_files/remark-css-0.0.1/default.css" rel="stylesheet" />
+    <link href="01Solution_files/remark-css-0.0.1/metropolis.css" rel="stylesheet" />
+    <link href="01Solution_files/remark-css-0.0.1/metropolis-fonts.css" rel="stylesheet" />
+    <link rel="stylesheet" href="my-css.css" type="text/css" />
+  </head>
+  <body>
+    <textarea id="source">
+class: center, middle, inverse, title-slide
+
+# Getting to know .mono[R]
+## EC 425/525, Lab 1
+### Edward Rubin
+### 05 April 2019
+
+---
+
+exclude: true
+
+
+
+
+
+---
+# Exercises
+
+1. Using the tools we've covered, generate a dataset `\(\left( n=50 \right)\)` such that
+$$
+`\begin{align}
+  y_i = 12 + 1.5 x_i + \varepsilon_i
+\end{align}`
+$$
+where `\(x_i\sim N(3,7)\)` and `\(\varepsilon_i\sim N(0,1)\)`.
+
+2. Estimate the relationship via OLS using only matrix algebra. Recall
+$$
+`\begin{align}
+  \hat{\beta}_\text{OLS} = \left( {X}^\prime {X} \right)^{-1} {X}^\prime {y}
+\end{align}`
+$$
+
+3. .hi-slate[*Harder*] Write a function that estimates OLS coefficients using matrix algebra. Compare your results with the canned function from .mono[R] (`lm`).
+
+4. .hi-slate[*Hardest*] Bring it all together: Use your DGP (1) and function (3) to run a simulation that illustrates the unbiasedness of OLS.
+---
+layout: true
+
+# Example solution: Part 1
+
+1\. Using the tools we've covered, generate a dataset `\(\left( n=50 \right)\)` such that
+$$
+`\begin{align}
+  y_i = 12 + 1.5 x_i + \varepsilon_i
+\end{align}`
+$$
+where `\(x_i\sim N(3,7)\)` and `\(\varepsilon_i\sim N(0,1)\)`.
+
+---
+
+.pull-left[.pseudocode-small[
+1. Set seed
+1. Set sample size n=50
+1. Generate x~N(3,7)
+1. Generate ε~N(0,1)
+1. Calculate y&lt;br&gt;y ≔ 12 + 1.5 x + ε
+]]
+
+--
+
+.pull-right[
+
+```r
+# Set seed
+set.seed(12345)
+# Set sample size
+n &lt;- 50
+# Generate x~N(3,7)
+x &lt;- rnorm(
+  n = n, mean = 3, sd = sqrt(7)
+)
+# Generate ε~N(0,1)
+ε &lt;- rnorm(n = n)
+# Calcualte y
+y &lt;- 12 + 1.5 * x + ε
+```
+]
+---
+layout: false
+class: clear, center, middle
+
+&lt;img src="01Solution_files/figure-html/plot1-1.svg" style="display: block; margin: auto;" /&gt;
+---
+layout: true
+
+# Example solution: Part 2
+
+2\. Estimate the relationship via OLS using only matrix algebra. Recall
+$$
+`\begin{align}
+  \hat{\beta}_\text{OLS} = \left( {X}^\prime {X} \right)^{-1} {X}^\prime {y}
+\end{align}`
+$$
+
+---
+
+.pull-left[.pseudocode-small[
+1. Convert y to matrix
+2. Create X matrix: [1 x]
+3. OLS matrix math
+]]
+--
+.pull-right[
+
+```r
+# Convert y to matrix
+y_m &lt;- as.matrix(y)
+# Create X matrix
+X_m &lt;- cbind(1, x)
+# Matrix math
+XX &lt;- t(X_m) %*% X_m
+Xy &lt;- t(X_m) %*% y_m
+b_ols &lt;- solve(XX) %*% Xy
+```
+]
+
+--
+
+- `cbind` is *column-binding* its arguments (`1` and `x`).
+
+--
+- .slate[*Alternatives:*]
+  - `matrix(data = c(rep(1, n), x), ncol = 2, byrow = F)`
+  - `as.matrix(data.frame(1, x))`
+
+---
+
+How did we do?
+--
+
+.pull-left[
+.hi-pink[Our estimates:]
+
+```r
+b_ols
+```
+
+```
+#&gt;        [,1]
+#&gt;   12.313159
+#&gt; x  1.499329
+```
+]
+--
+.pull-right[
+.hi-purple[.mono[R]'s estimates:]
+
+```r
+lm(y ~ x)
+```
+
+```
+#&gt; 
+#&gt; Call:
+#&gt; lm(formula = y ~ x)
+#&gt; 
+#&gt; Coefficients:
+#&gt; (Intercept)            x  
+#&gt;      12.313        1.499
+```
+
+]
+---
+layout: false
+class: clear, center, middle
+
+&lt;img src="01Solution_files/figure-html/sol2_plot-1.svg" style="display: block; margin: auto;" /&gt;
+---
+exclude: true
+    </textarea>
+<script src="https://remarkjs.com/downloads/remark-latest.min.js"></script>
+<script>var slideshow = remark.create({
+"highlightStyle": "github",
+"highlightLines": true,
+"countIncrementalSlides": false
+});
+if (window.HTMLWidgets) slideshow.on('afterShowSlide', function (slide) {
+  window.dispatchEvent(new Event('resize'));
+});
+(function() {
+  var d = document, s = d.createElement("style"), r = d.querySelector(".remark-slide-scaler");
+  if (!r) return;
+  s.type = "text/css"; s.innerHTML = "@page {size: " + r.style.width + " " + r.style.height +"; }";
+  d.head.appendChild(s);
+})();</script>
+
+<script>
+(function() {
+  var i, text, code, codes = document.getElementsByTagName('code');
+  for (i = 0; i < codes.length;) {
+    code = codes[i];
+    if (code.parentNode.tagName !== 'PRE' && code.childElementCount === 0) {
+      text = code.textContent;
+      if (/^\\\((.|\s)+\\\)$/.test(text) || /^\\\[(.|\s)+\\\]$/.test(text) ||
+          /^\$\$(.|\s)+\$\$$/.test(text) ||
+          /^\\begin\{([^}]+)\}(.|\s)+\\end\{[^}]+\}$/.test(text)) {
+        code.outerHTML = code.innerHTML;  // remove <code></code>
+        continue;
+      }
+    }
+    i++;
+  }
+})();
+</script>
+<!-- dynamically load mathjax for compatibility with self-contained -->
+<script>
+(function () {
+  var script = document.createElement('script');
+  script.type = 'text/javascript';
+  script.src  = 'https://mathjax.rstudio.com/latest/MathJax.js?config=TeX-MML-AM_CHTML';
+  if (location.protocol !== 'file:' && /^https?:/.test(script.src))
+    script.src  = script.src.replace(/^https?:/, '');
+  document.getElementsByTagName('head')[0].appendChild(script);
+})();
+</script>
+  </body>
+</html>
