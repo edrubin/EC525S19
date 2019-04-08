@@ -1,0 +1,418 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <title>Getting to know .mono[R]</title>
+    <meta charset="utf-8">
+    <meta name="author" content="Edward Rubin" />
+    <meta name="date" content="2019-04-08" />
+    <link href="01Solution_NoPause_files/remark-css-0.0.1/default.css" rel="stylesheet" />
+    <link href="01Solution_NoPause_files/remark-css-0.0.1/metropolis.css" rel="stylesheet" />
+    <link href="01Solution_NoPause_files/remark-css-0.0.1/metropolis-fonts.css" rel="stylesheet" />
+    <link rel="stylesheet" href="my-css.css" type="text/css" />
+  </head>
+  <body>
+    <textarea id="source">
+class: center, middle, inverse, title-slide
+
+# Getting to know .mono[R]
+## EC 425/525, Lab 1 Solutions
+### Edward Rubin
+### 08 April 2019
+
+---
+
+exclude: true
+
+
+
+
+
+---
+# Exercises
+
+1. Using the tools we've covered, generate a dataset `\(\left( n=50 \right)\)` such that
+$$
+`\begin{align}
+  y_i = 12 + 1.5 x_i + \varepsilon_i
+\end{align}`
+$$
+where `\(x_i\sim N(3,7)\)` and `\(\varepsilon_i\sim N(0,1)\)`.
+
+2. Estimate the relationship via OLS using only matrix algebra. Recall
+$$
+`\begin{align}
+  \hat{\beta}_\text{OLS} = \left( {X}^\prime {X} \right)^{-1} {X}^\prime {y}
+\end{align}`
+$$
+
+3. .hi-slate[*Harder*] Write a function that estimates OLS coefficients using matrix algebra. Compare your results with the canned function from .mono[R] (`lm`).
+
+4. .hi-slate[*Hardest*] Bring it all together: Use your DGP (1) and function (3) to run a simulation that illustrates the unbiasedness of OLS.
+---
+layout: true
+
+# Example solution: Part 1
+
+1\. Using the tools we've covered, generate a dataset `\(\left( n=50 \right)\)` such that
+$$
+`\begin{align}
+  y_i = 12 + 1.5 x_i + \varepsilon_i
+\end{align}`
+$$
+where `\(x_i\sim N(3,7)\)` and `\(\varepsilon_i\sim N(0,1)\)`.
+
+---
+
+.pull-left[.pseudocode-small[
+1. Set seed
+1. Set sample size n=50
+1. Generate x~N(3,7)
+1. Generate ε~N(0,1)
+1. Calculate y&lt;br&gt;y ≔ 12 + 1.5 x + ε
+]]
+
+
+.pull-right[
+
+```r
+# Set seed
+set.seed(12345)
+# Set sample size
+n &lt;- 50
+# Generate x~N(3,7)
+x &lt;- rnorm(
+  n = n, mean = 3, sd = sqrt(7)
+)
+# Generate ε~N(0,1)
+ε &lt;- rnorm(n = n)
+# Calcualte y
+y &lt;- 12 + 1.5 * x + ε
+```
+]
+---
+layout: false
+class: clear, center, middle
+
+&lt;img src="01Solution_NoPause_files/figure-html/plot1-1.svg" style="display: block; margin: auto;" /&gt;
+---
+layout: true
+
+# Example solution: Part 2
+
+2\. Estimate the relationship via OLS using only matrix algebra. Recall
+$$
+`\begin{align}
+  \hat{\beta}_\text{OLS} = \left( {X}^\prime {X} \right)^{-1} {X}^\prime {y}
+\end{align}`
+$$
+
+---
+
+.pull-left[.pseudocode-small[
+1. Convert y to matrix
+2. Create X matrix: [1 x]
+3. OLS matrix math
+]]
+.pull-right[
+
+```r
+# Convert y to matrix
+y_m &lt;- as.matrix(y)
+# Create X matrix
+X_m &lt;- cbind(1, x)
+# Matrix math
+XX &lt;- t(X_m) %*% X_m
+Xy &lt;- t(X_m) %*% y_m
+b_ols &lt;- solve(XX) %*% Xy
+```
+]
+
+
+- `cbind` is *column-binding* its arguments (`1` and `x`).
+
+- .slate[*Alternatives:*]
+  - `matrix(data = c(rep(1, n), x), ncol = 2, byrow = F)`
+  - `as.matrix(data.frame(1, x))`
+
+---
+
+How did we do?
+
+.pull-left[
+.hi-pink[Our estimates:]
+
+```r
+b_ols
+```
+
+```
+#&gt;        [,1]
+#&gt;   12.313159
+#&gt; x  1.499329
+```
+]
+.pull-right[
+.hi-purple[.mono[R]'s estimates:]
+
+```r
+lm(y ~ x)
+```
+
+```
+#&gt; 
+#&gt; Call:
+#&gt; lm(formula = y ~ x)
+#&gt; 
+#&gt; Coefficients:
+#&gt; (Intercept)            x  
+#&gt;      12.313        1.499
+```
+
+]
+---
+layout: false
+class: clear, center, middle
+
+&lt;img src="01Solution_NoPause_files/figure-html/sol2_plot-1.svg" style="display: block; margin: auto;" /&gt;
+---
+layout: true
+# Example solution: Part 3
+
+3\. .hi-slate[*Harder*] Write a function that estimates OLS coefficients using matrix algebra. Compare your results with the canned function from .mono[R] (`lm`).
+
+.pseudocode-small[
+1. Convert data to matrix
+1. Optional: Add a column of 1s
+1. Calculate: (X'X).super[-1](X'y)
+]
+
+---
+
+Our function should take arguments
+
+- `y` (the outcome matrix)
+- `x` (covariates)
+- an optional argument for whether we add an intercept ot `x`
+---
+
+
+```r
+b_ols &lt;- function(y, x, add_int = F) {
+  # Force 'y' to matrix
+  Y &lt;- as.matrix(y)
+  # Force 'x' to matrix
+  X &lt;- as.matrix(x)
+  # If desired: Add intercept
+  if (add_int == T) X &lt;- cbind(1, X)
+  # Matrix math
+  b &lt;- solve(t(X) %*% X) %*% t(X) %*% y
+  # Done
+  return(b)
+}
+```
+---
+
+.pull-left[
+.hi-pink[Us]
+
+```r
+b_ols(y = y, x = x, add_int = T)
+```
+
+```
+#&gt;           [,1]
+#&gt; [1,] 12.313159
+#&gt; [2,]  1.499329
+```
+]
+.pull-right[
+.hi-purple[Canned .mono[R]]
+
+```r
+lm(y ~ x)
+```
+
+```
+#&gt; 
+#&gt; Call:
+#&gt; lm(formula = y ~ x)
+#&gt; 
+#&gt; Coefficients:
+#&gt; (Intercept)            x  
+#&gt;      12.313        1.499
+```
+]
+---
+layout: true
+
+# Example solution: Part 4
+
+4\. .hi-slate[*Hardest*] Bring it all together: Use your DGP (1) and function (3) to run a simulation that illustrates the unbiasedness of OLS.
+
+---
+
+*Simulation outline*
+
+.pseudocode-small[
+One iteration:
+
+1. Generate data via DGP (x, ε, and y)
+1. Estimate OLS coefficients
+
+Repeat n=10,000 times...
+]
+---
+
+Let's write a function for one iteration
+
+
+```r
+one_iter &lt;- function(iter, b0, b1, n) {
+  # Generate x~N(3,7)
+  x &lt;- rnorm(n = n, mean = 3, sd = sqrt(7))
+  # Generate ε~N(0,1)
+  ε &lt;- rnorm(n = n)
+  # Calcualte y
+  y &lt;- b0 + b1 * x + ε
+  # Regress y and x with our function
+  b_est &lt;- b_ols(y = y, x = x, add_int = T)
+  # Include iteration and convert to vector
+  b_est &lt;- c(iter, b_est)
+  # Return
+  return(b_est)
+}
+```
+---
+
+Now we run the function 10,000 times...&lt;sup&gt;.pink[†]&lt;/sup&gt;
+
+.footnote[.pink[†] We'll talk more about `lapply` and parallelization in the future.]
+
+
+```r
+library(parallel)
+# Run the simulation (parallelized)
+sim_list &lt;- mclapply(
+  # The function we want to 'repeat'
+  FUN = one_iter,
+  # The values we want to use/vary
+  X = 1:1e4,
+  # Number of cores
+  mc.cores = 4,
+  # Other arguments/parameters for 'one_iter'
+  b0 = 12, b1 = 1.5, n = 50
+)
+```
+---
+
+.hi-slate[Q] What does our `list` named `sim_list` look like?
+
+
+
+```r
+# First element
+sim_list[[1]]
+```
+
+```
+#&gt; [1]  1.000000 12.117939  1.468596
+```
+
+```r
+# Last element
+tail(sim_list, 1)
+```
+
+```
+#&gt; [[1]]
+#&gt; [1] 10000.000000    12.217868     1.500868
+```
+
+.hi-slate[A] It's made up of each iteration's vector of results.
+
+---
+
+Let's bind the individual vectors together into a single data frame.
+
+
+```r
+# Bind together the vectors (outputs matrix)
+sim_df &lt;- do.call("rbind", sim_list)
+# Covert to data frame
+sim_df &lt;- data.frame(sim_df)
+# Name our columns
+names(sim_df) &lt;- c("iter", "b0", "b1")
+```
+---
+layout: false
+class: clear
+
+Density of our estimates for `\(\beta_1\)` via OLS (mean `\(\hat{\beta}_1=\)` 1.5; `\(\beta_1=\)` 1.5)
+
+&lt;img src="01Solution_NoPause_files/figure-html/b_ols-1.svg" style="display: block; margin: auto;" /&gt;
+
+.hi-slate[Q] Does this simulation tell us about *consistency* or *unbiasedness*?
+---
+class: clear
+
+.mono[R] code from the density plot
+
+```r
+ggplot(data = sim_df, aes(x = b1)) +
+  geom_density(color = NA, fill = red_pink, alpha = 0.9) +
+  ylab("Density") +
+  xlab(expression(b[1])) +
+  geom_hline(yintercept = 0, color = "black") +
+  geom_vline(xintercept = 1.5, size = 1, linetype = "solid", color = orange) +
+  theme_pander(base_family = "Fira Sans Book", base_size = 20)
+```
+---
+exclude: true
+    </textarea>
+<script src="https://remarkjs.com/downloads/remark-latest.min.js"></script>
+<script>var slideshow = remark.create({
+"highlightStyle": "github",
+"highlightLines": true,
+"countIncrementalSlides": false
+});
+if (window.HTMLWidgets) slideshow.on('afterShowSlide', function (slide) {
+  window.dispatchEvent(new Event('resize'));
+});
+(function() {
+  var d = document, s = d.createElement("style"), r = d.querySelector(".remark-slide-scaler");
+  if (!r) return;
+  s.type = "text/css"; s.innerHTML = "@page {size: " + r.style.width + " " + r.style.height +"; }";
+  d.head.appendChild(s);
+})();</script>
+
+<script>
+(function() {
+  var i, text, code, codes = document.getElementsByTagName('code');
+  for (i = 0; i < codes.length;) {
+    code = codes[i];
+    if (code.parentNode.tagName !== 'PRE' && code.childElementCount === 0) {
+      text = code.textContent;
+      if (/^\\\((.|\s)+\\\)$/.test(text) || /^\\\[(.|\s)+\\\]$/.test(text) ||
+          /^\$\$(.|\s)+\$\$$/.test(text) ||
+          /^\\begin\{([^}]+)\}(.|\s)+\\end\{[^}]+\}$/.test(text)) {
+        code.outerHTML = code.innerHTML;  // remove <code></code>
+        continue;
+      }
+    }
+    i++;
+  }
+})();
+</script>
+<!-- dynamically load mathjax for compatibility with self-contained -->
+<script>
+(function () {
+  var script = document.createElement('script');
+  script.type = 'text/javascript';
+  script.src  = 'https://mathjax.rstudio.com/latest/MathJax.js?config=TeX-MML-AM_CHTML';
+  if (location.protocol !== 'file:' && /^https?:/.test(script.src))
+    script.src  = script.src.replace(/^https?:/, '');
+  document.getElementsByTagName('head')[0].appendChild(script);
+})();
+</script>
+  </body>
+</html>

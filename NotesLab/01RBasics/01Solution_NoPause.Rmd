@@ -115,7 +115,6 @@ where $x_i\sim N(3,7)$ and $\varepsilon_i\sim N(0,1)$.
 1. Calculate y<br>y ≔ 12 + 1.5 x + ε
 ]]
 
---
 
 .pull-right[
 ```{R, sol1}
@@ -162,7 +161,6 @@ $$
 2. Create X matrix: [1 x]
 3. OLS matrix math
 ]]
---
 .pull-right[
 ```{R, sol2}
 # Convert y to matrix
@@ -176,11 +174,9 @@ b_ols <- solve(XX) %*% Xy
 ```
 ]
 
---
 
 - `cbind` is *column-binding* its arguments (`1` and `x`).
 
---
 - .slate[*Alternatives:*]
   - `matrix(data = c(rep(1, n), x), ncol = 2, byrow = F)`
   - `as.matrix(data.frame(1, x))`
@@ -188,7 +184,6 @@ b_ols <- solve(XX) %*% Xy
 ---
 
 How did we do?
---
 
 .pull-left[
 .hi-pink[Our estimates:]
@@ -196,7 +191,6 @@ How did we do?
 b_ols
 ```
 ]
---
 .pull-right[
 .hi-purple[.mono[R]'s estimates:]
 ```{R, sol2_lm}
@@ -327,7 +321,6 @@ sim_list <- mclapply(
 
 .hi-slate[Q] What does our `list` named `sim_list` look like?
 
---
 
 ```{R, sim_list_eval}
 # First element
@@ -385,5 +378,4 @@ exclude: true
 
 ```{R, generate pdfs, include = F, eval = T}
 source("../../ScriptsR/unpause.R")
-unpause("01Solution.Rmd", ".", F, T)
 ```
