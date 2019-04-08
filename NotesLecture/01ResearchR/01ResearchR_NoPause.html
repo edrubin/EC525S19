@@ -1,0 +1,703 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <title>Research and .mono[R]</title>
+    <meta charset="utf-8">
+    <meta name="author" content="Edward Rubin" />
+    <meta name="date" content="2019-04-05" />
+    <link href="01ResearchR_NoPause_files/remark-css-0.0.1/default.css" rel="stylesheet" />
+    <link href="01ResearchR_NoPause_files/remark-css-0.0.1/metropolis.css" rel="stylesheet" />
+    <link href="01ResearchR_NoPause_files/remark-css-0.0.1/metropolis-fonts.css" rel="stylesheet" />
+    <link rel="stylesheet" href="my-css.css" type="text/css" />
+  </head>
+  <body>
+    <textarea id="source">
+class: center, middle, inverse, title-slide
+
+# Research and .mono[R]
+## EC 425/525, Set 1
+### Edward Rubin
+### 05 April 2019
+
+---
+
+class: inverse, middle
+
+
+
+# Prologue
+
+---
+name: schedule
+
+# Schedule
+
+## Today
+
+- Research basics: *Why are we here?* .grey-vlight[*MHE*: Preface &amp; Ch. 1]
+- Our class: *What are we doing?*
+- .mono[R]: Part of our *how* in this class: Install and basics.
+
+## Upcoming
+
+- Learn more .mono[R].
+- Review metrics and building intution for causality and inference.
+- Build momentum.
+
+## Long run
+
+.hi[Goal:] Deepen understandings/intuitions for causality and inference.
+---
+layout: true
+# Research
+---
+name: why
+
+## Why are we here?
+
+
+- .hi[Econ. research]
+.hi[:] Understand human, social, and/or economic behaviors.
+
+
+- .hi[PhD]
+.hi[:] Learn methods, tools, skills, and intution required for research.
+
+
+- .hi[(Applied) econometrics]
+.hi[:] Build a toolbox of .pink[*empirical* methods, tools, and skills] to that combine data and statistical insights to test and/or measure theories and policies.
+
+
+- .hi[You]
+.hi[:] You should be thinking about this question throughout your program/work/life.
+ .hi-purple[Self awareness and mental health are important.]
+---
+
+## This class
+
+For many of people, .hi[this course marks a big shift] in how school works.
+
+- You don't have a metrics qualifying exam.
+- Grades are not super important.
+
+
+The material and tools are pivotal for **a lot** of what you will do in the future.
+
+
+.hi[Take responsibility for your education and career.]
+
+- Commit to spending the necessary time.
+- Be proactive and curious.
+- Go down rabbit holes.
+- Ask questions.
+- Learn.
+
+
+
+---
+
+## What are we doing?
+
+.hi[Q] What is the difference between *econometrics* and *data science*?
+&lt;br&gt;.hi[Q].sub[.pink[v2]] Is there anything special about *econometrics*?
+
+
+.hi[A].pink[.sub[1/∞]] Causality.&lt;sup&gt;.smallest[😸]&lt;/sup&gt;
+
+.footnote[
+😸 Sources for this Q and A: [Dan Hammer](https://www.danham.me/r/about.html) and [Max Auffhammer](https://www.auffhammer.com/).
+]
+
+
+***Note:*** There are large parts of econometrics that focus on *prediction* rather than *causality* (*e.g.*, forecasting—see [Jeremy Piger](https://pages.uoregon.edu/jpiger/)). However, causality plays a *huge* role in modern applied econometrics (esp. in micro).
+
+---
+layout: false
+class: clear
+
+Toward this end—causality—we will use two books (favoring *MHE*).
+
+.pull-left[
+.hi-pink[Mostly Harmless Econometrics]
+&lt;br&gt;*Angrist and Pischke, 2008*
+&lt;img src="cover_mhe.jpg" width="50%" style="display: block; margin: auto;" /&gt;
+]
+.pull-right[
+.hi-slate[Econometric Analysis]
+&lt;br&gt;*Greene, 2018*
+&lt;img src="cover_greene.jpg" width="60%" style="display: block; margin: auto;" /&gt;
+]
+
+
+.pull-left[Buy now. .hi[Read this book.]&lt;br&gt;The standard for causal metrics.&lt;br&gt;.pink[*MHE*]]
+.pull-right[More of an reference/encyclopedia.&lt;br&gt;Classic metrics theory.&lt;br&gt;.slate[*Greene*]]
+---
+layout: true
+
+# Causal research
+---
+
+## Motivation
+
+&gt; First, we believe that .pink[empirical research is most valuable when it uses data to answer specific causal questions, *as if* in a randomized clinical trial.] This view shapes our approach to most research questions. In the absence of a real experiment, we look for well-controlled comparisons and/or natural quasi-experiments. Of course, some quasi-experimental research designs are more convincing than others, but .purple[the econometric methods used in these studies are almost always fairly simple].
+
+*Mostly Harmless Econometrics*, p. xii (color added)
+
+
+.pink[1\. This ideology inherently compares research to "gold-standard" RCTs.]
+&lt;br&gt;.purple[2\. The methods are usually (relatively) straightforward (after training).]
+---
+name: faqs
+
+## Angrist and Pischke's FAQs&lt;sup&gt;.pink[†]&lt;/sup&gt;
+
+.footnote[
+.pink[†] See *MHE*, chapter 1.
+.pink[††] Credit for these questions goes to [Reed Walker](https://w-reed-walker.com/).
+]
+
+1. What is the .hi[causal relationship of interest]?
+
+2. How would an .hi[ideal experiment] capture this causal effect of interest?
+
+3. What is your .hi[identification strategy]?
+
+4. What is your .hi[mode of inference]?
+
+
+***Note:*** Other questions also matter for developing quality research, *e.g.*,&lt;sup&gt;.pink[††]&lt;/sup&gt;
+
+- Why is your question .hi[important/interesting]?
+- Why is the .hi[current literature] lacking or nonexistant?
+- How do you propose to .hi[advance the literature]?
+---
+name: faq1
+
+## FAQ.sub[1]: What is the causal relationship of interest?
+
+Descriptive exercises can be [very interesting and important](https://www.opportunityatlas.org/), but in modern applied econometrics, .hi-purple[causality is king].
+
+**Why?**
+
+
+- Causal relationships directly .hi-purple[test theories] of how the world works.
+
+- Causal relationships provide us with .hi-purple[*counterfactuals*]—how the world would have looked with different sets of policies/circumstances.
+
+
+🚧 If you can't clearly and succinctly name the causal relationship of interest, then you may not actually have a research project.
+---
+
+## FAQ.sub[1]: What is the causal relationship of interest?
+
+*Some classic examples...*
+
+**Labor and Education**&lt;br&gt;How does an additional year of schooling affect wages?
+
+**Political economy and Development**&lt;br&gt;How do democratic institutions affect economic development?
+
+**Environment and Urban**&lt;br&gt;Do the poor receive substantive benefits from environmental clean ups?
+
+**Health, Crime, and Law**&lt;br&gt;Do gun-control laws actually reduce gun violence?
+
+---
+name: faq2
+
+## FAQ.sub[2]: What is the ideal experiment for this setting?
+
+Describing the *ideal experiment* helps us formulate
+
+- the .pink[exact causal question(s)]
+
+- the dimensions we want to .pink[manipulate]
+
+- the factors we need to .pink[hold constant]
+
+
+🚧 These *ideal experiments* are generally hypothetical, but if you can't describe the ideal, it will probably be hard to come up with data and plausible research designs in real life.
+
+
+Angrist and Pischke call questions without ideal experiments *fundamentally unanswerable questions* (FUQs).
+---
+
+## FAQ.sub[2]: What is the ideal experiment for this setting?
+
+*Examples of potentially answerable questions...*
+
+- **The effect of education on wages:** Randomize scholarships or incentives to remain in school.
+- **Democracy and development:** Arbitrarily assign institutional types to countries as they receive independence.
+- **Environmental cleanups:** Ask EPA to randomly clean toxic sites.
+- **Gun laws:** Randomly assign gun restrictions to jurisdictions.
+
+
+*Examples of challenging questions to answer (potentially unanswerable?)...*
+
+- How does gender affect eventual career paths?
+- What role does race play in one's wages?
+
+---
+
+## FAQ.sub[2]: What is the ideal experiment for this setting?
+
+Sometimes even simple-sounding policy questions turn out to be fundamentally unanswerable.
+
+
+*Example of a fundamentally unanswerable question*:
+&gt; Do children perform better by starting school at an older age?
+
+
+**Proposed ideal experiment**
+
+1. Randomize kids to start 1.super[st] grade at age 6 or 7.
+2. Compare 2.super[nd] grade test scores.
+
+
+.hi[Problem]
+ Kids who started later are older in 2.super[nd] grade. Older kids do better. Do we want the effect of starting later or just being older?
+
+---
+count: false
+
+## FAQ.sub[2]: What is the ideal experiment for this setting?
+
+Sometimes even simple-sounding policy questions turn out to be fundamentally unanswerable.
+
+*Example of a fundamentally unanswerable question*:
+&gt; Do children perform better by starting school at an older age?
+
+**Proposed ideal experiment.sub[2.0]**
+
+1. Randomize kids to start 1.super[st] grade at age 6 or 7.
+2. .purple[Control for age.] Compare test scores when kids are age 8.
+
+
+.hi[Problem.sub[2.0]]
+ The two groups will have been in school for different numbers of years (1 vs. 2). More school should mean better scores.
+---
+count: false
+
+## FAQ.sub[2]: What is the ideal experiment for this setting?
+
+Sometimes even simple-sounding policy questions turn out to be fundamentally unanswerable.
+
+*Example of a fundamentally unanswerable question*:
+&gt; Do children perform better by starting school at an older age?
+
+.hi[Central problem:] Mechanical links between ages and time in school.
+
+.center[(Start Age) = (Current Age) – (Time in School)]
+
+No experiment can separate these effects (for school-age children).
+---
+name: faq3
+
+## FAQ.sub[3]: What's your identification strategy?
+
+This question&lt;sup&gt;✋&lt;/sup&gt; describes how you plan to recover/observe *as good as random* assignment of your variable of interest (approximating your ideal experiment) .hi-pink[in real life].
+
+.footnote[✋ You will hear this question asked *a lot*.]
+
+***Examples***
+- Compulsory school-attendance laws *interacted with* quarter of birth
+- Vietnam War draft
+- Thresholds for the Clean Air Act violations
+- Notches in income-tax policies
+- Judge assignments
+- Randomly assigned characteristics on résumés
+
+---
+
+## FAQ.sub[3]: What's your identification strategy?
+
+*A brief history*
+
+The term "identification strategy" goes back to Angrist and Krueger (1991).
+
+However, the comparison of *ideal* and *natural* experiments goes back much farther to Haavelmo (1944)...
+
+---
+
+&gt; A design of experiments... is an essential appendix to any quantitative theory. And .orange[we usually have some such experiment in mind when we construct the theories], although-unfortunately-most economists do not describe their design of experiments explicitly. If they did, they would see that the experiments they have in mind may be grouped into two different classes, namely, (1) .pink[experiments that we should like to make to see if certain real economic phenomena—when artificially isolated from "other influences"]—would verify certain hypotheses, and (2) .purple[the stream of experiments that Nature is steadily turning out from her own enormous laboratory], and which we merely watch as passive observers. In both cases the aim of the theory is the same, to become master of the happenings of real life.
+
+*Haavelmo, 1944* (color added)
+---
+name: faq4
+
+## FAQ.sub[4]: What is your mode of inference?
+
+Historically, inference—standard errors, confidence intervals, hypothesis tests, *etc.*—has received much less attention than point estimates. It's becoming more important (more than an afterthought).
+
+- Which .hi[population] does your sample represent?
+
+- How much .hi[noise] (error) exists in your estimator (and estimates)?
+
+- How much .hi[variation] do you actually have in your variable of interest?
+
+
+Without careful inference, we don't know the difference between
+- 21% ± 2.3%
+- 21% ± 20.3%
+---
+layout: false
+class: middle, inverse
+
+# Our class
+---
+name: syllabus
+
+# Our class
+## Mini-syllabus
+
+.hi[Class] Attend/participate. Read assigned readings—especially papers.
+
+.hi[Lab] Practice applying our in-class content in .mono[R] with Jenni Putz. Attend.
+
+.hi[Problem sets] 2–4 problem sets mixing theory and applications in .mono[R].
+
+.hi[Other grades] The current plan: Two take-home exams.
+
+
+***Note:*** This class is under development.
+- .hi-slate[Challenge:] Less structure.
+- .hi-slate[Benefit:] You get more say in what we cover/do. Participate!
+
+---
+layout: false
+class: middle, inverse
+
+# .mono[R]
+---
+layout: true
+
+# .mono[R] basics
+---
+name: basics
+
+## What is it?
+
+The [.mono[R] project website](https://www.r-project.org):
+
+&gt; R is a free software environment for statistical computing and graphics. It compiles and runs on a wide variety of UNIX platforms, Windows and MacOS.
+
+
+What does that mean?
+
+- .mono[R] was created for the statistical and graphical work required by econometrics.
+
+- .mono[R] has a vibrant, thriving online community (*e.g.*, [Stack Overflow](https://stackoverflow.com/questions/tagged/r)).
+
+- Plus it's __free__ and __open source__.
+
+---
+
+## Why are we using .mono[R]?
+
+1\. .mono[R] is __free__ and __open source__—saving both you and the university 💰💵💰.
+
+2\. _Related:_ Outside of a small group of economists, private- and public-sector __employers favor .mono[R]__ over .mono[Stata] and most competing softwares.
+
+3\. .mono[R] is very __flexible and powerful__—adaptable to nearly any task, _e.g._, 'metrics, spatial data analysis, machine learning, web scraping, data cleaning, website building, teaching. [My website](https://edrub.in), the [TWEEDS website](https://tweeds.io), and these notes all came out of .mono[R].
+
+---
+
+&lt;img src="01ResearchR_NoPause_files/figure-html/statistical languages-1.svg" style="display: block; margin: auto;" /&gt;
+
+---
+
+## Why are we using .mono[R]?
+
+4\. _Related:_ .mono[R] imposes __no limitations__ on your amount of observations, variables, memory, or processing power. (I'm looking at __you__, .mono[Stata].)
+
+5\. If you put in the work,&lt;sup&gt;.tiny[🖥️]&lt;/sup&gt; you (and your students!) will come away with a __valuable and marketable__ tool.
+
+.footnote[
+🖥️: Learning .mono[R] definitely requires time and effort.
+]
+
+6\. I 💖 __.mono[R]__
+
+---
+
+.center[![Gapminder](ex_gganimate.gif)]
+---
+name: install
+
+## The install
+
+Installing .mono[R] is fairly straightfoward, but it occasionally involves challenges for older computers.
+
+.hi-slate[Step 1:] Download ([r-project.org](https://www.r-project.org/)) and install .mono[R] .purple[for your operating system].
+
+.hi-slate[Step 2:] Download ([rstudio.com](https://www.rstudio.com/products/rstudio/download/#download)) and install .mono[RStudio] .orange[Desktop] .purple[for your operating system].
+
+[DataCamp](https://www.datacamp.com/community/tutorials/installing-R-windows-mac-ubuntu) has a nice tutorial on installing .mono[R] and .mono[RStudio] for Windows, Mac, and Linux operating systems.
+
+---
+name: fundamentals
+
+## Fundamentals
+
+Let's get started. There are a few principals to keep in mind with .mono[R]:
+
+
+.more-left[1\. Everything is an __object__.]
+.less-right[`foo`]
+
+&lt;br&gt;
+
+
+.more-left[2\. Every object has a __name__ and __value__.]
+.less-right[`foo &lt;- 2`]
+
+&lt;br&gt;
+
+
+.more-left[3\. You use __functions__ on these objects.]
+.less-right[`mean(foo)`]
+
+&lt;br&gt;
+
+
+.more-left[4\. Functions come in __libraries__ (__packages__)]
+.less-right[`library(dplyr)`]
+
+&lt;br&gt;
+
+
+.more-left[5\. .mono[R] will try to __help__ you.]
+.less-right[`?dplyr`]
+
+&lt;br&gt;
+
+
+.more-left[6\. .mono[R] has its __quirks__.]
+.less-right[`NA; error; warning`]
+
+---
+
+## Fundamentals of functions
+
+Functions operate on objects, but they need some guidance—arguments.
+
+
+***Example:*** `ex_fun(arg1, arg2, arg3)`
+
+
+- Our function is named `ex_fun`.
+
+- This function takes three arguments: `arg1`, `arg2`, `arg3`.
+
+- You can tell .mono[R] which values to assign to which arguments:&lt;br&gt;`ex_fun(arg1 = 13, arg2 = 25, arg3 = 7)` (probably best practice)
+
+- ... or .mono[R] will assign the values using the arguments' defined order:&lt;br&gt;`ex_fun(13, 25, 7)` (shorter/lazier but has the same result)
+
+- You must assign a name to a function's outputted object (to keep it).
+---
+
+## Example function: `matrix`
+
+We will need to create matrices in this class.
+
+Enter: .mono[R]'s `matrix()` function!
+
+---
+layout: false
+class: clear
+
+
+.pull-left[
+
+```r
+# 3x2 matrix filled w/ zeros
+matrix(
+  data = 0, nrow = 3, ncol = 2
+)
+```
+
+```
+#&gt;      [,1] [,2]
+#&gt; [1,]    0    0
+#&gt; [2,]    0    0
+#&gt; [3,]    0    0
+```
+]
+.pull-right[
+
+```r
+# 3x2 matrix filled w/ 1 to 6
+matrix(
+  data = 1:6, nrow = 3, ncol = 2
+)
+```
+
+```
+#&gt;      [,1] [,2]
+#&gt; [1,]    1    4
+#&gt; [2,]    2    5
+#&gt; [3,]    3    6
+```
+]
+
+---
+layout: false
+class: clear
+
+.pull-left[
+
+```r
+# 3x2 matrix filled w/ 1:6 by row
+matrix(
+  data = 1:6, nrow = 3, ncol = 2,
+  byrow = T
+)
+```
+
+```
+#&gt;      [,1] [,2]
+#&gt; [1,]    1    2
+#&gt; [2,]    3    4
+#&gt; [3,]    5    6
+```
+]
+.pull-right[
+
+```r
+# 3x2 matrix filled w/ 1:3
+matrix(
+  data = 1:3,
+  nrow = 3, ncol = 2
+)
+```
+
+```
+#&gt;      [,1] [,2]
+#&gt; [1,]    1    1
+#&gt; [2,]    2    2
+#&gt; [3,]    3    3
+```
+]
+.pull-left[
+
+```r
+# 3x2 matrix filled w/ 1:3
+# Assigned to memory
+our_matrix &lt;- matrix(
+  data = 1:3,
+  nrow = 3, ncol = 2
+)
+```
+]
+
+---
+layout: true
+
+# .mono[R] basics
+
+---
+
+## Help and functions
+
+.hi[Q] How do we know which arguments a function requires/accepts?
+
+
+.hi[A] `?`
+ Meaning you can type `?matrix` into your .mono[R] console to find the help file associated with the functions/objects named `matrix`.
+
+
+.hi[Double bonus:] Use `??matrix` to perform a fuzzy search for the term `matrix` in all of the help files.
+
+---
+
+## Example function: `matrix`
+
+.hi[Q] How do we know which arguments a function requires/accepts?
+
+.hi[A.sub[2]] .mono[RStudio] will also try to help you.
+- Type a name (_e.g._, `matrix`) into the console; .mono[RStudio] will show you some info about the function.
+- After you type the name and parentheses (_e.g._, `matrix()`), press .mono[tab], and .mono[RStudio] will show you a list of arguments for the function.
+
+---
+layout: false
+# Table of contents
+
+.pull-left[
+### Admin
+.smallest[
+
+1. [Schedule](#schedule)
+1. [Mini-syllabus](#syllabus)
+]
+
+]
+
+.pull-right[
+### Research
+.smallest[
+
+1. [Why are we here?](#why)
+1. [*MHE*'s FAQs](#faqs)
+  1. [Question](#faq1)
+  1. [Experiment](#faq2)
+  1. [Identification](#faq3)
+  1. [Inference](#faq4)
+]
+
+### .mono[R]
+.smallest[
+
+1. [Basics](#basics)
+1. [Install](#install)
+1. [Fundamentals](#fundamentals)
+]
+
+]
+---
+exclude: true
+    </textarea>
+<script src="https://remarkjs.com/downloads/remark-latest.min.js"></script>
+<script>var slideshow = remark.create({
+"highlightStyle": "github",
+"highlightLines": true,
+"countIncrementalSlides": false
+});
+if (window.HTMLWidgets) slideshow.on('afterShowSlide', function (slide) {
+  window.dispatchEvent(new Event('resize'));
+});
+(function() {
+  var d = document, s = d.createElement("style"), r = d.querySelector(".remark-slide-scaler");
+  if (!r) return;
+  s.type = "text/css"; s.innerHTML = "@page {size: " + r.style.width + " " + r.style.height +"; }";
+  d.head.appendChild(s);
+})();</script>
+
+<script>
+(function() {
+  var i, text, code, codes = document.getElementsByTagName('code');
+  for (i = 0; i < codes.length;) {
+    code = codes[i];
+    if (code.parentNode.tagName !== 'PRE' && code.childElementCount === 0) {
+      text = code.textContent;
+      if (/^\\\((.|\s)+\\\)$/.test(text) || /^\\\[(.|\s)+\\\]$/.test(text) ||
+          /^\$\$(.|\s)+\$\$$/.test(text) ||
+          /^\\begin\{([^}]+)\}(.|\s)+\\end\{[^}]+\}$/.test(text)) {
+        code.outerHTML = code.innerHTML;  // remove <code></code>
+        continue;
+      }
+    }
+    i++;
+  }
+})();
+</script>
+<!-- dynamically load mathjax for compatibility with self-contained -->
+<script>
+(function () {
+  var script = document.createElement('script');
+  script.type = 'text/javascript';
+  script.src  = 'https://mathjax.rstudio.com/latest/MathJax.js?config=TeX-MML-AM_CHTML';
+  if (location.protocol !== 'file:' && /^https?:/.test(script.src))
+    script.src  = script.src.replace(/^https?:/, '');
+  document.getElementsByTagName('head')[0].appendChild(script);
+})();
+</script>
+  </body>
+</html>

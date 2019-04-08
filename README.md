@@ -29,7 +29,7 @@ We will use two books.
 1. An introduction to empirical research via applied econometrics.
 1. R: Light introduction—objects, functions, and help.
 
-**Note formats:** [.html](https://raw.githack.com/edrubin/EC525S19/master/NotesLecture/01ResearchR/01ResearchR.html) | [.pdf](https://raw.githack.com/edrubin/EC525S19/master/NotesLecture/01ResearchR/01ResearchR.pdf) | [.Rmd](https://raw.githack.com/edrubin/EC525S19/master/NotesLecture/01ResearchR/01ResearchR.Rmd)
+**Note formats:** [.html](https://raw.githack.com/edrubin/EC525S19/master/NotesLecture/01ResearchR/01ResearchR.html) | [.html (no pause)](https://raw.githack.com/edrubin/EC525S19/master/NotesLecture/01ResearchR/01ResearchR_NoPause.html) | [.pdf](https://raw.githack.com/edrubin/EC525S19/master/NotesLecture/01ResearchR/01ResearchR.pdf) | [.pdf (no pause)](https://raw.githack.com/edrubin/EC525S19/master/NotesLecture/01ResearchR/01ResearchR_NoPause.pdf) | [.Rmd](https://raw.githack.com/edrubin/EC525S19/master/NotesLecture/01ResearchR/01ResearchR.Rmd)
 <br>**Readings:** MHE preface + MHE chapter 1
 
 **[Lecture 02: The Experimental Ideal](https://raw.githack.com/edrubin/EC525S19/master/NotesLecture/02Ideal/02Ideal.html)**

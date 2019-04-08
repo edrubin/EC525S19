@@ -4,7 +4,7 @@
     <title>Getting to know .mono[R]</title>
     <meta charset="utf-8">
     <meta name="author" content="Edward Rubin" />
-    <meta name="date" content="2019-04-05" />
+    <meta name="date" content="2019-04-08" />
     <link href="01RBasics_files/remark-css-0.0.1/default.css" rel="stylesheet" />
     <link href="01RBasics_files/remark-css-0.0.1/metropolis.css" rel="stylesheet" />
     <link href="01RBasics_files/remark-css-0.0.1/metropolis-fonts.css" rel="stylesheet" />
@@ -17,7 +17,7 @@ class: center, middle, inverse, title-slide
 # Getting to know .mono[R]
 ## EC 425/525, Lab 1
 ### Edward Rubin
-### 05 April 2019
+### 08 April 2019
 
 ---
 
@@ -717,6 +717,83 @@ is.vector(NA)
 ```
 ]
 ---
+name: functions
+
+## Functions
+
+In general, a function takes some arguments, performs some internal tasks, and returns some output.
+
+.hi-slate[*Typical function in* .mono[R]:] `some_fun(arg1, arg2, arg3 = 0)`
+
+- For `some_fun` to run, you must define `arg1` and `arg2`, _e.g._, `some_fun(arg1 = 12, arg2 = -1)`
+
+- *Optional arguments* If you do not assign a value for `arg3`, then `some_fun` defaults to `arg3 = 0`
+  - Omitted: `some_fun(arg1 = 12, arg2 = -1)`
+  - Equivalent: `some_fun(arg1 = 12, arg2 = -1, arg3 = 0)`
+
+---
+
+## Functions
+
+Functions in .mono[R] are flexible.
+
+.hi-slate[*Examples*]
+
+- `c(arg1, arg2, ... argN)` returns a vector of the inputted arguments
+&lt;br&gt;*Note* `c()` takes many inputs and returns one output.
+
+- `ls()` lists all user-defined objects in the current environment
+&lt;br&gt;*Note* `ls` works without any inputs and returns a character vector.
+
+- `rm(obj)` removes the object `obj` from the current environment
+&lt;br&gt;*Note* `rm` can take many inputs and returns no output.
+---
+name: user_fun
+
+## User-defined functions
+
+.mono[R] makes it easy to define your own functions.&lt;sup&gt;.pink[†]&lt;/sup&gt;
+
+.footnote[.pink[†] We'll delve more deeply into this topic soon.]
+
+.hi-slate[*Standard example*] A function that returns the product of three numbers.
+
+
+```r
+# Our function 'our_product' takes three arguments
+our_product &lt;- function(num1, num2, num3) {
+  # Calculate the product
+  tmp_product &lt;- num1 * num2 * num3
+  # Return the answer
+  return(tmp_product)
+}
+```
+
+You *could* get away without using `return()` but that's not recommended.
+---
+
+## User-defined functions
+
+Our function in action...
+
+
+```r
+our_product(1, 2, 3)
+```
+
+```
+#&gt; [1] 6
+```
+
+
+```r
+our_product(1, 2, NA)
+```
+
+```
+#&gt; [1] NA
+```
+---
 name: exercise
 
 ## Exercises
@@ -758,6 +835,8 @@ layout: false
 1. [Statistics and simulation](#stat)
 1. [Indexing](#indexing)
 1. [`NA` and logical operators](#more)
+1. [Functions](#functions)
+1. [User-defined functions](#user_fun)
 1. [Exercise](#exercise)
 
 ]

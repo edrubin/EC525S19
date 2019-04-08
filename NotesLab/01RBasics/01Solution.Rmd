@@ -1,6 +1,6 @@
 ---
 title: "Getting to know .mono[R]"
-subtitle: "EC 425/525, Lab 1"
+subtitle: "EC 425/525, Lab 1 Solutions"
 author: "Edward Rubin"
 date: "`r format(Sys.time(), '%d %B %Y')`"
 output:
@@ -214,6 +214,171 @@ ggplot(data = data.frame(x, y), aes(x, y)) +
   geom_point(color = "darkslategrey", alpha = 0.85, size = 3) +
   theme_pander(base_size = 18, base_family = "Fira Sans Book") +
   theme(axis.title.y = element_text(angle = 0, vjust = 0.5))
+```
+---
+layout: true
+# Example solution: Part 3
+
+3\. .hi-slate[*Harder*] Write a function that estimates OLS coefficients using matrix algebra. Compare your results with the canned function from .mono[R] (`lm`).
+
+.pseudocode-small[
+1. Convert data to matrix
+1. Optional: Add a column of 1s
+1. Calculate: (X'X).super[-1](X'y)
+]
+
+---
+
+Our function should take arguments
+
+- `y` (the outcome matrix)
+- `x` (covariates)
+- an optional argument for whether we add an intercept ot `x`
+---
+
+```{R, ols_fun, eval = T}
+b_ols <- function(y, x, add_int = F) {
+  # Force 'y' to matrix
+  Y <- as.matrix(y)
+  # Force 'x' to matrix
+  X <- as.matrix(x)
+  # If desired: Add intercept
+  if (add_int == T) X <- cbind(1, X)
+  # Matrix math
+  b <- solve(t(X) %*% X) %*% t(X) %*% y
+  # Done
+  return(b)
+}
+```
+---
+
+.pull-left[
+.hi-pink[Us]
+```{R, check_b}
+b_ols(y = y, x = x, add_int = T)
+```
+]
+.pull-right[
+.hi-purple[Canned .mono[R]]
+```{R, check_b2}
+lm(y ~ x)
+```
+]
+---
+layout: true
+
+# Example solution: Part 4
+
+4\. .hi-slate[*Hardest*] Bring it all together: Use your DGP (1) and function (3) to run a simulation that illustrates the unbiasedness of OLS.
+
+---
+
+*Simulation outline*
+
+.pseudocode-small[
+One iteration:
+
+1. Generate data via DGP (x, ε, and y)
+1. Estimate OLS coefficients
+
+Repeat n=10,000 times...
+]
+---
+
+Let's write a function for one iteration
+
+```{R, sim_fun}
+one_iter <- function(iter, b0, b1, n) {
+  # Generate x~N(3,7)
+  x <- rnorm(n = n, mean = 3, sd = sqrt(7))
+  # Generate ε~N(0,1)
+  ε <- rnorm(n = n)
+  # Calcualte y
+  y <- b0 + b1 * x + ε
+  # Regress y and x with our function
+  b_est <- b_ols(y = y, x = x, add_int = T)
+  # Include iteration and convert to vector
+  b_est <- c(iter, b_est)
+  # Return
+  return(b_est)
+}
+```
+---
+
+Now we run the function 10,000 times...<sup>.pink[†]</sup>
+
+.footnote[.pink[†] We'll talk more about `lapply` and parallelization in the future.]
+
+```{R, the_sim, cache = T, eval = T}
+library(parallel)
+# Run the simulation (parallelized)
+sim_list <- mclapply(
+  # The function we want to 'repeat'
+  FUN = one_iter,
+  # The values we want to use/vary
+  X = 1:1e4,
+  # Number of cores
+  mc.cores = 4,
+  # Other arguments/parameters for 'one_iter'
+  b0 = 12, b1 = 1.5, n = 50
+)
+```
+---
+
+.hi-slate[Q] What does our `list` named `sim_list` look like?
+
+--
+
+```{R, sim_list_eval}
+# First element
+sim_list[[1]]
+# Last element
+tail(sim_list, 1)
+```
+
+.hi-slate[A] It's made up of each iteration's vector of results.
+
+---
+
+Let's bind the individual vectors together into a single data frame.
+
+```{R, bind}
+# Bind together the vectors (outputs matrix)
+sim_df <- do.call("rbind", sim_list)
+# Covert to data frame
+sim_df <- data.frame(sim_df)
+# Name our columns
+names(sim_df) <- c("iter", "b0", "b1")
+```
+---
+layout: false
+class: clear
+
+Density of our estimates for $\beta_1$ via OLS (mean $\hat{\beta}_1=$ `r round(sim_df$b1 %>% mean(), 3)`; $\beta_1=$ 1.5)
+
+```{R, b_ols, echo = F, fig.height = 6}
+ggplot(data = sim_df, aes(x = b1)) +
+  geom_density(color = NA, fill = red_pink, alpha = 0.9) +
+  ylab("Density") +
+  xlab(expression(b[1])) +
+  geom_hline(yintercept = 0, color = "black") +
+  geom_vline(xintercept = 1.5, size = 1, linetype = "solid", color = orange) +
+  theme_pander(base_family = "Fira Sans Book", base_size = 20)
+```
+
+.hi-slate[Q] Does this simulation tell us about *consistency* or *unbiasedness*?
+---
+class: clear
+
+.mono[R] code from the density plot
+```{R, b_ols_code, eval = F}
+ggplot(data = sim_df, aes(x = b1)) +
+  geom_density(color = NA, fill = red_pink, alpha = 0.9) +
+  ylab("Density") +
+  xlab(expression(b[1])) +
+  geom_hline(yintercept = 0, color = "black") +
+  geom_vline(xintercept = 1.5, size = 1, linetype = "solid", color = orange) +
+  theme_pander(base_family = "Fira Sans Book", base_size = 20)
 ```
 ---
 exclude: true

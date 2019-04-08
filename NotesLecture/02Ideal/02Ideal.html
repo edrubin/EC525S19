@@ -4,7 +4,7 @@
     <title>The Experimental Ideal</title>
     <meta charset="utf-8">
     <meta name="author" content="Edward Rubin" />
-    <meta name="date" content="2019-04-04" />
+    <meta name="date" content="2019-04-08" />
     <link href="02Ideal_files/remark-css-0.0.1/default.css" rel="stylesheet" />
     <link href="02Ideal_files/remark-css-0.0.1/metropolis.css" rel="stylesheet" />
     <link href="02Ideal_files/remark-css-0.0.1/metropolis-fonts.css" rel="stylesheet" />
@@ -18,7 +18,7 @@ class: center, middle, inverse, title-slide
 # The Experimental Ideal
 ## EC 425/525, Set 2
 ### Edward Rubin
-### 04 April 2019
+### 08 April 2019
 
 ---
 
@@ -33,22 +33,24 @@ name: schedule
 
 # Schedule
 
-## Last time
+### Last time
 
 Research basics, our class, and .mono[R]
 
-## Today
+### Today
 
 .hi-slate[Admin:] Canvas exists. Updated class [website](https://github.com/edrubin/EC525S19).
-&lt;br&gt;.hi-slate[Material:] The Rubin causal model (not mine), .orange[Chapter 2 MHE]. .mono[R] basics.
+&lt;br&gt;.hi-slate[Material:] The Rubin causal model (not mine), .orange[Chapter 2 MHE].
 --
 &lt;br&gt;.hi-purple[Assignment.sub[1]] Install [.mono[R]](https://www.r-project.org/) and [.mono[RStudio]](https://www.rstudio.com/products/rstudio/download/#download) on your computer.
 --
 &lt;br&gt;.hi-purple[Assignment.sub[2]] Take 15 minutes to quietly think about your interests.
+--
+&lt;br&gt;.hi-purple[Assignment.sub[3]] [First step of project proposal due April 15.super[th]](https://github.com/edrubin/EC525S19/#project).
 
 --
 
-## Future
+### Future
 
 .hi-slate[Lab:] Matrix work, regression, functions, simulation
 &lt;br&gt;.hi[Long run:] Deepen understandings/intuitions for causality and inference.
@@ -413,6 +415,45 @@ name: experiments
 &lt;br&gt;  `\(= \mathop{E}\left[ \color{#FFA500}{\tau_i} \right]\)`
 --
        Random assignment of `\(\text{D}_{i}\)` breaks selection bias.
+---
+
+## Randomly assigned treatment
+
+The key to avoiding selection bias: .hi-slate[random assignment of treatment]
+--
+&lt;br&gt;(or .slate[*as-good-as random assignment*], _e.g._, natural experiments).
+
+--
+
+Random assignment of treatment gives us
+$$
+`\begin{align}
+   \mathop{E}\left[ \color{#6A5ACD}{\text{Y}_{0i}}\mid \color{#6A5ACD}{\text{D}_{i}=0} \right] = \mathop{E}\left[ \color{#6A5ACD}{\text{Y}_{0i}} \mid \color{#e64173}{\text{D}_{i}=1} \right]
+\end{align}`
+$$
+meaning the control group's mean now provides a good counterfactual for the treatment group's mean.
+
+--
+
+In other words, there is no selection bias, _i.e._,
+&lt;br&gt;&lt;center&gt;Selection bias `\(=\mathop{E}\left[ \color{#6A5ACD}{\text{Y}_{0i}} \mid \color{#e64173}{\text{D}_{i}=1} \right] - \mathop{E}\left[ \color{#6A5ACD}{\text{Y}_{0i}}\mid \color{#6A5ACD}{\text{D}_{i}=0} \right] = 0\)`&lt;/center&gt;
+---
+
+## Randomly assigned treatment
+
+Additional benefit of randomization:
+
+The *average treatment effect* is now representative of the *population average*, rather than the *treatment-group average*.
+
+--
+
+$$
+`\begin{align}
+  \mathop{E}\left[ \color{#FFA500}{\tau_i} \mid \color{#e64173}{\text{D}_{i}=1} \right] = \mathop{E}\left[ \color{#FFA500}{\tau_i} \mid \color{#6A5ACD}{\text{D}_{i}=0} \right] = \mathop{E}\left[ \color{#FFA500}{\tau_i} \right]
+\end{align}`
+$$
+
+
 ---
 name: ex_training
 
@@ -1332,191 +1373,6 @@ class: clear, middle
 
 Additional controls slightly increase precision.
 ---
-layout: true
-
-# .mono[R]
----
-class: inverse, middle
----
-name: types
-
-## Object types/classes
-
-As we discussed last class, .mono[R] revolves around objects, _e.g._, `test &lt;- 123`.
-
---
-
-Objects have types/classes.
-
---
-
-- `1`, `2/3`, and  are `numeric`.
-
---
-
-- `"Hello"` and `'cruel world'` are both `character`.
-
---
-
-- `TRUE`, `T`, `FALSE`, and `F` are `logical` (as is the result of `3 &gt; 2`).
-
---
-
-The `class(x)` function tells you the class of object `x`.
-
----
-
-## Structure
-
-In addition to having types/classes, objects have some type of structure.
-
-- `1:3`, `c(1, 2)`, and `seq(2, 8, 2)` each produce a `numeric`-class `vector`.
-
---
-
-- `c("Alright", "already")` produces a `vector` of `character` class.
-
---
-
-- `c(1, 3, T, "Hello")` produces a `vector` of `character` class.
-
---
-
-- `matrix(data = 1:15, ncol = 5)
-` creates a `matrix` with class from `data`.
-
---
-
-- `data.frame(x = 1:2, y = c("a", "b"), z = T)` produces a `data.frame` with three columns and two rows. The first column (`x`) is `numeric`; the second column (`y`) is `character`, and the third column (`z`) is logical.
----
-
-.pull-left[
-
-Our `matrix`
-
-
-```r
-matrix(data = 1:15, ncol = 5)
-```
-
-```
-#&gt;      [,1] [,2] [,3] [,4] [,5]
-#&gt; [1,]    1    4    7   10   13
-#&gt; [2,]    2    5    8   11   14
-#&gt; [3,]    3    6    9   12   15
-```
-
-
-]
-
---
-
-.pull-right[
-
-Our first `data.frame`!
-
-
-```r
-data.frame(x = 1:2, y = c("a", "b"), z = T)
-```
-
-```
-#&gt;   x y    z
-#&gt; 1 1 a TRUE
-#&gt; 2 2 b TRUE
-```
-
-]
-
---
-
-Notice how .mono[R] helps 'fill' out the columns when lengths don't match.
----
-name: packages
-
-## Packages
-
-Straight out of the box, .mono[R] has a ton of useful features, but it really gets its power from the additional packages (libraries) that users create.
-
-- .hi-slate[Open-source greatness] Users find needs and create amazing solutions.
-
-- .hi-slate[*Caveat utilitor*] There are a lot of packages, each with a lot of functions. Mistakes can happen.
-
-- .hi-slate[Open-source greatness.sub[2]] Again, .mono[R] is open source: Check the code!
---
-&lt;br&gt;(Maybe. Sometimes it's very hard.)
-
---
-
-.hi-slate[Examples] `ggplot2` (plotting), `dplyr` (data work that can link with SQL), `sf` and `raster` (geospatial work), `lfe` (high-dimensional fixed-effect regression), `data.table` (fast and efficient data work)
-
----
-
-## Installing packages
-
-
-Once you find a function/package that you need to install,.super[.pink[†]] you'll typically install it via `install.packages("newAmazingPackage")`..super[.pink[††]]
-
-.footnote[.pink[†] Tool \#1: Google.  .pink[††] The quotation marks are important.]
-
-We'll use the package `dplyr` throughout the course. Let's install it.
-
-
-```r
-# Install 'dplyr' package
-install.packages("dplyr")
-```
-
-.hi-slate[*Aside*] Notice the comment above the actual code (.mono[R] uses `#` for comments).
---
-&lt;br&gt;While not necessary for .mono[R] to work, comments are necessary for research.
----
-
-## Using packages
-
-Once you install a package, it is on your machine.
-
-You don't need to install it again—though you probably should update them from time to time.
-
---
-
-To .hi-slate[load a package], use the `library(package)` function.super[.pink[†]], _e.g._, to load `dplyr`
-
-.footnote[.pink[†] Notice `library()` doesn't *need* quotation marks. I know...]
-
-
-```r
-# Load 'dplyr'
-library(dplyr)
-```
-
---
-
-Now all functions contained in `dplyr` are available (until you close .mono[R]).
----
-
-## Package management
-
-All of this installing, loading, updating, checking-for-existance-and-then-loading can get old.
-
-
-As can typing `library(pacakge1)`, `library(package2)`, ...
-
---
-
-.slate[*[Enter]*] The `pacman` package... for package management, of course.
-
---
-
-After installing (`install.packages("pacman")`), you can
-
-- Install and load packages via `p_load(package1, ..., packageN)`
-
-- Update packages via `p_update()`
-
-The `p_load` paradigm is especially helpful for collaboarations or projects across multiple machines.
-
----
 layout: false
 # Table of contents
 
@@ -1527,14 +1383,6 @@ layout: false
 1. [Schedule](#schedule)
 1. [Review](#review)
 ]
-
-### .mono[R]
-.smaller[
-
-1. [Object types/classes](#types)
-1. [Packages](#packages)
-]
-
 
 ]
 

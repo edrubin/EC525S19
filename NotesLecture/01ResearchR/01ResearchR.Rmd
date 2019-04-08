@@ -831,5 +831,6 @@ layout: false
 exclude: true
 
 ```{R, generate pdfs, include = F, eval = T}
-system("decktape remark 01ResearchR.html 01ResearchR.pdf --chrome-arg=--allow-file-access-from-files")
+source("../../ScriptsR/unpause.R")
+unpause("01ResearchR.Rmd", ".", T, T)
 ```
