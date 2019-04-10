@@ -1,0 +1,1086 @@
+---
+title: "Why Regression?"
+subtitle: "EC 425/525, Set 3"
+author: "Edward Rubin"
+date: "`r format(Sys.time(), '%d %B %Y')`"
+output:
+  xaringan::moon_reader:
+    css: ['default', 'metropolis', 'metropolis-fonts', 'my-css.css']
+    # self_contained: true
+    nature:
+      highlightStyle: github
+      highlightLines: true
+      countIncrementalSlides: false
+---
+class: inverse, middle
+
+```{R, setup, include = F}
+# devtools::install_github("dill/emoGG")
+library(pacman)
+p_load(
+  broom, tidyverse,
+  ggplot2, ggthemes, ggforce, ggridges,
+  latex2exp, viridis, extrafont, gridExtra,
+  kableExtra, snakecase, janitor,
+  data.table, dplyr, estimatr,
+  lubridate, knitr, parallel,
+  lfe,
+  here, magrittr
+)
+# Define pink color
+red_pink <- "#e64173"
+turquoise <- "#20B2AA"
+orange <- "#FFA500"
+red <- "#fb6107"
+blue <- "#3b3b9a"
+green <- "#8bb174"
+grey_light <- "grey70"
+grey_mid <- "grey50"
+grey_dark <- "grey20"
+purple <- "#6A5ACD"
+slate <- "#314f4f"
+# Dark slate grey: #314f4f
+# Knitr options
+opts_chunk$set(
+  comment = "#>",
+  fig.align = "center",
+  fig.height = 7,
+  fig.width = 10.5,
+  warning = F,
+  message = F
+)
+opts_chunk$set(dev = "svg")
+options(device = function(file, width, height) {
+  svg(tempfile(), width = width, height = height)
+})
+options(crayon.enabled = F)
+options(knitr.table.format = "html")
+# A blank theme for ggplot
+theme_empty <- theme_bw() + theme(
+  line = element_blank(),
+  rect = element_blank(),
+  strip.text = element_blank(),
+  axis.text = element_blank(),
+  plot.title = element_blank(),
+  axis.title = element_blank(),
+  plot.margin = structure(c(0, 0, -0.5, -1), unit = "lines", valid.unit = 3L, class = "unit"),
+  legend.position = "none"
+)
+theme_simple <- theme_bw() + theme(
+  line = element_blank(),
+  panel.grid = element_blank(),
+  rect = element_blank(),
+  strip.text = element_blank(),
+  axis.text.x = element_text(size = 18, family = "STIXGeneral"),
+  axis.text.y = element_blank(),
+  axis.ticks = element_blank(),
+  plot.title = element_blank(),
+  axis.title = element_blank(),
+  # plot.margin = structure(c(0, 0, -1, -1), unit = "lines", valid.unit = 3L, class = "unit"),
+  legend.position = "none"
+)
+theme_axes_math <- theme_void() + theme(
+  text = element_text(family = "MathJax_Math"),
+  axis.title = element_text(size = 22),
+  axis.title.x = element_text(hjust = .95, margin = margin(0.15, 0, 0, 0, unit = "lines")),
+  axis.title.y = element_text(vjust = .95, margin = margin(0, 0.15, 0, 0, unit = "lines")),
+  axis.line = element_line(
+    color = "grey70",
+    size = 0.25,
+    arrow = arrow(angle = 30, length = unit(0.15, "inches")
+  )),
+  plot.margin = structure(c(1, 0, 1, 0), unit = "lines", valid.unit = 3L, class = "unit"),
+  legend.position = "none"
+)
+theme_axes_serif <- theme_void() + theme(
+  text = element_text(family = "MathJax_Main"),
+  axis.title = element_text(size = 22),
+  axis.title.x = element_text(hjust = .95, margin = margin(0.15, 0, 0, 0, unit = "lines")),
+  axis.title.y = element_text(vjust = .95, margin = margin(0, 0.15, 0, 0, unit = "lines")),
+  axis.line = element_line(
+    color = "grey70",
+    size = 0.25,
+    arrow = arrow(angle = 30, length = unit(0.15, "inches")
+  )),
+  plot.margin = structure(c(1, 0, 1, 0), unit = "lines", valid.unit = 3L, class = "unit"),
+  legend.position = "none"
+)
+theme_axes <- theme_void() + theme(
+  text = element_text(family = "Fira Sans Book"),
+  axis.title = element_text(size = 18),
+  axis.title.x = element_text(hjust = .95, margin = margin(0.15, 0, 0, 0, unit = "lines")),
+  axis.title.y = element_text(vjust = .95, margin = margin(0, 0.15, 0, 0, unit = "lines")),
+  axis.line = element_line(
+    color = grey_light,
+    size = 0.25,
+    arrow = arrow(angle = 30, length = unit(0.15, "inches")
+  )),
+  plot.margin = structure(c(1, 0, 1, 0), unit = "lines", valid.unit = 3L, class = "unit"),
+  legend.position = "none"
+)
+theme_set(theme_gray(base_size = 20))
+# Column names for regression results
+reg_columns <- c("Term", "Est.", "S.E.", "t stat.", "p-Value")
+# Function for formatting p values
+format_pvi <- function(pv) {
+  return(ifelse(
+    pv < 0.0001,
+    "<0.0001",
+    round(pv, 4) %>% format(scientific = F)
+  ))
+}
+format_pv <- function(pvs) lapply(X = pvs, FUN = format_pvi) %>% unlist()
+# Tidy regression results table
+tidy_table <- function(x, terms, highlight_row = 1, highlight_color = "black", highlight_bold = T, digits = c(NA, 3, 3, 2, 5), title = NULL) {
+  x %>%
+    tidy() %>%
+    select(1:5) %>%
+    mutate(
+      term = terms,
+      p.value = p.value %>% format_pv()
+    ) %>%
+    kable(
+      col.names = reg_columns,
+      escape = F,
+      digits = digits,
+      caption = title
+    ) %>%
+    kable_styling(font_size = 20) %>%
+    row_spec(1:nrow(tidy(x)), background = "white") %>%
+    row_spec(highlight_row, bold = highlight_bold, color = highlight_color)
+}
+```
+
+# Prologue
+
+---
+name: schedule
+
+# Schedule
+
+### Last time
+
+- The Experimental Ideal
+- Fundamentals of .mono[R] (wrap up Lab 1).
+
+### Today
+
+What's so great about linear regression and OLS?
+<br>.hi-slate[Read] *MHE* 3.1
+
+### Upcoming
+
+.hi-slate[Assignment] [First step of project proposal due April 15.super[th]](https://github.com/edrubin/EC525S19/#project).
+---
+name: return
+
+# Follow up
+## `return()`
+
+1. `function()` automatically returns the last evaluated value—regardless of `return()`.
+
+2. Hadley Wickham<sup>.pink[†]</sup> suggests reserving `return` for ["early" returns](http://adv-r.had.co.nz/Functions.html#return-values).
+
+.footnote[.pink[†] An .mono[R] god]
+
+---
+layout: true
+
+# Regression
+---
+class: inverse, middle
+---
+name: why
+
+## Why?
+
+In our previous discussion, we began moving from simple differences to a regression framework.
+
+
+.hi-slate[Q] Why do we<sup>.pink[†]</sup> care so much about linear regression and OLS?
+
+.footnote[.pink[†] *we* = empirically inclined applied economists]
+
+
+.hi-slate[A] As we discussed, regression allows us to control for covariates that *can* assist with (.slate[1]) causal identification and (.slate[2]) inference.
+
+
+There's a deeper reason that we care about *linear* regression and ordinary least squares (OLS): .hi-pink[*the conditional expectation function (CEF).*]
+
+---
+
+## Why?
+
+Even ignoring causality, we can show important relationships between
+
+1. .hi-pink[the CEF] (the conditional expectation function),
+
+2. the .hi-purple[population regression function],
+
+3. and the .hi-slate[sampling distribution of regression estimates].
+---
+layout: true
+
+# Regression
+## The *CEF*
+---
+name: cef
+
+.hi-slate[Definition] The .hi[conditional expectation function] for a dependent variable $\text{Y}_{i}$, given a $\text{K}\times 1$ vector of covariates $\text{X}_{i}$, tells us .pink[the expected value (population average) of] $\color{#e64173}{\text{Y}_{i}}$ .pink[with] $\color{#e64173}{\text{X}_{i}}$ .pink[held constant.]
+
+
+Written as $\mathop{E}\left[ \text{Y}_{i} \mid \text{X}_{i} \right]$, the CEF is a function of $\text{X}_{i}$.<sup>.pink[†]</sup>
+
+.footnote[
+.pink[†] We'll generally assume $\text{X}_{i}$ is a random variable, which implies that $\mathop{E}\left[ \text{Y}_{i}\mid \text{X}_{i} \right]$ is also a random variable.
+]
+
+
+.hi-slate[Examples]
+
+- $\mathop{E}\left[ \text{Income}_i \mid \text{Education}_i \right]$
+
+
+- $\mathop{E}\left[ \text{Wage}_i \mid \text{Gender}_i \right]$
+
+
+- $\mathop{E}\left[ \text{Birth weight}_i \mid \text{Air quality}_i \right]$
+---
+
+Formally, for continuous $\text{Y}_{i}$ with conditional density $f_y(t|\text{X}_{i}=x)$,
+$$
+\begin{align}
+  \mathop{E}\left[ \text{Y}_{i}\mid \text{X}_{i} = x \right] = \int t f_y(t|\text{X}_{i}=x)dt
+\end{align}
+$$
+and for discrete $\text{Y}_{i}$ with conditional p.m.f. $\mathop{\text{Pr}}\left(\text{Y}_{i}=t|\text{X}_{i}=x\right)$,
+$$
+\begin{align}
+  \mathop{E}\left[ \text{Y}_{i}\mid \text{X}_{i}=x \right] = \sum_t t \mathop{\text{Pr}}\left(\text{Y}_{i}=t|\text{X}_{i}=x\right)
+\end{align}
+$$
+
+.hi-slate[*Notice*] We are focusing on the .hi-pink[population].
+ We want to build our intuition about the parameters that we will eventually estimate.
+---
+layout: false
+class: clear, middle
+
+Graphically...
+---
+class: clear, center, middle
+name: graphically
+
+The conditional distributions of $\text{Y}_{i}$ for $\text{X}_{i}=x$ in 8, ..., 22.
+
+```{R, data_cef, echo = F, cache = T}
+# Set seed
+set.seed(12345)
+# Sample size
+n <- 1e4
+# Generate extra disturbances
+u <- sample(-2:2, size = 22, replace = T) * 1e3
+# Generate data
+cef_df <- tibble(
+  x = sample(x = seq(8, 22, 1), size = n, replace = T),
+  y = 15000 + 3000 * x  + 1e3 * (x %% 3) + 500 * (x %% 2) + rnorm(n, sd = 1e4) + u[x]
+) %>% mutate(x = round(x)) %>%
+filter(y > 0)
+# Means
+means_df <- cef_df %>% group_by(x) %>% summarize(y = mean(y))
+# The CEF in ggplot
+gg_cef <- ggplot(data = cef_df, aes(x = y, y = x %>% as.factor())) +
+  geom_density_ridges_gradient(
+    aes(fill = ..x..),
+    rel_min_height = 0.003,
+    color = "white",
+    scale = 2.5,
+    size = 0.3
+  ) +
+  scale_x_continuous(
+    "Annual income",
+    labels = scales::dollar
+  ) +
+  ylab("Years of education") +
+  scale_fill_viridis(option = "magma") +
+  theme_pander(base_family = "Fira Sans Book", base_size = 18) +
+  theme(
+    legend.position = "none"
+  ) +
+  coord_flip()
+```
+
+```{R, fig_cef_dist, echo = F, cache = T}
+gg_cef
+```
+---
+class: clear, middle, center
+
+The CEF, $\mathop{E}\left[ \text{Y}_{i}\mid \text{X}_{i} \right]$, connects these conditional distributions' means.
+
+```{R, fig_cef, echo = F, cache = T}
+gg_cef +
+  geom_path(
+    data = means_df,
+    aes(x = y, y = x %>% as.factor(), group = 1),
+    color = "white",
+    alpha = 0.85
+  ) +
+  geom_point(
+    data = means_df,
+    aes(x = y, y = x %>% as.factor()),
+    color = "white",
+    shape = 16,
+    size = 3.5
+  )
+```
+
+---
+class: clear, middle, center
+
+Focusing in on the CEF, $\mathop{E}\left[ \text{Y}_{i}\mid \text{X}_{i} \right]$...
+
+```{R, fig_cef_only, echo = F, cache = T}
+ggplot(data = cef_df, aes(x = y, y = x %>% as.factor())) +
+  geom_density_ridges(
+    rel_min_height = 0.003,
+    color = "grey85",
+    fill = NA,
+    scale = 2.5,
+    size = 0.3
+  ) +
+  scale_x_continuous(
+    "Annual income",
+    labels = scales::dollar
+  ) +
+  ylab("Years of education") +
+  scale_fill_viridis(option = "magma") +
+  theme_pander(base_family = "Fira Sans Book", base_size = 18) +
+  theme(
+    legend.position = "none"
+  ) +
+  geom_path(
+    data = means_df,
+    aes(x = y, y = x %>% as.factor(), group = 1),
+    color = "grey20",
+    alpha = 0.85
+  ) +
+  geom_point(
+    data = means_df,
+    aes(x = y, y = x %>% as.factor()),
+    color = "grey20",
+    shape = 16,
+    size = 3.5
+  ) +
+  coord_flip()
+```
+---
+class: clear, middle
+
+.hi-slate[Q] How does the CEF relate to/inform regression?
+---
+layout: true
+# Regression
+## The *CEF*
+---
+name: lie
+
+As we derive the properties and relationships associated with the CEF, regression, and a host of other estimators, we will frequently rely upon<br>.hi-slate[*the Law of Iterated Expectations*] (LIE).
+$$
+\begin{align}
+  \color{#6A5ACD}{\mathop{E}\left[ \text{Y}_{i} \right]} = \mathop{E}\!\bigg( \color{#e64173}{\mathop{E}\left[ \text{Y}_{i}\mid \text{X}_{i} \right]} \bigg)
+\end{align}
+$$
+which says that the .hi-purple[unconditional expectation] is equal to the .b[unconditional average] of the .hi-pink[conditional expectation function].
+
+---
+layout: false
+# Regression
+
+.hi-slate[A proof of the LIE]
+
+First, we need notation...
+
+Let $\mathop{f_{x,y}}(u,t)$ denote the joint density for continuous RVs $\left( \text{X}_{i},\text{Y}_{i} \right)$.
+
+Let $\mathop{f_{y|x}}(t\mid \text{X}_{i}=u)$ denote the conditional distribution of $\text{Y}_{i}$ given $\text{X}_{i}=u$.
+
+And let $\mathop{g_y}(t)$ and $\mathop{g_x}(u)$ denote the marginal densities of $\text{Y}_{i}$ and $\text{X}_{i}$.
+---
+# Regression
+
+.hi-slate[A proof of the LIE]
+
+$\mathop{E}\!\bigg( \color{#e64173}{\mathop{E}\left[ \text{Y}_{i}\mid \text{X}_{i} \right]} \bigg)$
+<br>  $= {\displaystyle\int} \color{#e64173}{\mathop{E}\left[ \text{Y}_{i}\mid \text{X}_{i} = u \right]} \mathop{g_x}(u) du$
+<br>  $={\displaystyle\int} \color{#e64173}{\left[{\displaystyle\int} t \mathop{f_{y|x}}\left( t\mid \text{X}_{i}=u \right) dt\right]} \mathop{g_x}(u) du$
+<br>  $={\displaystyle\int} {\displaystyle\int} \color{#e64173}{t \mathop{f_{y|x}}\left( t\mid \text{X}_{i}=u \right)} \mathop{g_x}(u) du \, \color{#e64173}{dt}$
+<br>  $={\displaystyle\int} \color{#e64173}{t} \left[ {\displaystyle\int} \color{#e64173}{\mathop{f_{y|x}}\left( t\mid \text{X}_{i}=u \right)} \mathop{g_x}(u) du \right] \color{#e64173}{dt}$
+<br>  $={\displaystyle\int} \color{#e64173}{t} \left[ {\displaystyle\int} \mathop{f_{x,y}}(u,t) du \right] \color{#e64173}{dt}$
+<br>  $={\displaystyle\int} \color{#e64173}{t} \mathop{g_y(t)} \color{#e64173}{dt}$
+<br>  $=\mathop{E}\left[ \text{Y}_{i} \right]$
+  .bigger[🥳]
+---
+layout: false
+class: clear, middle
+
+Great. What's the point?
+---
+layout: true
+# Regression
+## The *LIE* and the *CEF*
+---
+name: decomposition
+
+.hi-slate[Theorem] The CEF decomposition property (3.1.1)
+
+The LIE allows us to **decompose random variables** into two pieces
+
+
+$$
+\begin{align}
+  \text{Y}_{i} = \color{#e64173}{\mathop{E}\left[ \text{Y}_{i}\mid \text{X}_{i} \right]} + \color{#6A5ACD}{\varepsilon_i}
+\end{align}
+$$
+
+1. .hi-pink[the conditional expectation function]
+2. .hi-purple[a residual] with special powers<sup>.pink[†]</sup>
+<br> i.  $\color{#6A5ACD}{\varepsilon_i}$ is mean independent of $\text{X}_{i}$, _i.e._, $\mathop{E}\left[ \color{#6A5ACD}{\varepsilon_i} \mid \text{X}_{i} \right] = 0$.
+<br> ii.  $\color{#6A5ACD}{\varepsilon_i}$ is uncorrelated with any function of $\text{X}_{i}$.
+
+.footnote[.pink[†] Angrist and Pischke go with *special properties*.]
+
+
+.hi-orange[*Important*] It might not seem like much, but these results are .hi-orange[huge] for building intuition, theory, *and* application.
+ Put a ⭐ here!
+---
+
+.hi-slate[Proof] The CEF decomposition property (properties i. and ii. of $\color{#6A5ACD}{\varepsilon_i}$)
+
+
+.pull-left[
+.hi-slate[Mean independence], $\mathop{E}\left[ \color{#6A5ACD}{\varepsilon_i} \mid \text{X}_{i} \right] = 0$
+$$
+\begin{align}
+  &\mathop{E}\left[ \color{#6A5ACD}{\varepsilon_i} \mid \text{X}_{i} \right] \\[0.6em]
+  &= \mathop{E}\!\bigg( \text{Y}_{i} - \color{#e64173}{\mathop{E}\left[ \text{Y}_{i}\mid \text{X}_{i} \right]} \bigg| \text{X}_{i} \bigg) \\[0.6em]
+  &= \color{#e64173}{\mathop{E}\left[ \text{Y}_{i} \mid \text{X}_{i} \right]} - \mathop{E}\!\bigg( \color{#e64173}{\mathop{E}\left[ \text{Y}_{i} \mid \text{X}_{i} \right]} \bigg| \text{X}_{i} \bigg) \\[0.6em]
+  &= \color{#e64173}{\mathop{E}\left[ \text{Y}_{i} \mid \text{X}_{i} \right]} - \color{#e64173}{\mathop{E}\left[ \text{Y}_{i} \mid \text{X}_{i} \right]} \\[0.6em]
+  &= 0
+\end{align}
+$$
+]
+.pull-right[
+.hi-slate[Zero correlation] btn. $\color{#6A5ACD}{\varepsilon_i}$ and $\mathop{h}\left( \text{X}_{i} \right)$
+$$
+\begin{align}
+  &\mathop{E}\left[ \mathop{h}\left( \text{X}_{i} \right) \color{#6A5ACD}{\varepsilon_i}\right] \\[0.6em]
+  &= \mathop{E}\!\bigg( \mathop{E}\left[ \mathop{h}\left( \text{X}_{i} \right) \color{#6A5ACD}{\varepsilon_i}\mid \text{X}_{i} \right]\bigg) \\[0.6em]
+  &= \mathop{E}\!\bigg( \mathop{h}\left( \text{X}_{i} \right) \mathop{E}\left[\color{#6A5ACD}{\varepsilon_i}\mid \text{X}_{i} \right]\bigg) \\[0.6em]
+  &= \mathop{E}\left[ \mathop{h}\left( \text{X}_{i} \right) \times 0\right] \\[0.6em]
+  &= 0
+\end{align}
+$$
+]
+---
+
+.hi-slate[The CEF decomposition property]
+<br>says that we can decompose any random variable (_e.g._, $\text{Y}_{i}$) into
+
+1. a part that is .pink[explained by] $\color{#e64173}{\text{X}_{i}}$ (_i.e._, the CEF $\color{#e64173}{\mathop{E}\left[ \text{Y}_{i} \mid \text{X}_{i} \right]}$),
+2. a part that is .purple[*orthogonal to*<sup>.purple[†]</sup> any function of] $\color{#6A5ACD}{\text{X}_{i}}$ (_i.e._, $\color{#6A5ACD}{\varepsilon_i}$).
+
+.footnote[.purple[†] "orthogonal to" = "uncorrelated with"]
+
+
+.hi-slate[Why the CEF?]
+<br>The .pink[CEF] also presents an intuitive summary of the relationship between $\text{Y}_{i}$ and $\text{X}_{i}$, since we are often use means to characterize random variables.
+
+
+But (of course) there are more reasons to use the CEF...
+---
+name: prediction
+
+.hi-slate[Theorem] The CEF prediction property (3.1.2)
+
+Let $\mathop{m}\left( \text{X}_{i} \right)$ be *any* function of $\text{X}_{i}$. The CEF solves
+$$
+\begin{align}
+  \color{#e64173}{\mathop{E}\left[ \text{Y}_{i} \mid \text{X}_{i} \right]} = \underset{\mathop{m}\left( \text{X}_{i} \right)}{\text{arg max}}\enspace \mathop{E}\left[ \left( \text{Y}_{i} - \mathop{m}\left( \text{X}_{i} \right) \right)^2 \right]
+\end{align}
+$$
+In other words, the .hi-pink[CEF] is the minimum mean-squared error (MMSE) predictor of $\text{Y}_{i}$ given $\text{X}_{i}$.
+
+
+.hi-slate[*Notice*]
+1. We haven't restricted $m$ to any class of functions—it can be nonlinear.
+2. We're talking about *prediction* (specifically predicting $\text{Y}_{i}$).
+---
+layout: false
+class: clear
+
+.hi-slate[Proof] The CEF prediction property
+
+$\bigg( \text{Y}_{i} - \mathop{m}\left( \text{X}_{i} \right) \bigg)^2$ .right10[.orange[(**1**)]]
+<br>  $= \bigg( \big\{ \text{Y}_{i} - \color{#e64173}{\mathop{E}\left[ \text{Y}_{i} \mid \text{X}_{i} \right]} \big\} + \big\{ \color{#e64173}{\mathop{E}\left[ \text{Y}_{i} \mid \text{X}_{i} \right]} - \mathop{m}\left( \text{X}_{i} \right) \big\} \bigg)^2$
+<br>  $= \bigg( \text{Y}_{i} - \color{#e64173}{\mathop{E}\left[ \text{Y}_{i} \mid \text{X}_{i} \right]} \bigg)^2$  .right10[.turquoise[(**a**)]]
+<br>   $+ 2 \bigg( \color{#e64173}{\mathop{E}\left[ \text{Y}_{i} \mid \text{X}_{i} \right] - \mathop{m}\left( \text{X}_{i} \right)}\bigg)\times \bigg( \text{Y}_{i} - \color{#e64173}{\mathop{E}\left[ \text{Y}_{i} \mid \text{X}_{i} \right]} \bigg)$  .right10[.turquoise[(**b**)]]
+<br>   $+ \bigg( \color{#e64173}{\mathop{E}\left[ \text{Y}_{i} \mid \text{X}_{i} \right]} - \mathop{m}\left( \text{X}_{i} \right) \bigg)^2$  .right10[.turquoise[(**c**)]]
+
+
+.hi-slate[Recall:] We want to choose the $\mathop{m}\left( \text{X}_{i} \right)$ that minimizes .orange[(**1**)] in expectation.
+<br> .turquoise[(**a**)] is irrelevant, _i.e._,  it does not depend upon $\mathop{m}\left( \text{X}_{i} \right)$.
+<br> .turquoise[(**b**)] equals zero in expectation: $\mathop{E}\left[ \mathop{h}\left( \text{X}_{i} \right)\times \color{#6A5ACD}{\varepsilon_i} \right] = 0$.
+<br> .turquoise[(**c**)] is minimized by $\mathop{m}\left( \text{X}_{i} \right) = \color{#e64173}{\mathop{E}\left[ \text{Y}_{i} \mid \text{X}_{i} \right]}$, _i.e._, when $\mathop{m}\left( \text{X}_{i} \right)$ is the .pink[CEF].
+---
+layout: true
+
+# Regression
+## The *LIE* and the *CEF*
+---
+
+∴ the .pink[CEF] is the function that minimizes the mean-squared error (MSE)
+$$
+\begin{align}
+  \color{#e64173}{\mathop{E}\left[ \text{Y}_{i} \mid \text{X}_{i} \right]} = \underset{\mathop{m}\left( \text{X}_{i} \right)}{\text{arg max}}\enspace \mathop{E}\left[ \left( \text{Y}_{i} - \mathop{m}\left( \text{X}_{i} \right) \right)^2 \right]
+\end{align}
+$$
+---
+
+One final property of the .pink[CEF] (very similar to the decomposition property)
+
+.hi-slate[Theorem] The ANOVA theorem (3.1.3)
+$$
+\begin{align}
+  \mathop{\text{Var}} \left( \text{Y}_{i} \right) = \mathop{\text{Var}} \left( \color{#e64173}{\mathop{E}\left[ \text{Y}_{i} \mid \text{X}_{i} \right]} \right) + \mathop{E}\left[ \mathop{\text{Var}} \left( \text{Y}_{i} \mid \text{X}_{i} \right) \right]
+\end{align}
+$$
+which says that we can decompose the variance in $\text{Y}_{i}$ into
+1. the variance in the .pink[CEF]
+2. the variance of the residual
+
+
+.hi-slate[*Example*] Decomposing wage variation into (.hi-slate[1]) variation explained by workers' characteristics and (.hi-slate[2]) unexplained (residual) variation
+
+
+The proof centers on the fact that the decomposition property of the CEF.
+---
+layout: false
+class: clear, middle
+
+We now understand the CEF a bit better.
+<br>But how does the CEF actually relate to regression?
+---
+layout: true
+# Regression
+## The *CEF* and regression
+---
+
+We've discussed how the .pink[CEF] summarizes empirical relationships.
+
+*Previously* we discussed how regression provides simple empirical insights.
+
+Let's link these two concepts.
+---
+name: pop_ls
+
+.hi-slate[Population least-squares regression]
+
+We will focus on $\beta$, the vector (a $K\times 1$ matrix) of population, least-squares regression coefficients, _i.e._,
+$$
+\begin{align}
+  \beta = \underset{b}{\text{arg min}}\thinspace \mathop{E}\left[ \left( \text{Y}_{i} - \text{X}_{i}'b \right)^2 \right]
+\end{align}
+$$
+where $b$ and $\text{X}_{i}$ are also $K\times 1$, and $\text{Y}_{i}$ is a scalar.
+
+
+Taking the first-order condition gives
+$$
+\begin{align}
+   \mathop{E}\left[ \text{X}_{i} \left( \text{Y}_{i} - \text{X}_{i}'b \right) \right] = 0
+\end{align}
+$$
+---
+
+From the first-order condition
+$$
+\begin{align}
+   \mathop{E}\left[ \text{X}_{i} \left( \text{Y}_{i} - \text{X}_{i}'b \right) \right] = 0
+\end{align}
+$$
+we can solve for $b$. We've defined the optimum as $\beta$. Thus,
+$$
+\begin{align}
+  \beta = \mathop{E}\left[ \text{X}_{i} \text{X}_{i}' \right]^{-1} \mathop{E}\left[ \text{X}_{i} \text{Y}_{i} \right]
+\end{align}
+$$
+
+
+.hi-slate[*Note*] The first-order conditions tell us that our least-squares population regression residuals $\left(e_i = \text{Y}_{i} - \text{X}_{i}'\beta \right)$ are uncorrelated with $\text{X}_i$.
+---
+layout: true
+
+# Regression
+## Anatomy
+---
+name: anatomy
+
+Our "new" result: $\beta = \mathop{E}\left[ \text{X}_{i} \text{X}_{i}' \right]^{-1} \mathop{E}\left[ \text{X}_{i} \text{Y}_{i} \right]$
+
+In .hi-slate[simple linear regression] (an intercept and one regressor $x_i$),
+$$
+\begin{align}
+  \beta_1 &= \dfrac{\mathop{\text{Cov}} \left( \text{Y}_{i},\, x_i \right)}{\mathop{\text{Var}} \left( x_i \right)}
+  & \beta_0 = \mathop{E}\left[ \text{Y}_{i} \right] - \beta_1 \mathop{E}\left[ x_i \right]
+\end{align}
+$$
+
+
+For .hi-slate[multivariate regression], the coefficient on the k.super[th] regressor $x_{ki}$ is
+$$
+\begin{align}
+  \beta_k &= \dfrac{\mathop{\text{Cov}} \left( \text{Y}_{i},\, \widetilde{x}_{ki} \right)}{\mathop{\text{Var}} \left( \widetilde{x}_{ki} \right)}
+\end{align}
+$$
+where $\widetilde{x}_{ki}$ is the residual from a regression of $x_{ki}$ on all other covariates.
+---
+
+This alternative formulation of least-squares coefficients is quite powerful.
+$$
+\begin{align}
+  \beta_k &= \dfrac{\mathop{\text{Cov}} \left( \text{Y}_{i},\, \widetilde{x}_{ki} \right)}{\mathop{\text{Var}} \left( \widetilde{x}_{ki} \right)}
+\end{align}
+$$
+
+
+.hi-slate[Why?]
+ This expression illustrates how each coefficient in a least-squares regression represents the bivariate slope coefficient .pink[after controlling for the other covariates].
+
+---
+
+In fact, we can re-write our coefficients to further emphasize this point
+$$
+\begin{align}
+  \beta_k &= \dfrac{\mathop{\text{Cov}} \left( \widetilde{\text{Y}}_{i},\, \widetilde{x}_{ki} \right)}{\mathop{\text{Var}} \left( \widetilde{x}_{ki} \right)}
+\end{align}
+$$
+$\widetilde{\text{Y}}_{i}$ denotes the residual from regressing $\text{Y}_{i}$ on all regressors except $x_{ki}$.
+---
+layout: false
+class: clear, middle
+
+Graphical example
+---
+class: clear, middle, center
+
+```{R, data_anatomy, cache = F, include = F}
+n <- 1e2
+set.seed(1234)
+gen_df <- tibble(
+  x1 = runif(n = n, min = -3, max = 3),
+  x2 = sample(x = c(F, T), size = n, replace = T),
+  u  = rnorm(n = n, mean = 0, sd = 1),
+  y  = -0.5 + x1 + x2 * 4 + u
+)
+mean_a <- filter(gen_df, x2 == F)$y %>% mean()
+mean_b <- filter(gen_df, x2 == T)$y %>% mean()
+gen_df %<>% mutate(y_dm = y - mean_a * (x2 == F) - mean_b * (x2 == T))
+```
+
+$y_i = \beta_0 + \beta_1 x_{1i} + \beta_2 x_{2i} + \varepsilon_i$
+
+```{R, fig_anatomy1, echo = F}
+ggplot(data = gen_df, aes(y = y, x = x1, color = x2, shape = x2)) +
+  geom_hline(yintercept = 0, color = "grey85") +
+  geom_vline(xintercept = 0, color = "grey85") +
+  annotate("text", x = -0.075, y = 7.75, label = TeX("$y$"), size = 8) +
+  annotate("text", x = 2.95, y = 0.3, label = TeX("$x_1$"), size = 8) +
+  geom_point(size = 3) +
+  ylim(c(-4.5, 8)) +
+  theme_empty +
+  scale_color_manual(
+    expression(x[2]),
+    values = c("darkslategrey", red_pink),
+    labels = c("A", "B")
+  ) +
+  scale_shape_manual(
+    expression(x[2]),
+    values = c(1, 19),
+    labels = c("A", "B")
+  ) +
+  theme(
+    legend.position = "bottom",
+    text = element_text(size = 22)
+  )
+```
+---
+class: clear, middle, center
+count: false
+
+$\beta_1$ gives the relationship between $y$ and $x_1$ *after controlling for* $x_2$
+
+```{R, fig_anatomy2, echo = F}
+ggplot(data = gen_df, aes(y = y, x = x1, color = x2, shape = x2)) +
+  geom_hline(yintercept = mean_a, color = "darkslategrey", alpha = 0.5, size = 2) +
+  geom_hline(yintercept = mean_b, color = red_pink, alpha = 0.5, size = 2) +
+  geom_hline(yintercept = 0, color = "grey85") +
+  geom_vline(xintercept = 0, color = "grey85") +
+  annotate("text", x = -0.075, y = 7.75, label = TeX("$y$"), size = 8) +
+  annotate("text", x = 2.95, y = 0.3, label = TeX("$x_1$"), size = 8) +
+  geom_point(size = 3) +
+  ylim(c(-4.5, 8)) +
+  theme_empty +
+  scale_color_manual(
+    expression(x[2]),
+    values = c("darkslategrey", red_pink),
+    labels = c("A", "B")
+  ) +
+  scale_shape_manual(
+    expression(x[2]),
+    values = c(1, 19),
+    labels = c("A", "B")
+  ) +
+  theme(
+    legend.position = "bottom",
+    text = element_text(size = 22)
+  )
+```
+---
+class: clear, middle, center
+count: false
+
+$\beta_1$ gives the relationship between $y$ and $x_1$ *after controlling for* $x_2$
+
+```{R, fig_anatomy3, echo = F}
+ggplot(data = gen_df %>% mutate(y = y - 4 * x2), aes(y = y_dm, x = x1)) +
+  geom_hline(yintercept = 0, color = "grey85") +
+  geom_vline(xintercept = 0, color = "grey85") +
+  annotate("text", x = -0.075, y = 7.75, label = TeX("$y$"), size = 8) +
+  annotate("text", x = 2.95, y = 0.3, label = TeX("$x_1$"), size = 8) +
+  geom_point(size = 3, aes(color = x2, shape = x2)) +
+  ylim(c(-4.5, 8)) +
+  theme_empty +
+  scale_color_manual(
+    expression(x[2]),
+    values = c("darkslategrey", red_pink),
+    labels = c("A", "B")
+  ) +
+  scale_shape_manual(
+    expression(x[2]),
+    values = c(1, 19),
+    labels = c("A", "B")
+  ) +
+  theme(
+    legend.position = "bottom",
+    text = element_text(size = 22)
+  )
+```
+---
+class: clear, middle, center
+count: false
+
+$\beta_1$ gives the relationship between $y$ and $x_1$ *after controlling for* $x_2$
+
+```{R, fig_anatomy4, echo = F}
+ggplot(data = gen_df %>% mutate(y = y - 4 * x2), aes(y = y_dm, x = x1)) +
+  geom_hline(yintercept = 0, color = "grey85") +
+  geom_vline(xintercept = 0, color = "grey85") +
+  geom_smooth(method = lm, se = F, color = purple, alpha = 1, size = 2) +
+  annotate("text", x = -0.075, y = 7.75, label = TeX("$y$"), size = 8) +
+  annotate("text", x = 2.95, y = 0.3, label = TeX("$x_1$"), size = 8) +
+  geom_point(size = 3, aes(color = x2, shape = x2)) +
+  ylim(c(-4.5, 8)) +
+  theme_empty +
+  scale_color_manual(
+    expression(x[2]),
+    values = c("darkslategrey", red_pink),
+    labels = c("A", "B")
+  ) +
+  scale_shape_manual(
+    expression(x[2]),
+    values = c(1, 19),
+    labels = c("A", "B")
+  ) +
+  theme(
+    legend.position = "bottom",
+    text = element_text(size = 22)
+  )
+```
+
+
+---
+layout: false
+class: clear, middle
+
+Now that we've refreshed/deepened our regression knowledge, let's connect regression and the CEF.
+---
+layout: true
+# Regression
+## Regression and the *CEF*
+---
+
+Angrist and Pischke make the case that
+> ... you should be interested in regression parameters if you are interested in the CEF. (*MHE*, p.36)
+
+.hi-slate[Q] What is the reasoning/connection?
+
+
+.hi-slate[A] We'll cover three reasons.
+
+1. *If the CEF is linear*, then the population regression line is the CEF.
+
+2. The function $\text{X}_{i}' \beta$ is the min. MSE *linear* predictor of $\text{Y}_{i}$ given $\text{X}_{i}$.
+
+3. The function $\text{X}_{i}' \beta$ gives the min. MSE *linear* approximation to the CEF.
+---
+layout: true
+# Regression
+## Regression and the *CEF*
+---
+
+.hi-slate[Theorem] The linear CEF theorem (3.1.4)
+
+If the CEF is linear, then the population regression is the CEF.
+
+
+.hi-slate[Proof] Let the CEF equal some linear function, _i.e._, $\color{#e64173}{\mathop{E}\left[ \text{Y}_{i} \mid \text{X}_{i} \right]} = \text{X}_{i}' \beta^\star$.
+
+From the CEF decomposition property, we know $\mathop{E}\left[ \text{X}_{i} \color{#6A5ACD}{\varepsilon_i} \right] = 0$.
+
+
+$\implies \mathop{E}\left[ \text{X}_{i} \left( \text{Y}_{i} - \color{#e64173}{\mathop{E}\left[ \text{Y}_{i} \mid \text{X}_{i} \right]} \right) \right] = 0$
+
+
+$\implies \mathop{E}\left[ \text{X}_{i} \left( \text{Y}_{i} - \text{X}_{i}'\beta^\star \right) \right] = 0$
+
+
+$\implies \mathop{E}\left[ \text{X}_{i}\text{Y}_{i} \right] - \mathop{E}\left[ \text{X}_{i} \text{X}_{i}' \beta^\star \right] = 0$
+
+
+$\implies \beta^\star = \mathop{E}\left[ \text{X}_{i} \text{X}_{i}' \right]^{-1} \mathop{E}\left[ \text{X}_{i}\text{Y}_{i} \right]$
+ $=\beta$, our population regression coefficients.
+---
+
+>.hi-slate[Theorem] The linear CEF theorem (3.1.4)
+>
+>If the CEF is linear, then the population regression is the CEF.
+
+Linearity can be a strong assumption. When might we expect linearity?
+
+
+1. Situations in which $\left( \text{Y}_{i},\, \text{X}_{i} \right)$ follows a multivariate normal distribution.
+<br>.hi-slate[*Concern*] Might be limited—especially when $\text{Y}_{i}$ or $\text{X}_{i}$ are not continuous.
+
+
+2. Saturated regression models
+<br>.hi-slate[*Example*] A model with two binary indicators and their interaction.
+
+---
+
+.hi-slate[Theorem] The best linear predictor theorem (3.1.5)
+
+The function $\text{X}_{i}' \beta$ the best linear predictor of $\text{Y}_{i}$ given $\text{X}_{i}$ (minimizes MSE).
+
+
+.hi-slate[Proof] We defined $\beta$ as the vector that minimizes MSE, _i.e._,
+$$
+\begin{align}
+  \beta = \underset{b}{\text{arg min}}\thinspace \mathop{E}\left[ \left( \text{Y}_{i} - \text{X}_{i}'b \right)^2 \right]
+\end{align}
+$$
+so $\text{X}_{i}'\beta$ is literally defined as the minimum MSE linear predictor of $\text{Y}_{i}$.
+
+
+- The population-regression function $\left(\text{X}_{i}'\beta\right)$ is the best (min. MSE) *linear* predictor of $\text{Y}_{i}$ given $\text{X}_{i}$.
+- The CEF $\left( \mathop{E}\left[ \text{Y}_{i} \mid \text{X}_{i} \right] \right)$ is the best predictor (min. MSE) of $\text{Y}_{i}$ given $\text{X}_{i}$ across *all classes* of functions.
+
+---
+
+.hi-slate[Q] If $\text{X}_{i}'\beta$ is .hi[the best linear predictor] of $\text{Y}_{i}$ given $\text{X}_{i}$, then why is there so much interest machine learning for prediction (opposed to regression)?
+
+
+.hi-slate[A] A few reasons
+
+1. Relax *linearity*
+2. Model selection
+  - choosing $\text{X}_{i}$ is not always obvious
+  - overfitting is bad
+3. It's fancy/shiny and new
+4. Some ML methods boil down to regression
+5. Others?
+
+
+.hi-slate[Counter Q] Why are we (still) using regression?
+---
+name: reg_cef_theorem
+
+.hi-slate[Theorem] The regression CEF theorem (3.1.6)
+
+The population regression function $\text{X}_{i}'\beta$ provides the minimum MSE linear approximation to the CEF $\mathop{E}\left[ \text{Y}_{i} \mid \text{X}_{i} \right]$, _i.e._,
+$$
+\begin{align}
+  \beta = \underset{b}{\text{arg min}}\thinspace \mathop{E}\!\left\{ \bigg( \mathop{E}\left[ \text{Y}_{i} \mid \text{X}_{i} \right] - \text{X}_{i}'b \bigg)^2 \right\}
+\end{align}
+$$
+
+
+.hi-slate[*Put simply*] Regression gives us the *best* linear approximation to the CEF.
+---
+layout: false
+class: clear
+
+.hi-slate[Proof] First, recall that, in expectation, $\beta$ is the $b$ that minimizes $\left( \text{Y}_{i} - \text{X}_{i}'b \right)$
+
+
+$\left( \text{Y}_{i} - \text{X}_{i}'b \right)^2 \color{#ffffff}{\bigg|}$ .right10[.orange[(**1**)]]
+<br>  $= \bigg( \left\{ \text{Y}_{i} - \color{#e64173}{\mathop{E}\left[ \text{Y}_{i} \mid \text{X}_{i} \right]} \right\} + \left\{ \color{#e64173}{\mathop{E}\left[ \text{Y}_{i} \mid \text{X}_{i} \right]} - \text{X}_{i}'b \right\} \bigg)^2$
+<br>  $= \bigg( \text{Y}_{i} - \color{#e64173}{\mathop{E}\left[ \text{Y}_{i} \mid \text{X}_{i} \right]} \bigg)^2$ .right10[.turquoise[(**a**)]]
+<br>  $\color{#ffffff}{=}+\bigg( \color{#e64173}{\mathop{E}\left[ \text{Y}_{i} \mid \text{X}_{i} \right]} - \text{X}_{i}'b \bigg)^2$ .right10[.turquoise[(**b**)]]
+<br>  $\color{#ffffff}{=}+ 2 \bigg( \text{Y}_{i} - \color{#e64173}{\mathop{E}\left[ \text{Y}_{i} \mid \text{X}_{i} \right]} \bigg) \bigg( \color{#e64173}{\mathop{E}\left[ \text{Y}_{i} \mid \text{X}_{i} \right]} - \text{X}_{i}'b \bigg)$ .right10[.turquoise[(**c**)]]
+
+
+We want to minimize .turquoise[(**b**)], and we know $\beta$ minimizes .orange[(**1**)].
+<br> .turquoise[(**a**)] is irrelevant, _i.e._,  it does not depend upon $b$.
+<br> .turquoise[(**c**)] can be written as $2 \color{#6A5ACD}{\varepsilon_i} \mathop{h}(\text{X}_{i})$, which equals zero in expectation.
+
+
+∴ (In expectation) If $b=\beta$ minimizes .orange[(**1**)], then $b=\beta$ minimizes .turquoise[(**b**)].
+
+---
+layout: true
+# Regression
+## Regression and the *CEF*
+---
+
+Let's review our new(-ish) regression results
+
+1. When the CEF is linear, the regression function *is* the CEF.
+<br>.hi-slate[Too small] Very specific circumstances—or big assumptions.
+
+1. Regression gives us the best *linear* predictor of $\text{Y}_{i}$ (given $\text{X}_{i}$)
+<br>.hi-slate[Off point] We're often interested in $\beta$—not $\widehat{\text{Y}}_{i}$.
+
+1. Regression provides the best *linear* approximation of the CEF.
+<br>.hi-slate[Just right?] (Depends on your goals)
+
+---
+
+Motivation (**3**) tends to be the most compelling.
+
+Even when the CEF is not linear, regression recovers the best linear approximation to the CEF.
+
+
+> The statement that .pink[regression approximates the CEF] lines up with our view of .purple[empirical work as an effort to describe the essential features of statistical relationships] without necessarily trying to pin them down exactly. (*MHE*, p.39, emphasis added)
+---
+layout: false
+class: clear, middle
+
+Let's dig into this linear-approximate to the CEF a little more...
+---
+class: clear, middle, center
+
+Returning to our **CEF**
+
+```{R, fig_reg_cef, echo = F, cache = T}
+# Estimate the relationship
+cef_lm <- lm(y ~ x, data = cef_df)
+# Find the regression points
+lm_df <- tibble(
+  x = 8:22,
+  y = predict(object = cef_lm, newdata = data.frame(x = 8:22))
+)
+# Create the figure
+gg_cef <- ggplot(data = cef_df, aes(x = y, y = x %>% as.factor())) +
+  geom_density_ridges(
+    rel_min_height = 0.003,
+    color = "grey85",
+    fill = NA,
+    scale = 2.5,
+    size = 0.3
+  ) +
+  scale_x_continuous(
+    "Annual income",
+    labels = scales::dollar
+  ) +
+  ylab("Years of education") +
+  scale_fill_viridis(option = "magma") +
+  theme_pander(base_family = "Fira Sans Book", base_size = 18) +
+  theme(
+    legend.position = "none"
+  ) +
+  geom_path(
+    data = means_df,
+    aes(x = y, y = x %>% as.factor(), group = 1),
+    color = "grey20",
+    alpha = 0.85
+  ) +
+  geom_point(
+    data = means_df,
+    aes(x = y, y = x %>% as.factor()),
+    color = "grey20",
+    shape = 16,
+    size = 3.5
+  ) +
+  coord_flip()
+# Plot it
+gg_cef
+```
+---
+class: clear, center, middle
+
+Adding the population .hi-orange[regression function]
+
+```{R, fig_reg_cef2, echo = F, cache = T}
+# Figure
+gg_cef +
+  geom_path(
+    data = lm_df,
+    aes(x = y, y = x %>% as.factor(), group = 1),
+    color = orange,
+    alpha = 0.5,
+    size = 2
+  )
+```
+---
+# Regression
+## Regression and the *CEF*
+
+As the previous figure suggests, one way to think about least-squares regression is .hi-slate[estimating a weighted regression on the CEF] rather than the individual observations.
+
+---
+layout: false
+# Table of contents
+
+.pull-left[
+### Admin
+.smaller[
+
+1. [Schedule](#schedule)
+1. [`return`](#return)
+]
+
+]
+
+.pull-right[
+### Regression
+.smaller[
+
+1. [Why?](#why)
+1. [The CEF](#cef)
+  - [Definition](#cef)
+  - [Graphically](#graphically)
+  - [Law of iterated expectations](#lie)
+  - [Decomposition](#decomposition)
+  - [Prediction](#prediction)
+1. [Population least squares](#pop_ls)
+1. [Anatomy](#anatomy)
+1. [Regression-CEF theorem](#reg_cef_theorem)
+]
+]
+---
+exclude: true
+
+```{R, generate pdfs, include = F, eval = T}
+source("../../ScriptsR/unpause.R")
+```

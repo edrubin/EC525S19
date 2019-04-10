@@ -759,7 +759,7 @@ Take the difference...
 
 $$
 \begin{align}
-  \mathop{E}\left[ \text{Y}_{i} \mid \color{#e64173}{\text{D}_{i}=1} \right] - \mathop{E}\left[ \text{Y}_{i} \mid \color{#6A5ACD}{\text{D}_{i}=0} \right] = \mathop{E}\left[ \eta_i | \color{#e64173}{\text{D}_{i}=1} \right] - \mathop{E}\left[ \eta_i \mid \color{#6A5ACD}{\text{D}_{i}=0} \right]
+  \mathop{E}\left[ \text{Y}_{i} \mid \color{#e64173}{\text{D}_{i}=1} \right] - \mathop{E}\left[ \text{Y}_{i} \mid \color{#6A5ACD}{\text{D}_{i}=0} \right] = \color{#FFA500}{\rho} + \mathop{E}\left[ \eta_i | \color{#e64173}{\text{D}_{i}=1} \right] - \mathop{E}\left[ \eta_i \mid \color{#6A5ACD}{\text{D}_{i}=0} \right]
 \end{align}
 $$
 

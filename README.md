@@ -41,6 +41,12 @@ We will use two books.
 **Note formats:** [.html](https://raw.githack.com/edrubin/EC525S19/master/NotesLecture/02Ideal/02Ideal.html) | [.html (no pause)](https://raw.githack.com/edrubin/EC525S19/master/NotesLecture/02Ideal/02Ideal_NoPause.html) | [.pdf](https://raw.githack.com/edrubin/EC525S19/master/NotesLecture/02Ideal/02Ideal.pdf) | [.pdf (no pause)](https://raw.githack.com/edrubin/EC525S19/master/NotesLecture/02Ideal/02Ideal_NoPause.pdf) | [.Rmd](https://raw.githack.com/edrubin/EC525S19/master/NotesLecture/02Ideal/02Ideal.Rmd)
 <br>**Readings:** MHE chapter 2
 
+**[Lecture 03: Why Regression?](https://raw.githack.com/edrubin/EC525S19/master/NotesLecture/03WhyRegression/03WhyRegression.html)**
+
+
+**Note formats:** [.html](https://raw.githack.com/edrubin/EC525S19/master/NotesLecture/03WhyRegression/03WhyRegression.html) | [.html (no pause)](https://raw.githack.com/edrubin/EC525S19/master/NotesLecture/03WhyRegression/03WhyRegression_NoPause.html) | [.pdf](https://raw.githack.com/edrubin/EC525S19/master/NotesLecture/03WhyRegression/03WhyRegression.pdf) | [.pdf (no pause)](https://raw.githack.com/edrubin/EC525S19/master/NotesLecture/03WhyRegression/03WhyRegression_NoPause.pdf) | [.Rmd](https://raw.githack.com/edrubin/EC525S19/master/NotesLecture/03WhyRegression/03WhyRegression.Rmd)
+<br>**Readings:** MHE chapter 3
+
 *Another note on the notes:* I create the slides with [`xaringan`](https://github.com/yihui/xaringan/wiki) in [R](cran.r-project.org). Thanks to [Grant McDermott](grantmcdermott.com/) for encouraging me to make this switch.
 
 ## Lab slides
