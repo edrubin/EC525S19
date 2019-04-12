@@ -742,7 +742,7 @@ our_df
 
 .pull-right[
 ```{R, ex_arrange2}
-# As is
+# Arrang by y, grp, then -x
 our_df %>% arrange(y, grp, -x)
 ```
 ]
