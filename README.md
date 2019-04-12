@@ -8,7 +8,10 @@ Welcome to **Economics 425/525: Econometrics III** (Spring 2019) at the Universi
 
 **Lab** Friday 12:00pm–12:50pm, [Gerlinger Hall 302](https://map.uoregon.edu/0b99fa5c1)
 
-**Office hours** Monday 4:00pm–5:00pm and Thursday 9:00am–10:00am, [PLC 519](https://map.uoregon.edu/e6bd451c7)
+**Office hours**
+
+- **Ed Rubin** Monday 4:00pm–5:00pm and Thursday 9:00am–10:00am, [PLC 519](https://map.uoregon.edu/e6bd451c7)
+- **Jenni Putz** Monday 4:00pm–5:00pm and Friday 9:30am–11:00am, [PLC 523](https://map.uoregon.edu/b1c21ff02)
 
 ## Books
 
@@ -43,6 +46,9 @@ We will use two books.
 
 **[Lecture 03: Why Regression?](https://raw.githack.com/edrubin/EC525S19/master/NotesLecture/03WhyRegression/03WhyRegression.html)**
 
+1. What's the big deal about least-squares (population) regression?
+2. What does the CEF tell us?
+3. How does least-squares regression relate to the CEF?
 
 **Note formats:** [.html](https://raw.githack.com/edrubin/EC525S19/master/NotesLecture/03WhyRegression/03WhyRegression.html) | [.html (no pause)](https://raw.githack.com/edrubin/EC525S19/master/NotesLecture/03WhyRegression/03WhyRegression_NoPause.html) | [.pdf](https://raw.githack.com/edrubin/EC525S19/master/NotesLecture/03WhyRegression/03WhyRegression.pdf) | [.pdf (no pause)](https://raw.githack.com/edrubin/EC525S19/master/NotesLecture/03WhyRegression/03WhyRegression_NoPause.pdf) | [.Rmd](https://raw.githack.com/edrubin/EC525S19/master/NotesLecture/03WhyRegression/03WhyRegression.Rmd)
 <br>**Readings:** MHE chapter 3
@@ -62,6 +68,13 @@ We will use two books.
 <br>
 **Solutions:**
 [.html](https://raw.githack.com/edrubin/EC525S19/master/NotesLab/01RBasics/01Solution.html) | [.pdf](https://raw.githack.com/edrubin/EC525S19/master/NotesLab/01RBasics/01Solution.pdf)
+
+**[Lab 02: Data in/and R](https://raw.githack.com/edrubin/EC525S19/master/NotesLab/02RData/02RData.html)**
+
+1. Data frames
+1. Data work with `dplyr`
+
+**Note formats:** [.html](https://raw.githack.com/edrubin/EC525S19/master/NotesLab/02RData/02RData.html) | [.html (no pause)](https://raw.githack.com/edrubin/EC525S19/master/NotesLab/02RData/02RData_NoPause.html) | [.pdf](https://raw.githack.com/edrubin/EC525S19/master/NotesLab/02RData/02RData.pdf) | [.pdf (no pause)](https://raw.githack.com/edrubin/EC525S19/master/NotesLab/02RData/02RData_NoPause.pdf) | [.Rmd](https://raw.githack.com/edrubin/EC525S19/master/NotesLab/02RData/02RData.Rmd)
 
 ## Problem sets
 

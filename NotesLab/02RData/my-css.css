@@ -1,4 +1,9 @@
-@import url(https://fonts.googleapis.com/css?family=Source+Code+Pro:300,300i,400,400i,500,500i,700,700i);
+@import url(https://fonts.googleapis.com/css?family=Bad+Script:300,300i,400,400i,500,500i,700,700i);
+@import url(https://fonts.googleapis.com/css?family=Indie+Flower:300,300i,400,400i,500,500i,700,700i);
+@import url(https://fonts.googleapis.com/css?family=Merriweather:300,300i,400,400i,500,500i,700,700i);
+@import url(https://fonts.googleapis.com/css?family=Zilla+Slab:300,300i,400,400i,500,500i,700,700i);
+@import url(https://fonts.googleapis.com/css?family=Bungee+Shade:300,300i,400,400i,500,500i,700,700i);
+
 
 /* Create a highlighted class called 'hi'  */
 .hi {
@@ -133,6 +138,9 @@
 .bigger {
   font-size: 125%;
 }
+.huge{
+  font-size: 150%;
+}
 
 .small {
   font-size: 95%;
@@ -209,7 +217,7 @@
   font-family: monospace;
   background: #f8f8f8;
   border-radius: 3px;
-  padding: 0px;
+  padding: 10px;
 }
 .pseudocode-small {
   font-size: 20px;
@@ -225,7 +233,7 @@
 }
 
 .remark-code {
-  font-size: 70%;
+  font-size: 80%;
 }
 
 .inverse > h2 {
@@ -248,8 +256,6 @@
 }
 
 .remark-inline-code {
-  font-variant-ligatures: none;
-  /* font-variant-ligatures: common-ligatures; */
   background: #F5F5F5; /* lighter */
   /* background: #e7e8e2; /* darker */
   border-radius: 3px;
@@ -269,6 +275,35 @@
   clear: both;
 }
 
+/* 9/10 left; 1/10 right */
+.left90 {
+  padding-top: 0.7em;
+  float: left;
+  width: 85%;
+}
+.right10 {
+  padding-top: 0.7em;
+  float: right;
+  width: 9%;
+}
+
+/* 95% left; 5% right */
+.left95 {
+  padding-top: 0.7em;
+  float: left;
+  width: 91%;
+}
+.right05 {
+  padding-top: 0.7em;
+  float: right;
+  width: 5%;
+}
+
+/* Extra left padding */
+.pad-left {
+  margin-left: 5%;
+}
+
 /* Format tables */
 table {
   color: #000000;
@@ -277,4 +312,18 @@ table {
 th, td {
   background-color: #ffffff;
   /* color: #314f4f; */
+}
+
+/* Question and answer */
+.qa {
+  font-weight: 500;
+  /* color: #314f4f !important; */
+  color: #e64173 !important;
+  font-family: 'Zilla Slab' !important;
+}
+/* Example */
+.ex {
+  font-weight: 300;
+  /* color: #314f4f !important; */
+  color: #8AA19E !important;
 }

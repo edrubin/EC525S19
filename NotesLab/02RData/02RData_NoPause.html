@@ -1,0 +1,892 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <title>Data in/and .mono[R]</title>
+    <meta charset="utf-8">
+    <meta name="author" content="Edward Rubin" />
+    <meta name="date" content="2019-04-12" />
+    <link href="02RData_NoPause_files/remark-css-0.0.1/default.css" rel="stylesheet" />
+    <link href="02RData_NoPause_files/remark-css-0.0.1/metropolis.css" rel="stylesheet" />
+    <link href="02RData_NoPause_files/remark-css-0.0.1/metropolis-fonts.css" rel="stylesheet" />
+    <link rel="stylesheet" href="my-css.css" type="text/css" />
+  </head>
+  <body>
+    <textarea id="source">
+class: center, middle, inverse, title-slide
+
+# Data in/and .mono[R]
+## EC 425/525, Lab 2
+### Edward Rubin
+### 12 April 2019
+
+---
+
+class: inverse, middle
+
+
+
+# Prologue
+
+---
+name: schedule
+
+# Schedule
+
+## Last time
+
+Getting to know .mono[R]—objects, functions, *etc.*
+
+## Today
+
+Working with data in .mono[R].
+- The `data.frame` class
+- The `dplyr` package
+
+## Upcoming
+
+.hi[Due Monday] Step 1 of our research-project proposal.
+
+---
+layout: true
+# Matrices
+---
+name: review
+
+## Quick review
+
+1. `mat &lt;- matrix(data = 1:10, ncol = 2)` creates a 5×2 `matrix` object containing the numbers 1 through 10 (filled by column).
+
+1. `mat[1,]` grabs the first row of our matrix `mat`.
+
+1. `mat[3,2] &lt;- NA` assigns `NA` to row-3 column-2 element of `mat`.
+
+1. `head(mat, 3)` returns up to the first three rows of `mat`.
+
+1. `matrix(data = rnorm(100), ncol = 10)` creates a 10×10 matrix filled with random draws from `\(N(\mu=0,\sigma^2=1)\)`.
+
+1. `mat[3,2] &lt;- "Carrots"` assigns the `character` object `"Carrots"` to the `[3,2]` element of `mat`, forcing all elements of `mat` to `character`.
+---
+
+## Next steps
+
+Matrices are convenient two-dimensional arrays on which math "works."&lt;sup&gt;.pink[†]&lt;/sup&gt;
+
+.footnote[.pink[†] At least for `numeric` and `logical` matrices.]
+
+*But* matrices also require all elements to be of the same class.
+
+.qa[Q] What if we a datasets whose variables (columns) have different classes?
+
+
+.qa[A] We need a more flexible table-like object for our data.
+&lt;br&gt;Maybe a `data.table`?
+ Or a `data.frame`?
+
+
+We'll start with `data.frame`.
+
+
+We will spend a good amount of time on data frames, as they make up a huge part of your workflow.
+---
+layout: true
+# Data frames
+---
+name: df
+
+A `data.frame` is .mono[R]'s base, spreadsheet-like object that holds variables.
+
+
+.ex[Example]
+
+
+
+```
+#&gt;    id first_name fave_num is_tired loves_econ
+#&gt; 1   1     Karmin       68     TRUE      FALSE
+#&gt; 2   2  Raychelle       57     TRUE       TRUE
+#&gt; 3   3    Jemelle       10     TRUE       TRUE
+#&gt; 4   4      Yusif       90     TRUE       TRUE
+#&gt; 5   5  Catherine       24     TRUE       TRUE
+#&gt; 6   6      Glory        4     TRUE       TRUE
+#&gt; 7   7     Kaelah       33    FALSE       TRUE
+#&gt; 8   8    Lysette       96     TRUE       TRUE
+#&gt; 9   9      Cisco       89     TRUE       TRUE
+#&gt; 10 10     Harman       69     TRUE       TRUE
+#&gt; 11 11   Jennelle       64     TRUE       TRUE
+#&gt; 12 12    Crayton      100     TRUE       TRUE
+```
+---
+
+A `data.frame` is .mono[R]'s base, spreadsheet-like object that holds variables.
+
+.ex[Example]
+
+
+```
+#&gt;                  name height mass gender homeworld species
+#&gt; 1      Luke Skywalker    172   77   male  Tatooine   Human
+#&gt; 2               C-3PO    167   75   &lt;NA&gt;  Tatooine   Droid
+#&gt; 3               R2-D2     96   32   &lt;NA&gt;     Naboo   Droid
+#&gt; 4         Darth Vader    202  136   male  Tatooine   Human
+#&gt; 5         Leia Organa    150   49 female  Alderaan   Human
+#&gt; 6           Owen Lars    178  120   male  Tatooine   Human
+#&gt; 7  Beru Whitesun lars    165   75 female  Tatooine   Human
+#&gt; 8               R5-D4     97   32   &lt;NA&gt;  Tatooine   Droid
+#&gt; 9   Biggs Darklighter    183   84   male  Tatooine   Human
+#&gt; 10     Obi-Wan Kenobi    182   77   male   Stewjon   Human
+#&gt; 11   Anakin Skywalker    188   84   male  Tatooine   Human
+#&gt; 12     Wilhuff Tarkin    180   NA   male    Eriadu   Human
+```
+---
+name: creation
+
+## Creation
+
+The `data.frame()` function creates...
+ `data.frame` objects.
+
+
+You'll generally define data frames by passing the function&lt;br&gt;(.hi-slate[1]) column names and (.hi-slate[2]) values for the columns.
+
+
+```r
+data.frame(var1 = 1:5, var2 = "apple", var3 = rnorm(5))
+```
+
+
+
+You can also assign the values using already-existing objects, _e.g._,
+
+
+```r
+# An object with value
+tmp &lt;- rnorm(5)
+# Creating the data frame
+data.frame(var1 = 1:5, var2 = "apple", var3 = tmp)
+```
+---
+
+## Creation
+
+
+```r
+# Creating the data frame
+data.frame(var1 = 1:5, var2 = "apple", var3 = rnorm(5))
+```
+
+```
+#&gt;   var1  var2       var3
+#&gt; 1    1 apple -0.6250393
+#&gt; 2    2 apple -1.6866933
+#&gt; 3    3 apple  0.8377870
+#&gt; 4    4 apple  0.1533731
+#&gt; 5    5 apple -1.1381369
+```
+(What a beauty.)
+
+
+Notice that .mono[R] assumes we want to repeat `"apple"` for the entire column.
+---
+
+## Creation
+
+You can also create data frames from other objects (_e.g._, matrices) using the function `as.data.frame()`&lt;sup&gt;.pink[†]&lt;/sup&gt;.
+
+.footnote[.pink[†] Or just plain, old `data.frame()`.]
+
+However, your data frame's columns will only have names if your matrix's columns had names.
+
+
+---
+name: indexing
+
+## Indexing
+
+Consider a data frame `our_df &lt;- data.frame(x = 1:3, y = 4:6, z = 7:9)`.
+
+.purple[Option 1] Index data frames just as you index matrices in .mono[R].
+- `our_df[1,1]` grabs the value in the first row of the first variable.
+- `our_df[2,]` returns the second row of `our_df` (as a data frame).
+- `our_df[,3]` returns the third column (variable) of `our_df` (as a vector).
+
+
+.purple[Option 2] Reference values/variables using columns' names.
+- `our_df$x` returns the column named `x` (as a vector). .hi[New:] `$`
+- `our_df[,"x"]` returns the column named `x` (as a vector).
+- `our_df["x"]` returns the column named `x` (as a data frame).
+- `our_df[,c("x","y")]` returns a data frame with variables `"x"` and `"y"`.
+---
+name: names
+
+## Names (of columns)
+
+The columns (variables) in your data frame have names.&lt;sup&gt;.pink[†]&lt;/sup&gt;
+
+.footnote[.pink[†] If you don't name the columns, then .mono[R] will.]
+
+.qa[Q] What if you want to see/know those names?
+
+
+.qa[A] You've got a few options.
+
+
+1. The `names()` function returns the *names* of an object.
+
+
+2. `head(your_df)` will show you the first 6 rows of `your_df`.
+&lt;br&gt;*Note:* May provide too much output if you have a lot of columns.
+
+
+3. In .mono[RStudio]: `View(your_df)` or look in your .mono[Environment] tab.
+---
+
+## Naming
+
+The `names()` function will also help you rename any/all variables.
+
+
+Change the names of .b[all variables] (include a name for each variable):
+
+```r
+# Set new names
+names(our_df) &lt;- c("name1", "name2", "name3")
+```
+
+
+Change the name of .b[the second variable] (only):
+
+```r
+# Set new names
+names(our_df)[2] &lt;- "name2"
+```
+---
+name: adding
+
+## Adding variables
+
+Just as we referenced .pink[existing] variables using `$var_name`,
+&lt;br&gt;we can create .purple[new] varirables using `$new_var`, _e.g._,
+
+
+```r
+# Add a variable to our_df
+our_df$new_var &lt;- 1:100
+```
+
+
+If you want to use existing columns to create a new variable
+
+
+```r
+# Create interaction: xy = x * y
+our_df$xy &lt;- our_df$x * our_df$y
+```
+
+.qa[Q] Isn't there a better/faster/less-typing way?
+
+
+.qa[A] Yes. *Enter* `dplyr`
+ (also: `data.table`, which we'll leave for the future).
+---
+layout: true
+# dplyr
+---
+name: dplyr
+
+## Intro
+
+It's a package.
+ `dplyr` is not installed by default, so you'll need to install it.&lt;sup&gt;.pink[†]&lt;/sup&gt;
+
+.footnote[.pink[†] or just `p_load(dplyr)` after loading `pacman`.]
+
+
+`dplyr` is part of the [`tidyverse`](https://dplyr.tidyverse.org/) (Hadleyverse), and it follows a grammar-based approach to programming/data work.
+
+
+- `data` compose the subjects of your stories
+
+- `dplyr` provides the *verbs* (action words)
+:&lt;br&gt; `filter()`, `mutate()`, `select()`, `group_by()`, `summarize()`, `arrange()`
+
+
+.hi-slate[*Bonus*] `dplyr` is pretty fast and able to interact with SQL databases.
+---
+name: mutate
+
+## Manipulating variables: `mutate()`
+
+`dplyr` streamlines adding/manipulating variables in your data frame.
+
+.hi-slate[Function] `mutate(.data, ...)`
+
+- .pink[Required argument] `.data`, an existing data frame
+
+- .pink[Additional arguments] Names and values of the new variables
+
+- .pink[Output] An updated data frame
+
+
+.ex[Example]
+
+```r
+mutate(.data = our_df, new1 = 7, new2 = x * y)
+```
+
+---
+
+## `mutate()`
+
+.ex[Example] Take the data frame
+
+
+```r
+my_df &lt;- data.frame(x = 1:4, y = 5:8)
+```
+
+
+
+`mutate()` allows us to create many new variables with one call.
+
+.pull-left[
+
+
+```r
+mutate(.data = my_df,
+  xy = x * y,
+  x2 = x^2,
+  y2 = y^2,
+  xy2 = xy^2,
+  is_x_max = x == max(x)
+)
+```
+
+]
+.pull-right[
+
+
+```
+#&gt;   x y xy x2 y2  xy2 is_x_max
+#&gt; 1 1 5  5  1 25   25    FALSE
+#&gt; 2 2 6 12  4 36  144    FALSE
+#&gt; 3 3 7 21  9 49  441    FALSE
+#&gt; 4 4 8 32 16 64 1024     TRUE
+```
+
+Notice `mutate()` returns the original *and* new columns.
+
+]
+---
+name: transmute
+
+## `mutate()` *vs.* `transmute()`
+
+As their names imply, `mutate()` and `transmute()` are very similar functions.
+
+- `mutate()` returns the .pink[original] *and* .purple[new] columns (variables).
+
+- `transmute()` returns only the .purple[new] columns (variables).
+
+
+.slate[*Note*] Both functions return a new object as *output*—they do not update the object in .mono[R]'s memory. (This is the case for all functions in `dplyr`.)
+
+---
+name: pipes
+
+## Pipes
+
+We can't go much deeper into the land of `dplyr` without mentioning pipes.
+
+
+A *pipe* in programming allows you to take the output of one function and plug it into another function as an argument/input.
+
+
+In `dplyr`, the expression for a pipe is `%&gt;%`.
+
+
+.mono[R]'s pipe specifically plugs the returned object to the .pink[left] of the pipe into the first argument of the function on the .purple[right] fo the pipe, _e.g._,
+
+
+
+```r
+rnorm(10) %&gt;% mean()
+```
+
+```
+#&gt; [1] 0.4854731
+```
+
+
+---
+
+## Pipes
+
+Pipes help avoid lots of nested functions, prevent excessive writing to your disc, and increase the readability of our .mono[R] scripts.
+
+
+.ex[Example] Three ways to draw 100 N(0,1) observations and calculate the interquartile range (IQR: difference between the 75.super[th] and 25.super[th] percentiles).
+
+
+```r
+# Save each intermediate step
+draw &lt;- rnorm(100)
+end_points &lt;- quantile(draw, probs = c(0.25, 0.75))
+diff(end_points)
+# Lots of nesting
+diff(quantile(rnorm(100), probs = c(0.25, 0.75)))
+# Piping 💪
+rnorm(100) %&gt;% quantile(probs = c(0.25, 0.75)) %&gt;% diff()
+```
+---
+
+## Pipes
+
+By default, .mono[R] pipes the output from the LHS of the pipe into&lt;br&gt;the .hi[first] argument of the function on the RHS of the pipe.
+
+
+*E.g.*, `a %&gt;% fun(3)` is equivalent to `fun(arg1 = a, arg2 = 3)`.
+
+
+If you want to pipe output into a different argument, you use a period (`.`).
+
+
+- `b %&gt;% fun(arg1 = 3, .)` is equivalent to `fun(arg1 = 3, arg2 = b)`.
+- `b %&gt;% fun(3, .)` is also equivalent to `fun(arg1 = 3, arg2 = b)`.
+
+- `b %&gt;% fun(., .)` is equivalent to `fun(arg1 = b, arg2 = b)`.
+
+
+The `magrittr` package contains even more piping power.&lt;sup&gt;.pink[†]&lt;/sup&gt;
+
+.footnote[.pink[†] `magrittr` = Magritte (of [*this is not a pipe*](https://en.wikipedia.org/wiki/The_Treachery_of_Images) fame) plus .mono[R].]
+---
+
+## `%&gt;%` and `dplyr`
+
+Each `dplyr` function begins with a `.data` argument so that you can easily pipe in data frames (recall: `mutate(.data, ...)`).
+
+
+The common workflow in `dplyr` will look something like
+
+`new_df &lt;- old_df %&gt;% mutate(cool stuff here)`
+
+which takes `old_df`, does some cool stuff with `mutate()`, and then saves the output of `mutate()` as `new_df`.
+
+
+---
+
+## `filter()`
+
+The `filter()` function does what its name implies: it .b[filters the rows] of your data frame .b[based upon logical conditions].
+
+---
+layout: true
+
+# dplyr
+## `filter()`
+
+The `filter()` function does what its name implies: it .b[filters the rows] of your data frame .b[based upon logical conditions].
+
+.ex[Example]
+
+.pull-left[
+
+```r
+# Create a dataset
+some_df &lt;- data.frame(
+  x = 1:10,
+  y = 11:20
+)
+```
+]
+
+---
+name: filter
+count: false
+
+
+.pull-right[
+
+```r
+# Only keep rows where x is 3
+some_df %&gt;% filter(x == 3)
+```
+
+```
+#&gt;   x  y
+#&gt; 1 3 13
+```
+]
+---
+
+.pull-right[
+
+```r
+# Only keep rows where x &gt; 7
+some_df %&gt;% filter(x &gt; 7)
+```
+
+```
+#&gt;    x  y
+#&gt; 1  8 18
+#&gt; 2  9 19
+#&gt; 3 10 20
+```
+]
+---
+
+.pull-right[
+
+```r
+# Keep rows where y/x &gt; 3
+some_df %&gt;% filter(y/x &gt; 3)
+```
+
+```
+#&gt;   x  y
+#&gt; 1 1 11
+#&gt; 2 2 12
+#&gt; 3 3 13
+#&gt; 4 4 14
+```
+]
+---
+
+.pull-right[
+
+```r
+# Keep rows where x&gt;7 OR y&lt;12
+some_df %&gt;%
+  filter(x &gt; 7 | y &lt; 12)
+```
+
+```
+#&gt;    x  y
+#&gt; 1  1 11
+#&gt; 2  8 18
+#&gt; 3  9 19
+#&gt; 4 10 20
+```
+]
+---
+
+.pull-right[
+
+```r
+# Keep rows where 15&lt;=y&lt;=18
+some_df %&gt;%
+  filter(between(y, 15, 18))
+```
+
+```
+#&gt;   x  y
+#&gt; 1 5 15
+#&gt; 2 6 16
+#&gt; 3 7 17
+#&gt; 4 8 18
+```
+]
+---
+
+.pull-right[
+
+```r
+# Keep rows where y &gt; 20
+some_df %&gt;% filter(y &gt; 20)
+```
+
+```
+#&gt; [1] x y
+#&gt; &lt;0 rows&gt; (or 0-length row.names)
+```
+]
+
+If you filter your data frame down to nothing, .mono[R] returns a 0-row data frame with the names/number of columns from the original data frame.
+---
+layout: true
+# dplyr
+---
+name: select
+
+## `select()`
+
+Just as .purple[`filter()`] grabs .purple[row-based subsets] of your data frame,
+&lt;br&gt;.pink[`select()`] grabs .pink[column-based subsets].
+
+
+You can select columns using their .b[names]
+&lt;br&gt;.pad-left[`our_df %&gt;% select(var10, var100)`]
+
+
+you can select columns using their .b[numbers]
+&lt;br&gt;.pad-left[`our_df %&gt;% select(10, 100)`]
+
+
+or you can select columns using .b[helper fuctions]
+&lt;br&gt;.pad-left[`our_df %&gt;% select(starts_with("var10"))`]
+
+
+`select()` helps you narrow down a dataset to its necessary features.
+---
+name: summarize
+
+## `summarize()`
+
+Hopefully you're starting to see that functions' names in `dplyr` tell you what the function does.
+
+`summarize()`&lt;sup&gt;.pink[†]&lt;/sup&gt; summarizes variables—you choose the variables and the summaries (_e.g._, `mean()` or `min()`).
+
+.footnote[.pink[†] or `summarise()` if you ❤️️ 🇬🇧]
+
+
+
+```r
+the_df %&gt;% summarize(
+  mean(x), mean(y), mean(z),
+  min(x), max(x),
+)
+```
+would return a 1×5 data frame with the means of `x`, `y`, and `z`; the minimum of `x`; and the maximum of `x`.
+---
+name: group_summarize
+
+## `summarize()` and `group_by()`
+
+While sample-wide summarizes are certainly interesting, `dplyr` has one last gem for us: `group_by()`.
+
+`group_by()` groups your observations by the variable(s) that you name.
+
+
+Specifically, `group_by()` returns a *grouped data frame* that you can then feed to `summarize()`, `mutate()`, or `transmuate` to perform grouped calculations, _e.g._, each group's mean.
+
+
+---
+
+## Example: Grouped summaries
+
+
+.pull-left[.small[
+
+```r
+# Create a new data frame
+our_df &lt;- data.frame(
+  x = 1:6,
+  y = c(0, 1),
+  grp = rep(c("A", "B"), each = 3)
+)
+```
+
+
+```
+#&gt;   x y grp
+#&gt; 1 1 0   A
+#&gt; 2 2 1   A
+#&gt; 3 3 0   A
+#&gt; 4 4 1   B
+#&gt; 5 5 0   B
+#&gt; 6 6 1   B
+```
+]]
+
+
+.pull-right[.small[
+
+```r
+# For dataset 'our_df'...
+our_df %&gt;%
+  # Group by 'grp'
+  group_by(grp) %&gt;%
+  # Take means of 'x' and 'y'
+  summarize(mean(x), mean(y))
+```
+
+
+```
+#&gt; # A tibble: 2 x 3
+#&gt;   grp   `mean(x)` `mean(y)`
+#&gt;   &lt;fct&gt;     &lt;dbl&gt;     &lt;dbl&gt;
+#&gt; 1 A             2     0.333
+#&gt; 2 B             5     0.667
+```
+]]
+---
+
+## Example: Grouped mutation
+
+.pull-left[.small[
+
+```r
+# Create a new data frame
+our_df &lt;- data.frame(
+  x = 1:6,
+  y = c(0, 1),
+  grp = rep(c("A", "B"), each = 3)
+)
+```
+
+
+```
+#&gt;   x y grp
+#&gt; 1 1 0   A
+#&gt; 2 2 1   A
+#&gt; 3 3 0   A
+#&gt; 4 4 1   B
+#&gt; 5 5 0   B
+#&gt; 6 6 1   B
+```
+]]
+
+
+.pull-right[.small[
+
+```r
+# Add grp means for x and y
+our_df %&gt;%
+  group_by(grp) %&gt;%
+  mutate(
+    x_m = mean(x), y_m = mean(y)
+  )
+```
+
+
+```
+#&gt; # A tibble: 6 x 5
+#&gt; # Groups:   grp [2]
+#&gt;       x     y grp     x_m   y_m
+#&gt;   &lt;int&gt; &lt;dbl&gt; &lt;fct&gt; &lt;dbl&gt; &lt;dbl&gt;
+#&gt; 1     1     0 A         2 0.333
+#&gt; 2     2     1 A         2 0.333
+#&gt; 3     3     0 A         2 0.333
+#&gt; 4     4     1 B         5 0.667
+#&gt; 5     5     0 B         5 0.667
+#&gt; 6     6     1 B         5 0.667
+```
+]]
+
+---
+name: arrange
+
+## `arrange()`
+
+`arrange()` will sorts the rows of a data frame using the inputted columns.
+
+.mono[R] defaults to starting with the "lowest" (smallest) at the top of the data frame. Use a `-` in front of the variable's name to reverse sort.
+
+.pull-left[
+
+```r
+# As is
+our_df
+```
+
+```
+#&gt;   x y grp
+#&gt; 1 1 0   A
+#&gt; 2 2 1   A
+#&gt; 3 3 0   A
+#&gt; 4 4 1   B
+#&gt; 5 5 0   B
+#&gt; 6 6 1   B
+```
+]
+
+.pull-right[
+
+```r
+# As is
+our_df %&gt;% arrange(y, grp, -x)
+```
+
+```
+#&gt;   x y grp
+#&gt; 1 3 0   A
+#&gt; 2 1 0   A
+#&gt; 3 5 0   B
+#&gt; 4 2 1   A
+#&gt; 5 6 1   B
+#&gt; 6 4 1   B
+```
+]
+
+
+---
+layout: false
+
+# Table of contents
+
+.pull-left[.hi-slate[Data and .mono[R]]
+.smaller[
+1. [Schedule](#schedule)
+1. [Matrix review](#review)
+1. [The `data.frame`](#df)
+  - [Basic examples](#df)
+  - [Creating](#creation)
+  - [Indexing](#indexing)
+  - [Names](#names)
+  - [Adding variables](#adding)
+]]
+
+.pull-right[.hi-slate[`dplyr`]
+.smaller[
+1. [Intro](#dplyr)
+1. [`mutate()`](#mutate)
+1. [`transmute()`](#transmute)
+1. [Pipes (`%&gt;%`)](#pipes)
+1. [`filter()`](#filter)
+1. [`select()`](#select)
+1. [`summarize`](#summarize)
+1. [`summarize()` and `group_by()`](#group_summarize)
+1. [`arrange()`](#arrange)
+]]
+
+
+---
+exclude: true
+    </textarea>
+<script src="https://remarkjs.com/downloads/remark-latest.min.js"></script>
+<script>var slideshow = remark.create({
+"highlightStyle": "github",
+"highlightLines": true,
+"countIncrementalSlides": false
+});
+if (window.HTMLWidgets) slideshow.on('afterShowSlide', function (slide) {
+  window.dispatchEvent(new Event('resize'));
+});
+(function() {
+  var d = document, s = d.createElement("style"), r = d.querySelector(".remark-slide-scaler");
+  if (!r) return;
+  s.type = "text/css"; s.innerHTML = "@page {size: " + r.style.width + " " + r.style.height +"; }";
+  d.head.appendChild(s);
+})();</script>
+
+<script>
+(function() {
+  var i, text, code, codes = document.getElementsByTagName('code');
+  for (i = 0; i < codes.length;) {
+    code = codes[i];
+    if (code.parentNode.tagName !== 'PRE' && code.childElementCount === 0) {
+      text = code.textContent;
+      if (/^\\\((.|\s)+\\\)$/.test(text) || /^\\\[(.|\s)+\\\]$/.test(text) ||
+          /^\$\$(.|\s)+\$\$$/.test(text) ||
+          /^\\begin\{([^}]+)\}(.|\s)+\\end\{[^}]+\}$/.test(text)) {
+        code.outerHTML = code.innerHTML;  // remove <code></code>
+        continue;
+      }
+    }
+    i++;
+  }
+})();
+</script>
+<!-- dynamically load mathjax for compatibility with self-contained -->
+<script>
+(function () {
+  var script = document.createElement('script');
+  script.type = 'text/javascript';
+  script.src  = 'https://mathjax.rstudio.com/latest/MathJax.js?config=TeX-MML-AM_CHTML';
+  if (location.protocol !== 'file:' && /^https?:/.test(script.src))
+    script.src  = script.src.replace(/^https?:/, '');
+  document.getElementsByTagName('head')[0].appendChild(script);
+})();
+</script>
+  </body>
+</html>
