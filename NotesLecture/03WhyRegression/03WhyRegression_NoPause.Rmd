@@ -506,7 +506,7 @@ name: prediction
 Let $\mathop{m}\left( \text{X}_{i} \right)$ be *any* function of $\text{X}_{i}$. The CEF solves
 $$
 \begin{align}
-  \color{#e64173}{\mathop{E}\left[ \text{Y}_{i} \mid \text{X}_{i} \right]} = \underset{\mathop{m}\left( \text{X}_{i} \right)}{\text{arg max}}\enspace \mathop{E}\left[ \left( \text{Y}_{i} - \mathop{m}\left( \text{X}_{i} \right) \right)^2 \right]
+  \color{#e64173}{\mathop{E}\left[ \text{Y}_{i} \mid \text{X}_{i} \right]} = \underset{\mathop{m}\left( \text{X}_{i} \right)}{\text{arg min}}\enspace \mathop{E}\left[ \left( \text{Y}_{i} - \mathop{m}\left( \text{X}_{i} \right) \right)^2 \right]
 \end{align}
 $$
 In other words, the .hi-pink[CEF] is the minimum mean-squared error (MMSE) predictor of $\text{Y}_{i}$ given $\text{X}_{i}$.
@@ -542,7 +542,7 @@ layout: true
 ∴ the .pink[CEF] is the function that minimizes the mean-squared error (MSE)
 $$
 \begin{align}
-  \color{#e64173}{\mathop{E}\left[ \text{Y}_{i} \mid \text{X}_{i} \right]} = \underset{\mathop{m}\left( \text{X}_{i} \right)}{\text{arg max}}\enspace \mathop{E}\left[ \left( \text{Y}_{i} - \mathop{m}\left( \text{X}_{i} \right) \right)^2 \right]
+  \color{#e64173}{\mathop{E}\left[ \text{Y}_{i} \mid \text{X}_{i} \right]} = \underset{\mathop{m}\left( \text{X}_{i} \right)}{\text{arg min}}\enspace \mathop{E}\left[ \left( \text{Y}_{i} - \mathop{m}\left( \text{X}_{i} \right) \right)^2 \right]
 \end{align}
 $$
 ---
@@ -678,14 +678,19 @@ class: clear, middle, center
 n <- 1e2
 set.seed(1234)
 gen_df <- tibble(
-  x1 = runif(n = n, min = -3, max = 3),
   x2 = sample(x = c(F, T), size = n, replace = T),
+  x1 = runif(n = n, min = -3, max = 3) + x2 - 0.5,
   u  = rnorm(n = n, mean = 0, sd = 1),
-  y  = -0.5 + x1 + x2 * 4 + u
+  y  = -3 + x1 + x2 * 4 + u
 )
-mean_a <- filter(gen_df, x2 == F)$y %>% mean()
-mean_b <- filter(gen_df, x2 == T)$y %>% mean()
-gen_df %<>% mutate(y_dm = y - mean_a * (x2 == F) - mean_b * (x2 == T))
+ya_mean <- filter(gen_df, x2 == F)$y %>% mean()
+yb_mean <- filter(gen_df, x2 == T)$y %>% mean()
+x1a_mean <- filter(gen_df, x2 == F)$x1 %>% mean()
+x1b_mean <- filter(gen_df, x2 == T)$x1 %>% mean()
+gen_df %<>% mutate(
+  y_dm = y - ya_mean * (x2 == F) - yb_mean * (x2 == T),
+  x1_dm = x1 - x1a_mean * (x2 == F) - x1b_mean * (x2 == T)
+)
 ```
 
 $y_i = \beta_0 + \beta_1 x_{1i} + \beta_2 x_{2i} + \varepsilon_i$
@@ -694,10 +699,11 @@ $y_i = \beta_0 + \beta_1 x_{1i} + \beta_2 x_{2i} + \varepsilon_i$
 ggplot(data = gen_df, aes(y = y, x = x1, color = x2, shape = x2)) +
   geom_hline(yintercept = 0, color = "grey85") +
   geom_vline(xintercept = 0, color = "grey85") +
-  annotate("text", x = -0.075, y = 7.75, label = TeX("$y$"), size = 8) +
-  annotate("text", x = 2.95, y = 0.3, label = TeX("$x_1$"), size = 8) +
   geom_point(size = 3) +
-  ylim(c(-4.5, 8)) +
+  annotate("text", x = -0.075, y = 6.75, label = TeX("$y$"), size = 8) +
+  annotate("text", x = 2.95, y = 0.3, label = TeX("$x_1$"), size = 8) +
+  ylim(c(-7, 7)) +
+  xlim(c(-3.5, 3.5)) +
   theme_empty +
   scale_color_manual(
     expression(x[2]),
@@ -722,14 +728,15 @@ $\beta_1$ gives the relationship between $y$ and $x_1$ *after controlling for* $
 
 ```{R, fig_anatomy2, echo = F}
 ggplot(data = gen_df, aes(y = y, x = x1, color = x2, shape = x2)) +
-  geom_hline(yintercept = mean_a, color = "darkslategrey", alpha = 0.5, size = 2) +
-  geom_hline(yintercept = mean_b, color = red_pink, alpha = 0.5, size = 2) +
+  geom_hline(yintercept = ya_mean, color = "darkslategrey", alpha = 0.5, size = 2) +
+  geom_hline(yintercept = yb_mean, color = red_pink, alpha = 0.5, size = 2) +
   geom_hline(yintercept = 0, color = "grey85") +
   geom_vline(xintercept = 0, color = "grey85") +
-  annotate("text", x = -0.075, y = 7.75, label = TeX("$y$"), size = 8) +
-  annotate("text", x = 2.95, y = 0.3, label = TeX("$x_1$"), size = 8) +
   geom_point(size = 3) +
-  ylim(c(-4.5, 8)) +
+  annotate("text", x = -0.075, y = 6.75, label = TeX("$y$"), size = 8) +
+  annotate("text", x = 2.95, y = 0.3, label = TeX("$x_1$"), size = 8) +
+  ylim(c(-7, 7)) +
+  xlim(c(-3.5, 3.5)) +
   theme_empty +
   scale_color_manual(
     expression(x[2]),
@@ -756,10 +763,11 @@ $\beta_1$ gives the relationship between $y$ and $x_1$ *after controlling for* $
 ggplot(data = gen_df %>% mutate(y = y - 4 * x2), aes(y = y_dm, x = x1)) +
   geom_hline(yintercept = 0, color = "grey85") +
   geom_vline(xintercept = 0, color = "grey85") +
-  annotate("text", x = -0.075, y = 7.75, label = TeX("$y$"), size = 8) +
-  annotate("text", x = 2.95, y = 0.3, label = TeX("$x_1$"), size = 8) +
   geom_point(size = 3, aes(color = x2, shape = x2)) +
-  ylim(c(-4.5, 8)) +
+  annotate("text", x = -0.075, y = 6.75, label = TeX("$y|x_2$"), size = 8, hjust = 1) +
+  annotate("text", x = 2.95, y = 0.3, label = TeX("$x_1$"), size = 8) +
+  ylim(c(-7, 7)) +
+  xlim(c(-3.5, 3.5)) +
   theme_empty +
   scale_color_manual(
     expression(x[2]),
@@ -786,11 +794,76 @@ $\beta_1$ gives the relationship between $y$ and $x_1$ *after controlling for* $
 ggplot(data = gen_df %>% mutate(y = y - 4 * x2), aes(y = y_dm, x = x1)) +
   geom_hline(yintercept = 0, color = "grey85") +
   geom_vline(xintercept = 0, color = "grey85") +
-  geom_smooth(method = lm, se = F, color = purple, alpha = 1, size = 2) +
-  annotate("text", x = -0.075, y = 7.75, label = TeX("$y$"), size = 8) +
-  annotate("text", x = 2.95, y = 0.3, label = TeX("$x_1$"), size = 8) +
+  geom_vline(xintercept = x1a_mean, color = "darkslategrey", alpha = 0.5, size = 2) +
+  geom_vline(xintercept = x1b_mean, color = red_pink, alpha = 0.5, size = 2) +
   geom_point(size = 3, aes(color = x2, shape = x2)) +
-  ylim(c(-4.5, 8)) +
+  annotate("text", x = -0.075, y = 6.75, label = TeX("$y|x_2$"), size = 8, hjust = 1) +
+  annotate("text", x = 2.95, y = 0.3, label = TeX("$x_1$"), size = 8) +
+  ylim(c(-7, 7)) +
+  xlim(c(-3.5, 3.5)) +
+  theme_empty +
+  scale_color_manual(
+    expression(x[2]),
+    values = c("darkslategrey", red_pink),
+    labels = c("A", "B")
+  ) +
+  scale_shape_manual(
+    expression(x[2]),
+    values = c(1, 19),
+    labels = c("A", "B")
+  ) +
+  theme(
+    legend.position = "bottom",
+    text = element_text(size = 22)
+  )
+```
+---
+class: clear, middle, center
+count: false
+
+$\beta_1$ gives the relationship between $y$ and $x_1$ *after controlling for* $x_2$
+
+```{R, fig_anatomy5, echo = F}
+ggplot(data = gen_df %>% mutate(y = y - 4 * x2), aes(y = y_dm, x = x1_dm)) +
+  geom_hline(yintercept = 0, color = "grey85") +
+  geom_vline(xintercept = 0, color = "grey85") +
+  geom_point(size = 3, aes(color = x2, shape = x2)) +
+  annotate("text", x = -0.075, y = 6.75, label = TeX("$y|x_2$"), size = 8, hjust = 1) +
+  annotate("text", x = 2.95, y = 0.3, label = TeX("$x_1|x_2$"), size = 8, hjust = 1) +
+  ylim(c(-7, 7)) +
+  xlim(c(-3.5, 3.5)) +
+  theme_empty +
+  scale_color_manual(
+    expression(x[2]),
+    values = c("darkslategrey", red_pink),
+    labels = c("A", "B")
+  ) +
+  scale_shape_manual(
+    expression(x[2]),
+    values = c(1, 19),
+    labels = c("A", "B")
+  ) +
+  theme(
+    legend.position = "bottom",
+    text = element_text(size = 22)
+  )
+```
+---
+class: clear, middle, center
+count: false
+
+$\beta_1$ gives the relationship between $y$ and $x_1$ *after controlling for* $x_2$
+
+```{R, fig_anatomy6, echo = F}
+ggplot(data = gen_df %>% mutate(y = y - 4 * x2), aes(y = y_dm, x = x1_dm)) +
+  geom_hline(yintercept = 0, color = "grey85") +
+  geom_vline(xintercept = 0, color = "grey85") +
+  geom_smooth(method = lm, se = F, color = purple, alpha = 1, size = 2) +
+  geom_point(size = 3, aes(color = x2, shape = x2)) +
+  annotate("text", x = -0.075, y = 6.75, label = TeX("$y|x_2$"), size = 8, hjust = 1) +
+  annotate("text", x = 2.95, y = 0.3, label = TeX("$x_1|x_2$"), size = 8, hjust = 1) +
+  ylim(c(-7, 7)) +
+  xlim(c(-3.5, 3.5)) +
   theme_empty +
   scale_color_manual(
     expression(x[2]),
@@ -1043,11 +1116,39 @@ gg_cef +
   )
 ```
 ---
+layout: true
+
 # Regression
 ## Regression and the *CEF*
+---
+name: wls
 
 As the previous figure suggests, one way to think about least-squares regression is .hi-slate[estimating a weighted regression on the CEF] rather than the individual observations.
 
+
+.slate[.mono[TLDR]] Use $\color{#e64173}{\mathop{E}\left[ \text{Y}_{i} \mid \text{X}_{i} \right]}$ as the outcome, rather than $\text{Y}_{i}$, and properly weight.
+
+
+Suppose $\text{X}_{i}$ is discrete with pmf $\mathop{g_x}(u)$
+$$
+\begin{align}
+  \mathop{E}\!\bigg[ \left( \color{#e64173}{\mathop{E}\left[ \text{Y}_{i} \mid \text{X}_{i} \right]} - \text{X}_{i}'b \right)^2 \bigg] = \sum_u \left( \mathop{E}\left[ \text{Y}_{i} \mid \text{X}_{i} = u \right] - u'b \right)^2 \mathop{g_x}(u)
+\end{align}
+$$
+_i.e._, $\beta$ can be expressed as weighted-least squares regression of $\mathop{E}\left[ \text{Y}_{i} \mid \text{X}_{i} = u\right]$ on $u$ (the values of $\text{X}_{i}$) weighted by $\mathop{g_x}(u)$.
+---
+
+We can also use LIE here
+
+$\beta$
+<br>.pad-left[] $= \mathop{E}\left[ X_i X_i' \right]^{-1} \mathop{E}\left[ \text{X}_{i}\text{Y}_{i} \right]$
+<br>.pad-left[] $= \mathop{E}\left[ X_i X_i' \right]^{-1} \mathop{E}\left[ \text{X}_{i} \mathop{E}\left( \text{Y}_{i}\mid \text{X}_{i} \right) \right]$
+
+
+.hi-pink[Pro] Useful for aggregated data when microdata are sensitive/big.
+
+
+.hi-pink[Con] You .hi-slate[will not] get the same standard errors.
 ---
 layout: false
 # Table of contents
@@ -1076,6 +1177,7 @@ layout: false
 1. [Population least squares](#pop_ls)
 1. [Anatomy](#anatomy)
 1. [Regression-CEF theorem](#reg_cef_theorem)
+1. [WLS](#wls)
 ]
 ]
 ---

@@ -4,7 +4,7 @@
     <title>Why Regression?</title>
     <meta charset="utf-8">
     <meta name="author" content="Edward Rubin" />
-    <meta name="date" content="2019-04-10" />
+    <meta name="date" content="2019-04-15" />
     <link href="03WhyRegression_NoPause_files/remark-css-0.0.1/default.css" rel="stylesheet" />
     <link href="03WhyRegression_NoPause_files/remark-css-0.0.1/metropolis.css" rel="stylesheet" />
     <link href="03WhyRegression_NoPause_files/remark-css-0.0.1/metropolis-fonts.css" rel="stylesheet" />
@@ -17,7 +17,7 @@ class: center, middle, inverse, title-slide
 # Why Regression?
 ## EC 425/525, Set 3
 ### Edward Rubin
-### 10 April 2019
+### 15 April 2019
 
 ---
 
@@ -295,7 +295,7 @@ name: prediction
 Let `\(\mathop{m}\left( \text{X}_{i} \right)\)` be *any* function of `\(\text{X}_{i}\)`. The CEF solves
 $$
 `\begin{align}
-  \color{#e64173}{\mathop{E}\left[ \text{Y}_{i} \mid \text{X}_{i} \right]} = \underset{\mathop{m}\left( \text{X}_{i} \right)}{\text{arg max}}\enspace \mathop{E}\left[ \left( \text{Y}_{i} - \mathop{m}\left( \text{X}_{i} \right) \right)^2 \right]
+  \color{#e64173}{\mathop{E}\left[ \text{Y}_{i} \mid \text{X}_{i} \right]} = \underset{\mathop{m}\left( \text{X}_{i} \right)}{\text{arg min}}\enspace \mathop{E}\left[ \left( \text{Y}_{i} - \mathop{m}\left( \text{X}_{i} \right) \right)^2 \right]
 \end{align}`
 $$
 In other words, the .hi-pink[CEF] is the minimum mean-squared error (MMSE) predictor of `\(\text{Y}_{i}\)` given `\(\text{X}_{i}\)`.
@@ -331,7 +331,7 @@ layout: true
 ∴ the .pink[CEF] is the function that minimizes the mean-squared error (MSE)
 $$
 `\begin{align}
-  \color{#e64173}{\mathop{E}\left[ \text{Y}_{i} \mid \text{X}_{i} \right]} = \underset{\mathop{m}\left( \text{X}_{i} \right)}{\text{arg max}}\enspace \mathop{E}\left[ \left( \text{Y}_{i} - \mathop{m}\left( \text{X}_{i} \right) \right)^2 \right]
+  \color{#e64173}{\mathop{E}\left[ \text{Y}_{i} \mid \text{X}_{i} \right]} = \underset{\mathop{m}\left( \text{X}_{i} \right)}{\text{arg min}}\enspace \mathop{E}\left[ \left( \text{Y}_{i} - \mathop{m}\left( \text{X}_{i} \right) \right)^2 \right]
 \end{align}`
 $$
 ---
@@ -489,6 +489,20 @@ count: false
 `\(\beta_1\)` gives the relationship between `\(y\)` and `\(x_1\)` *after controlling for* `\(x_2\)`
 
 &lt;img src="03WhyRegression_NoPause_files/figure-html/fig_anatomy4-1.svg" style="display: block; margin: auto;" /&gt;
+---
+class: clear, middle, center
+count: false
+
+`\(\beta_1\)` gives the relationship between `\(y\)` and `\(x_1\)` *after controlling for* `\(x_2\)`
+
+&lt;img src="03WhyRegression_NoPause_files/figure-html/fig_anatomy5-1.svg" style="display: block; margin: auto;" /&gt;
+---
+class: clear, middle, center
+count: false
+
+`\(\beta_1\)` gives the relationship between `\(y\)` and `\(x_1\)` *after controlling for* `\(x_2\)`
+
+&lt;img src="03WhyRegression_NoPause_files/figure-html/fig_anatomy6-1.svg" style="display: block; margin: auto;" /&gt;
 
 
 ---
@@ -672,11 +686,39 @@ Adding the population .hi-orange[regression function]
 
 &lt;img src="03WhyRegression_NoPause_files/figure-html/fig_reg_cef2-1.svg" style="display: block; margin: auto;" /&gt;
 ---
+layout: true
+
 # Regression
 ## Regression and the *CEF*
+---
+name: wls
 
 As the previous figure suggests, one way to think about least-squares regression is .hi-slate[estimating a weighted regression on the CEF] rather than the individual observations.
 
+
+.slate[.mono[TLDR]] Use `\(\color{#e64173}{\mathop{E}\left[ \text{Y}_{i} \mid \text{X}_{i} \right]}\)` as the outcome, rather than `\(\text{Y}_{i}\)`, and properly weight.
+
+
+Suppose `\(\text{X}_{i}\)` is discrete with pmf `\(\mathop{g_x}(u)\)`
+$$
+`\begin{align}
+  \mathop{E}\!\bigg[ \left( \color{#e64173}{\mathop{E}\left[ \text{Y}_{i} \mid \text{X}_{i} \right]} - \text{X}_{i}'b \right)^2 \bigg] = \sum_u \left( \mathop{E}\left[ \text{Y}_{i} \mid \text{X}_{i} = u \right] - u'b \right)^2 \mathop{g_x}(u)
+\end{align}`
+$$
+_i.e._, `\(\beta\)` can be expressed as weighted-least squares regression of `\(\mathop{E}\left[ \text{Y}_{i} \mid \text{X}_{i} = u\right]\)` on `\(u\)` (the values of `\(\text{X}_{i}\)`) weighted by `\(\mathop{g_x}(u)\)`.
+---
+
+We can also use LIE here
+
+`\(\beta\)`
+&lt;br&gt;.pad-left[] `\(= \mathop{E}\left[ X_i X_i' \right]^{-1} \mathop{E}\left[ \text{X}_{i}\text{Y}_{i} \right]\)`
+&lt;br&gt;.pad-left[] `\(= \mathop{E}\left[ X_i X_i' \right]^{-1} \mathop{E}\left[ \text{X}_{i} \mathop{E}\left( \text{Y}_{i}\mid \text{X}_{i} \right) \right]\)`
+
+
+.hi-pink[Pro] Useful for aggregated data when microdata are sensitive/big.
+
+
+.hi-pink[Con] You .hi-slate[will not] get the same standard errors.
 ---
 layout: false
 # Table of contents
@@ -705,6 +747,7 @@ layout: false
 1. [Population least squares](#pop_ls)
 1. [Anatomy](#anatomy)
 1. [Regression-CEF theorem](#reg_cef_theorem)
+1. [WLS](#wls)
 ]
 ]
 ---

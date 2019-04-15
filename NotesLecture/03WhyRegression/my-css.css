@@ -302,3 +302,8 @@ th, td {
   background-color: #ffffff;
   /* color: #314f4f; */
 }
+
+/* Extra left padding */
+.pad-left {
+  margin-left: 5%;
+}
