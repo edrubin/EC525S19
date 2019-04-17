@@ -1,0 +1,644 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <title>Inference and Simulation</title>
+    <meta charset="utf-8">
+    <meta name="author" content="Edward Rubin" />
+    <meta name="date" content="2019-04-16" />
+    <link href="04Inference_NoPause_files/remark-css-0.0.1/default.css" rel="stylesheet" />
+    <link href="04Inference_NoPause_files/remark-css-0.0.1/metropolis.css" rel="stylesheet" />
+    <link href="04Inference_NoPause_files/remark-css-0.0.1/metropolis-fonts.css" rel="stylesheet" />
+    <link rel="stylesheet" href="my-css.css" type="text/css" />
+  </head>
+  <body>
+    <textarea id="source">
+class: center, middle, inverse, title-slide
+
+# Inference and Simulation
+## EC 425/525, Set 4
+### Edward Rubin
+### 16 April 2019
+
+---
+
+class: inverse, middle
+
+
+
+# Prologue
+
+---
+name: schedule
+
+# Schedule
+
+### Last time
+
+The *CEF* and least-squares regression
+
+### Today
+
+Inference
+&lt;br&gt;.note[Read] *MHE* 3.1
+
+### Upcoming
+
+Lab (as usual) on Friday. (Meet Jenni!)
+
+No class on Monday.
+---
+name: advice
+layout: false
+class: clear, middle
+
+.attn[Advice] Don't ride elevators (especially in PLC).
+
+---
+layout: true
+
+# Inference
+---
+class: inverse, middle
+---
+name: why
+
+## Why?
+
+.qa[Q] What's the big deal with inference?
+
+
+.qa[A] We rarely know the CEF or the population (and its regression vector).
+
+We *can* draw statistical inferences about the population using samples.
+
+
+.attn[Important] The issue/topic of *statistical inference* is separate from *causality*.
+
+Separate questions
+
+1. How do we interpret the estimated coefficient `\(\hat{\beta}\)`?
+2. What is the sampling distribution of `\(\hat{\beta}\)`?
+
+---
+name: ols
+
+## Moving from population to sample
+
+.attn[Recall] The population-regression function gives us the best linear approximation to the CEF.
+
+
+We're interested in the (unknown) population-regression vector
+$$
+`\begin{align}
+  \beta = \mathop{E}\nolimits\left[ \text{X}_{i} \text{X}_{i}' \right]^{-1} \mathop{E}\left[ \text{X}_{i} \text{Y}_{i} \right]
+\end{align}`
+$$
+which we estimate via the ordinary least squares (OLS) estimator.super[.pink[†]]
+$$
+`\begin{align}
+  \hat{\beta} = \left( \sum_i \text{X}_{i}\text{X}_{i}' \right)^{-1} \left( \sum_i \text{X}_{i} \text{Y}_{i} \right)
+\end{align}`
+$$
+
+.footnote[.pink[†]
+*MHE* presents a method-of-moments motivation for this derivation, where `\(\dfrac{1}{n}\sum_i \text{X}_{i} \text{X}_{i}'\)` is our sample-based estimated for `\(\mathop{E}\left[ \text{X}_{i}\text{X}_{i}' \right]\)`. You've also seen others, _e.g._, minimizing MSE of `\(\text{Y}_{i}\)` given `\(\text{X}_{i}\)`.
+]
+
+---
+
+## A classic
+
+However you write it, this OLS estimator
+$$
+`\begin{align}
+  \hat{\beta}
+  &amp;= \left( \text{X}^\prime \text{X} \right)^{-1} \text{X}^\prime \text{y} \\
+  &amp;= \left( \sum_i \text{X}_{i}\text{X}_{i}' \right)^{-1} \left( \sum_i \text{X}_{i} \text{Y}_{i} \right) \\
+  &amp;= \beta + \left[ \sum_i \text{X}_{i}\text{X}_{i}' \right]^{-1} \sum_i \text{X}_{i}e_i
+\end{align}`
+$$
+is the same estimator you've been using since undergrad.
+
+
+.note[Note] I'm following *MHE* in defining `\(e_i = \text{Y}_{i} - \text{X}_{i}'\beta\)`.
+
+---
+
+## A classic
+
+As you've learned, the OLS estimator
+$$
+`\begin{align}
+  \hat{\beta} = \left( \sum_i \text{X}_{i}\text{X}_{i}' \right)^{-1} \left( \sum_i \text{X}_{i} \text{Y}_{i} \right) = \beta + \left[ \sum_i \text{X}_{i}\text{X}_{i}' \right]^{-1} \sum_i \text{X}_{i}e_i
+\end{align}`
+$$
+has asymptotic covariance
+$$
+`\begin{align}
+  \mathop{E}\left[ \text{X}_{i}\text{X}_{i}' \right]^{-1} \mathop{E}\left[ \text{X}_{i}\text{X}_{i}' e_i^2 \right] \mathop{E}\left[ \text{X}_{i}\text{X}_{i}' \right]^{-1}
+\end{align}`
+$$
+which we estimate by (**1**) replacing `\(e_i\)` with `\(\hat{e}_i = \text{Y}_{i} - \text{X}_{i}'\hat{\beta}\)` and (**2**) replacing expectations with sample means, _e.g._, `\(\mathop{E}\left[ \text{X}_{i}\text{X}_{i}'e_i^2 \right]\)` becomes `\(\dfrac{1}{n}\sum \left[ \text{X}_{i}\text{X}_{i}'\hat{e}_i^2 \right]\)`.
+
+
+Standard errors of this flavor are known as heteroskedasticity-consistent (or -robust) standard errors (or Eicker-Huber-White).
+
+---
+name: het
+
+## Defaults
+
+Statistical packages default to assuming homoskedasticity, _i.e._, `\(\mathop{E}\left[ e_i^2 \mid \text{X}_{i} \right] = \sigma^2\)` for all `\(i\)`.
+ With homoskedasticity,
+$$
+`\begin{align}
+  \mathop{E}\left[ \text{X}_{i}\text{X}_{i}'e_i^2 \right] = \mathop{E}\left[ \mathop{E}\left[ \text{X}_{i}\text{X}_{i}'e_i^2 \mid \text{X}_{i} \right] \right] = \mathop{E}\left[ \text{X}_{i}\text{X}_{i}' \mathop{E}\left[ e_i^2 \mid \text{X}_{i} \right] \right] = \sigma^2 \mathop{E}\left[ \text{X}_{i}\text{X}_{i}' \right]
+\end{align}`
+$$
+
+
+Now, returning to to the asym. covariance matrix of `\(\hat{\beta}\)`,
+$$
+`\begin{align}
+  \mathop{E}\left[ \text{X}_{i}\text{X}_{i}' \right]^{-1} \mathop{E}\left[ \text{X}_{i} \text{X}_{i}' e_i^2 \right] \mathop{E}\left[ \text{X}_{i}\text{X}_{i}' \right]^{-1}
+  &amp;= \mathop{E}\left[ \text{X}_{i}\text{X}_{i}' \right]^{-1} \sigma^2 \mathop{E}\left[ \text{X}_{i} \text{X}_{i}' \right] \mathop{E}\left[ \text{X}_{i}\text{X}_{i}' \right]^{-1} \\
+  &amp;= \sigma^2 \mathop{E}\left[ \text{X}_{i}\text{X}_{i}' \right]^{-1}
+\end{align}`
+$$
+
+---
+
+## Defaults
+
+Angrist and Pischke argue we should probably change our default to heteroskedasticity.
+
+If the CEF is nonlinear, then our linear approximation (linear regression) generates heteroskedasticity.
+
+
+`\(\mathop{E}\left[ \left( \text{Y}_{i} - \text{X}_{i}'\beta \right)^2 \mid \text{X}_{i} \right]\)`
+&lt;br&gt;  `\(= \mathop{E} \left[ \bigg( \big\{ \text{Y}_{i} - \mathop{E}\left[ \text{Y}_{i} \mid \text{X}_{i} \right] \big\} + \big\{ \mathop{E}\left[ \text{Y}_{i} \mid \text{X}_{i} \right] - \text{X}_{i}'\beta \big\} \bigg)^2 \Bigg| \text{X}_{i} \right]\)`
+&lt;br&gt;  `\(= \mathop{\text{Var}} \left( \text{Y}_{i} \mid \text{X}_{i} \right) + \left( \mathop{E}\left[ \text{Y}_{i} \mid \text{X}_{i} \right] - \text{X}_{i}'\beta \right)^2\)`
+
+
+Thus, even if `\(\text{Y}_{i}\mid \text{X}_{i}\)` has contant variance, `\(e_i \mid \text{X}_{i}\)` is heteroskedastic.
+
+---
+
+## Two notes
+
+1. Heteroskedasticity is .hi[not our biggest concern] in inference.
+&gt; ...as an empirical matter, heteroskedasticity may matter very little... If heteroskedasticity matters a lot, say, more than a 30 percent increase or any marked decrease in standard errors, you should worry about possible programming errors or other problems. (*MHE*, p.47)
+
+2. Notice that we've .hi[avoided "standard" stronger assumptions], _e.g._, normality, fixed regressors, linear CEF, homoskedasticity.
+
+
+Following (2): We only have large-sample, asymptotic results (consistency) rather than finite-sample results (unbiasedness).
+
+---
+name: warning
+
+## Warning
+
+Because many of properties we care about for the inference are .hi-pink[large-sample] properties, they may not always apply to .hi-purple[small samples].
+
+
+One practical way we can study the behavior of an estimator: .b[simulation].
+
+
+.note[Note] You need to make sure your simulation can actually test/respond to the question you are asking (_e.g._, bias *vs.* consistency).
+---
+name: sim
+
+## Simulation
+
+Let's compare false- and true-positive rates.super[.pink[†]] for
+
+.footnote[.pink[†] The false-positive rate goes by many names; another common name: *type-I error rate*.]
+
+1. .hi-purple[Homoskedasticity-assuming standard errors] `\(\color{#6A5ACD}{\left( \mathop{\text{Var}} \left[ e_i | \text{X}_{i} \right] = \sigma^2\right)}\)`
+1. .hi-pink[Heteroskedasticity-robust standard errors]
+
+
+.b[Simulation outline]
+
+.pseudocode-small[
+1. Define data-generating process (DGP).
+1. Choose sample size n.
+1. Set seed.
+1. Run 10,000 iterations of
+&lt;br&gt;  a. Draw sample of size n from DGP.
+&lt;br&gt;  b. Conduction inference.
+&lt;br&gt;  c. Record inferences' outcomes.
+]
+---
+layout: true
+# Simulation
+
+---
+class: inverse, middle
+---
+name: dgp
+## Data-generating process
+
+First, we'll define our DGP.
+
+
+We've been talking a lot about nonlinear CEFs, so let's use one.
+
+Let's keep the disturbances well behaved.
+
+
+$$
+`\begin{align}
+  \text{Y}_{i} = 1 + e^{0.5 \text{X}_{i}} + \varepsilon_i
+\end{align}`
+$$
+where `\(\text{X}_{i}\sim\mathop{\text{Uniform}}(0, 10)\)` and `\(\varepsilon_i\sim\mathop{N}(0,1)\)`.
+
+---
+## Data-generating process
+
+$$
+`\begin{align}
+  \text{Y}_{i} = 1 + e^{0.5 \text{X}_{i}} + \varepsilon_i
+\end{align}`
+$$
+where `\(\text{X}_{i}\sim\mathop{\text{Uniform}}(0, 10)\)` and `\(\varepsilon_i\sim\mathop{N}(0,1)\)`.
+
+
+
+
+.pull-left[
+
+```r
+library(pacman)
+p_load(dplyr)
+# Choose a size
+n &lt;- 1000
+# Generate data
+dgp_df &lt;- tibble(
+  ε = rnorm(n, sd = 15),
+  x = runif(n, min = 0, max = 10),
+  y = 1 + exp(0.5 * x) + ε
+)
+```
+]
+.pull-right[
+
+```
+#&gt; # A tibble: 1,000 x 3
+#&gt;         ε     x      y
+#&gt;     &lt;dbl&gt; &lt;dbl&gt;  &lt;dbl&gt;
+#&gt;  1   8.78  9.53 127.  
+#&gt;  2  10.6   6.22  34.0 
+#&gt;  3  -1.64  5.32  13.6 
+#&gt;  4  -6.80  8.92  80.7 
+#&gt;  5   9.09  1.96  12.8 
+#&gt;  6 -27.3   8.84  57.0 
+#&gt;  7   9.45  2.18  13.4 
+#&gt;  8  -4.14  3.78   3.47
+#&gt;  9  -4.26  3.52   2.54
+#&gt; 10 -13.8   9.88 127.  
+#&gt; # … with 990 more rows
+```
+]
+---
+layout: false
+class: clear, middle
+
+.orange[Our CEF]
+&lt;img src="04Inference_NoPause_files/figure-html/sim_pop_plot1-1.svg" style="display: block; margin: auto;" /&gt;
+---
+count: false
+class: clear, middle
+
+Our population
+&lt;img src="04Inference_NoPause_files/figure-html/sim_pop_plot2-1.svg" style="display: block; margin: auto;" /&gt;
+---
+count: false
+class: clear, middle
+
+.purple[The population least-squares regression line]
+&lt;img src="04Inference_NoPause_files/figure-html/sim_pop_plot3-1.svg" style="display: block; margin: auto;" /&gt;
+---
+layout: true
+# Simulation
+
+---
+name: iter
+## Iterating
+
+To make iterating easier, let's wrap our DGP in a function.
+
+
+```r
+fun_iter &lt;- function(iter, n = 30) {
+  # Generate data
+  iter_df &lt;- tibble(
+    ε = rnorm(n, sd = 15),
+    x = runif(n, min = 0, max = 10),
+    y = 1 + exp(0.5 * x) + ε
+  )
+}
+```
+We still need to run a regression and draw some inferences.
+
+.note[Note] We're defaulting to size-30 samples.
+---
+
+We will use `lm_robust()` from the `estimatr` package for OLS and inference..super[.pink[†]]
+
+.footnote[.pink[†] `lm()` works for "spherical" standard errors but cannot calculate het.-robust standard errors.]
+
+- `se_type = "classical"` provides homoskedasticity-assuming SEs
+- `se_type = "HC2"` provides heteroskedasticity-robust SEs
+
+
+```r
+lm_robust(y ~ x, data = dgp_df, se_type = "classical") %&gt;% tidy() %&gt;% select(1:5)
+```
+
+```
+#&gt;          term  estimate std.error statistic       p.value
+#&gt; 1 (Intercept) -21.14183  1.473496 -14.34807  1.383951e-42
+#&gt; 2           x  10.48074  0.257810  40.65294 6.560626e-214
+```
+
+```r
+lm_robust(y ~ x, data = dgp_df, se_type = "HC2") %&gt;% tidy() %&gt;% select(1:5)
+```
+
+```
+#&gt;          term  estimate std.error statistic       p.value
+#&gt; 1 (Intercept) -21.14183 1.4335274 -14.74812  1.112039e-44
+#&gt; 2           x  10.48074 0.3097606  33.83495 8.788638e-168
+```
+---
+## Inference
+
+Now add these estimators to our iteration function...
+
+```r
+fun_iter &lt;- function(iter, n = 30) {
+  # Generate data
+  iter_df &lt;- tibble(
+    ε = rnorm(n, sd = 15),
+    x = runif(n, min = 0, max = 10),
+    y = 1 + exp(0.5 * x) + ε
+  )
+  # Estimate models
+  lm1 &lt;- lm_robust(y ~ x, data = iter_df, se_type = "classical")
+  lm2 &lt;- lm_robust(y ~ x, data = iter_df, se_type = "HC2")
+  # Stack and return results
+  bind_rows(tidy(lm1), tidy(lm2)) %&gt;%
+    select(1:5) %&gt;% filter(term == "x") %&gt;%
+    mutate(se_type = c("classical", "HC2"), i = iter)
+}
+```
+---
+## Run it
+
+Now we need to actually run our `iter_df()` function 10,000 times.
+
+
+There are a lot of ways to run a single function over a list/vector of values.
+
+- `lapply()`, _e.g._, `lapply(X = 1:3, FUN = sqrt)`
+- `for()`, _e.g._, `for (x in 1:3) sqrt(x)`
+- `map()` from `purrr`, _e.g._, `map(1:3, sqrt)`
+
+
+We're going to go with `map()` from the `purrr` package because it easily parallelizes across platforms using the `furrr` package.
+---
+name: parallel
+
+## Run it!
+
+.pull-left[
+Run our function 10,000 times
+
+```r
+# Packages
+p_load(purrr)
+# Set seed
+set.seed(12345)
+# Run 10,000 iterations
+sim_list &lt;- map(1:1e4, fun_iter)
+```
+]
+.pull-right[
+Parallelized 10,000 iterations
+
+```r
+# Packages
+p_load(purrr, furrr)
+# Set options
+set.seed(123)
+# Tell R to parallelize
+plan(multiprocess)
+# Run 10,000 iterations
+sim_list &lt;- future_map(
+  1:1e4, fun_iter,
+  .options = future_options(seed = T)
+)
+```
+]
+
+
+The `furrr` package (`future` + `purrr`) makes parallelization .hi-pink[easy] .hi-orange[and] .hi-turquoise[fun].hi-purlple[!]😸
+---
+## Run it!!
+
+Our `fun_iter()` function returns a `data.frame`, and `future_map()` returns a `list` (of the returned objects).
+
+So `sim_list` is going to be a `list` of `data.frame` objects. We can bind them into one `data.frame` with `bind_rows()`.
+
+
+```r
+# Bind list together
+sim_df &lt;- bind_rows(sim_list)
+```
+
+
+So what are the results?
+
+---
+name: results
+layout: false
+class: clear, middle
+
+Comparing the distributions of standard errors for the coefficient on `\(x\)`
+&lt;img src="04Inference_NoPause_files/figure-html/sim_plot1-1.svg" style="display: block; margin: auto;" /&gt;
+---
+class: clear, middle
+
+Comparing the distributions of `\(t\)` statistics for the coefficient on `\(x\)`
+&lt;img src="04Inference_NoPause_files/figure-html/sim_plot2-1.svg" style="display: block; margin: auto;" /&gt;
+---
+class: clear, middle
+
+.qa[Q] All of these test are for a false H.sub[0]. How would the simulation change to enforce a *true* null hypothesis?
+---
+layout: true
+# Simulation
+
+---
+name: null
+## Updating to enforce the null
+
+Let's update our simulation function to take arguments `γ` and `δ` such that
+$$
+`\begin{align}
+  \text{Y}_{i} = 1 + e^{\gamma \text{X}_{i}} + \varepsilon_i
+\end{align}`
+$$
+where `\(\varepsilon_i\sim\mathop{\text{N}}(0,\sigma^2\text{X}_{i}^\delta)\)`.
+
+
+In other words,
+- `\(\gamma = 0\)` implies no relationship between `\(\text{Y}_{i}\)` and `\(\text{X}_{i}\)`.
+- `\(\delta = 0\)` implies homoskedasticity.
+---
+## Updating to enforce the null
+
+Updating the function...
+
+
+```r
+flex_iter &lt;- function(iter, γ = 0, δ = 1, n = 30) {
+  # Generate data
+  iter_df &lt;- tibble(
+    x = runif(n, min = 0, max = 10),
+    ε = rnorm(n, sd = 15 * x^δ),
+    y = 1 + exp(γ * x) + ε
+  )
+  # Estimate models
+  lm1 &lt;- lm_robust(y ~ x, data = iter_df, se_type = "classical")
+  lm2 &lt;- lm_robust(y ~ x, data = iter_df, se_type = "HC2")
+  # Stack and return results
+  bind_rows(tidy(lm1), tidy(lm2)) %&gt;%
+    select(1:5) %&gt;% filter(term == "x") %&gt;%
+    mutate(se_type = c("classical", "HC2"), i = iter)
+}
+```
+---
+## Run again!
+
+Now we run our new function `flex_iter()` 10,000 times
+
+
+```r
+# Packages
+p_load(purrr, furrr)
+# Set options
+set.seed(123)
+# Tell R to parallelize
+plan(multiprocess)
+# Run 10,000 iterations
+null_df &lt;- future_map(
+  1:1e4, flex_iter,
+  # Enforce the null hypothesis
+  γ = 0,
+  # Specify heteroskedasticity
+  δ = 1,
+  .options = future_options(seed = T)
+) %&gt;% bind_rows()
+```
+---
+layout: false
+class: clear, middle
+
+Comparing the distributions of standard errors for the coefficient on `\(x\)`
+&lt;img src="04Inference_NoPause_files/figure-html/sim_plot3-1.svg" style="display: block; margin: auto;" /&gt;
+---
+class: clear, middle
+
+Comparing the distributions of `\(t\)` statistics for the coefficient on `\(x\)`
+&lt;img src="04Inference_NoPause_files/figure-html/null_plot4-1.svg" style="display: block; margin: auto;" /&gt;
+---
+class: clear, middle
+
+Distributions of *p*-values: both methods slightly over-reject the (true) null
+&lt;img src="04Inference_NoPause_files/figure-html/null_plot5-1.svg" style="display: block; margin: auto;" /&gt;
+
+---
+layout: false
+# Table of contents
+
+.pull-left[
+### Admin
+.smaller[
+
+1. [Schedule](#schedule)
+1. [Advice](#advice)
+]
+
+]
+
+.pull-right[
+### Inference
+.smaller[
+
+1. [Why?](#why)
+1. [OLS](#ols)
+1. [Heteroskedasticity](#het)
+1. [Small-sample warning](#warning)
+1. [Simulation](#sim)
+  - [Outline](#sim)
+  - [DGP](#dgp)
+  - [Iterating](#iter)
+  - [Parallelization](#parallel)
+  - [Results](#results)
+  - [Under the null](#null)
+]
+]
+---
+exclude: true
+    </textarea>
+<script src="https://remarkjs.com/downloads/remark-latest.min.js"></script>
+<script>var slideshow = remark.create({
+"highlightStyle": "github",
+"highlightLines": true,
+"countIncrementalSlides": false
+});
+if (window.HTMLWidgets) slideshow.on('afterShowSlide', function (slide) {
+  window.dispatchEvent(new Event('resize'));
+});
+(function() {
+  var d = document, s = d.createElement("style"), r = d.querySelector(".remark-slide-scaler");
+  if (!r) return;
+  s.type = "text/css"; s.innerHTML = "@page {size: " + r.style.width + " " + r.style.height +"; }";
+  d.head.appendChild(s);
+})();</script>
+
+<script>
+(function() {
+  var i, text, code, codes = document.getElementsByTagName('code');
+  for (i = 0; i < codes.length;) {
+    code = codes[i];
+    if (code.parentNode.tagName !== 'PRE' && code.childElementCount === 0) {
+      text = code.textContent;
+      if (/^\\\((.|\s)+\\\)$/.test(text) || /^\\\[(.|\s)+\\\]$/.test(text) ||
+          /^\$\$(.|\s)+\$\$$/.test(text) ||
+          /^\\begin\{([^}]+)\}(.|\s)+\\end\{[^}]+\}$/.test(text)) {
+        code.outerHTML = code.innerHTML;  // remove <code></code>
+        continue;
+      }
+    }
+    i++;
+  }
+})();
+</script>
+<!-- dynamically load mathjax for compatibility with self-contained -->
+<script>
+(function () {
+  var script = document.createElement('script');
+  script.type = 'text/javascript';
+  script.src  = 'https://mathjax.rstudio.com/latest/MathJax.js?config=TeX-MML-AM_CHTML';
+  if (location.protocol !== 'file:' && /^https?:/.test(script.src))
+    script.src  = script.src.replace(/^https?:/, '');
+  document.getElementsByTagName('head')[0].appendChild(script);
+})();
+</script>
+  </body>
+</html>

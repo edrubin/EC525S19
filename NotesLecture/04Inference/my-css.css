@@ -1,3 +1,4 @@
+@import url(https://fonts.googleapis.com/css?family=Zilla+Slab:300,300i,400,400i,500,500i,700,700i);
 
 /* Create a highlighted class called 'hi'  */
 .hi {
@@ -212,6 +213,8 @@
   background: #f8f8f8;
   border-radius: 3px;
   padding: 10px;
+  padding-top: 0px;
+  padding-bottom: 0px;
 }
 .pseudocode-small {
   font-size: 20px;
@@ -227,7 +230,7 @@
 }
 
 .remark-code {
-  font-size: 70%;
+  font-size: 68%;
 }
 
 .inverse > h2 {
@@ -306,6 +309,21 @@ th, td {
 /* Extra left padding */
 .pad-left {
   margin-left: 5%;
+}
+
+/* Attention */
+.attn {
+  font-weight: 500;
+  color: #e64173 !important;
+  font-family: 'Zilla Slab' !important;
+}
+
+/* Attention */
+.note {
+  font-weight: 300;
+  font-style: italic;
+  color: #314f4f !important;
+  font-family: 'Zilla Slab' !important;
 }
 
 /* Question and answer */

@@ -53,6 +53,16 @@ We will use two books.
 **Note formats:** [.html](https://raw.githack.com/edrubin/EC525S19/master/NotesLecture/03WhyRegression/03WhyRegression.html) | [.html (no pause)](https://raw.githack.com/edrubin/EC525S19/master/NotesLecture/03WhyRegression/03WhyRegression_NoPause.html) | [.pdf](https://raw.githack.com/edrubin/EC525S19/master/NotesLecture/03WhyRegression/03WhyRegression.pdf) | [.pdf (no pause)](https://raw.githack.com/edrubin/EC525S19/master/NotesLecture/03WhyRegression/03WhyRegression_NoPause.pdf) | [.Rmd](https://raw.githack.com/edrubin/EC525S19/master/NotesLecture/03WhyRegression/03WhyRegression.Rmd)
 <br>**Readings:** MHE chapter 3
 
+**[Lecture 04: Inference and Simulation](https://raw.githack.com/edrubin/EC525S19/master/NotesLecture/04Inference/04Inference.html)**
+
+1. How do we move from populations to samples?
+2. What matters for drawing basic statistical inferences about the population?
+3. How can we learn about inference from simulation?
+4. How do we run (parallelized) simulations in R?
+
+**Note formats:** [.html](https://raw.githack.com/edrubin/EC525S19/master/NotesLecture/04Inference/04Inference.html) | [.html (no pause)](https://raw.githack.com/edrubin/EC525S19/master/NotesLecture/04Inference/03WhyRegression_NoPause.html) | [.pdf](https://raw.githack.com/edrubin/EC525S19/master/NotesLecture/04Inference/04Inference.pdf) | [.pdf (no pause)](https://raw.githack.com/edrubin/EC525S19/master/NotesLecture/04Inference/03WhyRegression_NoPause.pdf) | [.Rmd](https://raw.githack.com/edrubin/EC525S19/master/NotesLecture/04Inference/04Inference.Rmd)
+<br>**Readings:** MHE chapter 3
+
 *Another note on the notes:* I create the slides with [`xaringan`](https://github.com/yihui/xaringan/wiki) in [R](cran.r-project.org). Thanks to [Grant McDermott](grantmcdermott.com/) for encouraging me to make this switch.
 
 ## Lab slides

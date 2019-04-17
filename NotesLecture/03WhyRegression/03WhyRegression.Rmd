@@ -1057,7 +1057,7 @@ $$
 layout: false
 class: clear
 
-.hi-slate[Proof] First, recall that, in expectation, $\beta$ is the $b$ that minimizes $\left( \text{Y}_{i} - \text{X}_{i}'b \right)$
+.hi-slate[Proof] First, recall that, .orange[in expectation], $\beta$ is the $b$ that minimizes $\left( \text{Y}_{i} - \text{X}_{i}'b \right)^2$
 
 --
 
