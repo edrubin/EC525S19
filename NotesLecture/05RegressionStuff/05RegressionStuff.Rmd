@@ -1,0 +1,983 @@
+---
+title: "Regression Stuff"
+subtitle: "EC 425/525, Set 5"
+author: "Edward Rubin"
+date: "`r format(Sys.time(), '%d %B %Y')`"
+output:
+  xaringan::moon_reader:
+    css: ['default', 'metropolis', 'metropolis-fonts', 'my-css.css']
+    # self_contained: true
+    nature:
+      highlightStyle: github
+      highlightLines: true
+      countIncrementalSlides: false
+---
+class: inverse, middle
+
+```{R, setup, include = F}
+# devtools::install_github("dill/emoGG")
+library(pacman)
+p_load(
+  broom, tidyverse,
+  ggplot2, ggthemes, ggforce, ggridges,
+  latex2exp, viridis, extrafont, gridExtra,
+  kableExtra, snakecase, janitor,
+  data.table, dplyr,
+  lubridate, knitr,
+  estimatr, here, magrittr
+)
+# Define pink color
+red_pink <- "#e64173"
+turquoise <- "#20B2AA"
+orange <- "#FFA500"
+red <- "#fb6107"
+blue <- "#3b3b9a"
+green <- "#8bb174"
+grey_light <- "grey70"
+grey_mid <- "grey50"
+grey_dark <- "grey20"
+purple <- "#6A5ACD"
+slate <- "#314f4f"
+# Dark slate grey: #314f4f
+# Knitr options
+opts_chunk$set(
+  comment = "#>",
+  fig.align = "center",
+  fig.height = 7,
+  fig.width = 10.5,
+  warning = F,
+  message = F
+)
+opts_chunk$set(dev = "svg")
+options(device = function(file, width, height) {
+  svg(tempfile(), width = width, height = height)
+})
+options(crayon.enabled = F)
+options(knitr.table.format = "html")
+# A blank theme for ggplot
+theme_empty <- theme_bw() + theme(
+  line = element_blank(),
+  rect = element_blank(),
+  strip.text = element_blank(),
+  axis.text = element_blank(),
+  plot.title = element_blank(),
+  axis.title = element_blank(),
+  plot.margin = structure(c(0, 0, -0.5, -1), unit = "lines", valid.unit = 3L, class = "unit"),
+  legend.position = "none"
+)
+theme_simple <- theme_bw() + theme(
+  line = element_blank(),
+  panel.grid = element_blank(),
+  rect = element_blank(),
+  strip.text = element_blank(),
+  axis.text.x = element_text(size = 18, family = "STIXGeneral"),
+  axis.text.y = element_blank(),
+  axis.ticks = element_blank(),
+  plot.title = element_blank(),
+  axis.title = element_blank(),
+  # plot.margin = structure(c(0, 0, -1, -1), unit = "lines", valid.unit = 3L, class = "unit"),
+  legend.position = "none"
+)
+theme_axes_math <- theme_void() + theme(
+  text = element_text(family = "MathJax_Math"),
+  axis.title = element_text(size = 22),
+  axis.title.x = element_text(hjust = .95, margin = margin(0.15, 0, 0, 0, unit = "lines")),
+  axis.title.y = element_text(vjust = .95, margin = margin(0, 0.15, 0, 0, unit = "lines")),
+  axis.line = element_line(
+    color = "grey70",
+    size = 0.25,
+    arrow = arrow(angle = 30, length = unit(0.15, "inches")
+  )),
+  plot.margin = structure(c(1, 0, 1, 0), unit = "lines", valid.unit = 3L, class = "unit"),
+  legend.position = "none"
+)
+theme_axes_serif <- theme_void() + theme(
+  text = element_text(family = "MathJax_Main"),
+  axis.title = element_text(size = 22),
+  axis.title.x = element_text(hjust = .95, margin = margin(0.15, 0, 0, 0, unit = "lines")),
+  axis.title.y = element_text(vjust = .95, margin = margin(0, 0.15, 0, 0, unit = "lines")),
+  axis.line = element_line(
+    color = "grey70",
+    size = 0.25,
+    arrow = arrow(angle = 30, length = unit(0.15, "inches")
+  )),
+  plot.margin = structure(c(1, 0, 1, 0), unit = "lines", valid.unit = 3L, class = "unit"),
+  legend.position = "none"
+)
+theme_axes <- theme_void() + theme(
+  text = element_text(family = "Fira Sans Book"),
+  axis.title = element_text(size = 18),
+  axis.title.x = element_text(hjust = .95, margin = margin(0.15, 0, 0, 0, unit = "lines")),
+  axis.title.y = element_text(vjust = .95, margin = margin(0, 0.15, 0, 0, unit = "lines")),
+  axis.line = element_line(
+    color = grey_light,
+    size = 0.25,
+    arrow = arrow(angle = 30, length = unit(0.15, "inches")
+  )),
+  plot.margin = structure(c(1, 0, 1, 0), unit = "lines", valid.unit = 3L, class = "unit"),
+  legend.position = "none"
+)
+theme_set(theme_gray(base_size = 20))
+# Column names for regression results
+reg_columns <- c("Term", "Est.", "S.E.", "t stat.", "p-Value")
+# Function for formatting p values
+format_pvi <- function(pv) {
+  return(ifelse(
+    pv < 0.0001,
+    "<0.0001",
+    round(pv, 4) %>% format(scientific = F)
+  ))
+}
+format_pv <- function(pvs) lapply(X = pvs, FUN = format_pvi) %>% unlist()
+# Tidy regression results table
+tidy_table <- function(x, terms, highlight_row = 1, highlight_color = "black", highlight_bold = T, digits = c(NA, 3, 3, 2, 5), title = NULL) {
+  x %>%
+    tidy() %>%
+    select(1:5) %>%
+    mutate(
+      term = terms,
+      p.value = p.value %>% format_pv()
+    ) %>%
+    kable(
+      col.names = reg_columns,
+      escape = F,
+      digits = digits,
+      caption = title
+    ) %>%
+    kable_styling(font_size = 20) %>%
+    row_spec(1:nrow(tidy(x)), background = "white") %>%
+    row_spec(highlight_row, bold = highlight_bold, color = highlight_color)
+}
+```
+
+# Prologue
+
+---
+name: previously
+
+# Schedule
+
+## Last time: Inference and simulation
+
+Let's review using a quote from *MHE*
+
+> We've chosen to start with the .hi[asymptotic approach to inference] because modern empirical work typically leans heavily on the large-sample theory that lies behind robust variance formulas. The .hi[payoff is valid inference under weak assumptions], in particular, a framework that makes sense for our less-than-literal approach to regression models. On the other hand, the .hi[large-sample approach is not without its dangers]...
+
+.grey-light[.small[*MHE*, p. 48 (emphasis added)]]
+
+---
+name: schedule
+
+# Schedule
+## Today
+
+Regression and causality
+<br>.note[Read] *MHE* 3.2
+
+## Upcoming
+
+Assignment \#1
+---
+name: advice
+layout: false
+class: clear, middle
+
+.attn[Advice] Make sure you're taking a few minutes for personal health..super[.pink[†]]
+
+.footnote[.pink[†] *health* = physical, mental, and spiritual. Also: Do a better job than I do.]
+---
+layout: false
+class: inverse, middle
+
+# Regression talk
+## Saturated models
+
+---
+layout: true
+
+# Regression talk
+## Saturated models
+
+A .attn[saturated model] is a regression model that includes a discrete (indicator) variable for each set of values the explanatory variables can take.
+
+---
+name: saturated
+
+--
+
+For discrete regressors, saturated models are pretty straightforward.
+
+--
+
+.ex[Example] For the relationship between .purple[Wages] and .orange[College Graduation],
+
+--
+
+$$
+\begin{align}
+  \color{#6A5ACD}{\text{Wages}_{i}} = \alpha + \beta \, \color{#FFA500}{\mathbb{I}\left\{ \text{College Graduate} \right\}_i} + \varepsilon_i
+\end{align}
+$$
+
+---
+
+For continuous variables, you need an indicator for each potential value.
+
+--
+
+.ex[Example.sub[2]] Regressing .purple[Wages] on .turquoise[Schooling] $\left(\color{#20B2AA}{s_i \in \left\{0,1,2,\ldots T \right\}}\right)$.
+
+--
+
+$$
+\begin{align}
+  \color{#6A5ACD}{\text{Wages}_{i}} = \alpha +
+  \beta_1 \, \color{#20B2AA}{\mathbb{I}\left\{ s_i = 1 \right\}_i}  +
+  \beta_2 \, \color{#20B2AA}{\mathbb{I}\left\{ s_i = 2 \right\}_i}  +
+  \cdots +
+  \beta_T \, \color{#20B2AA}{\mathbb{I}\left\{ s_i = T \right\}_i}  +
+  \varepsilon_i
+\end{align}
+$$
+
+--
+
+Here, $\color{#20B2AA}{s_i=0}$ is our reference level; $\beta_j$ is the effect of $\color{#20B2AA}{j}$ years of schooling.
+
+--
+
+$$
+\begin{align}
+  \mathop{E}\left[ \color{#6A5ACD}{\text{Wages}_i} \mid \color{#20B2AA}{s_i = j} \right] - \mathop{E}\left[ \color{#6A5ACD}{\text{Wages}_i} \mid \color{#20B2AA}{s_i = 0} \right] = \alpha + \beta_j - \alpha = \beta_j
+\end{align}
+$$
+---
+layout: true
+
+# Regression talk
+## Saturated models
+
+---
+
+.qa[Q] Why focus on saturated models?
+
+--
+
+.qa[A] .hi-slate[Saturated models perfectly fit the CEF]
+--
+ because the CEF is a linear function of the dummy variables—a special case of the linear CEF theorem.
+
+---
+If you have multiple explanatory variables, you need .attn[interactions].
+
+--
+
+.ex[Example.sub[3]] Regressing .purple[Wages] on .orange[College Graduation] and .red[Gender].
+
+--
+
+$$
+\begin{align}
+  \color{#6A5ACD}{\text{Wages}_{i}} = \alpha &+ \beta_1 \, \color{#FFA500}{\mathbb{I}\left\{ \text{College Graduate} \right\}_i} + \beta_2 \, \color{#fb6107}{\mathbb{I}\left\{ \text{Female} \right\}_i}
+  \\
+  &+ \beta_3 \, \color{#FFA500}{\mathbb{I}\left\{ \text{College Graduate} \right\}_i} \times \color{#fb6107}{\mathbb{I}\left\{ \text{Female} \right\}_i} +  \varepsilon_i
+\end{align}
+$$
+
+--
+
+Here, the uninteracted terms $\left( \beta_1\:\&\: \beta_2 \right)$ are called .attn[main effects]; $\beta_3$ gives the effect of the .attn[interaction].
+
+--
+
+$$
+\begin{align}
+  \mathop{E}\left[ \color{#6A5ACD}{\text{Wages}_i} | \color{#FFA500}{\text{College Graduate}_i = 0},\, \color{#fb6107}{\text{Female}_i = 0} \right] &= \alpha \\
+  \mathop{E}\left[ \color{#6A5ACD}{\text{Wages}_i} | \color{#FFA500}{\text{College Graduate}_i = 1},\, \color{#fb6107}{\text{Female}_i = 0} \right] &= \alpha + \beta_1 \\
+  \mathop{E}\left[ \color{#6A5ACD}{\text{Wages}_i} | \color{#FFA500}{\text{College Graduate}_i = 0},\, \color{#fb6107}{\text{Female}_i = 1} \right] &= \alpha + \beta_2 \\
+  \mathop{E}\left[ \color{#6A5ACD}{\text{Wages}_i} | \color{#FFA500}{\text{College Graduate}_i = 1},\, \color{#fb6107}{\text{Female}_i = 1} \right] &= \alpha + \beta_1 + \beta_2 + \beta_3
+\end{align}
+$$
+
+---
+
+The CEF can take on four possible values,
+
+$$
+\begin{align}
+  \mathop{E}\left[ \color{#6A5ACD}{\text{Wages}_i} | \color{#FFA500}{\text{College Graduate}_i = 0},\, \color{#fb6107}{\text{Female}_i = 0} \right] &= \alpha \\
+  \mathop{E}\left[ \color{#6A5ACD}{\text{Wages}_i} | \color{#FFA500}{\text{College Graduate}_i = 1},\, \color{#fb6107}{\text{Female}_i = 0} \right] &= \alpha + \beta_1 \\
+  \mathop{E}\left[ \color{#6A5ACD}{\text{Wages}_i} | \color{#FFA500}{\text{College Graduate}_i = 0},\, \color{#fb6107}{\text{Female}_i = 1} \right] &= \alpha + \beta_2 \\
+  \mathop{E}\left[ \color{#6A5ACD}{\text{Wages}_i} | \color{#FFA500}{\text{College Graduate}_i = 1},\, \color{#fb6107}{\text{Female}_i = 1} \right] &= \alpha + \beta_1 + \beta_2 + \beta_3
+\end{align}
+$$
+
+and the specification of our saturated regression model
+
+$$
+\begin{align}
+  \color{#6A5ACD}{\text{Wages}_{i}} = \alpha &+ \beta_1 \, \color{#FFA500}{\mathbb{I}\left\{ \text{College Graduate} \right\}_i} + \beta_2 \, \color{#fb6107}{\mathbb{I}\left\{ \text{Female} \right\}_i}
+  \\
+  &+ \beta_3 \, \color{#FFA500}{\mathbb{I}\left\{ \text{College Graduate} \right\}_i} \times \color{#fb6107}{\mathbb{I}\left\{ \text{Female} \right\}_i} +  \varepsilon_i
+\end{align}
+$$
+
+does not restrict the CEF at all.
+
+---
+layout: true
+# Regression talk
+## Model specification
+
+---
+name: specification
+
+*Saturated models* sit at one extreme of the model-specification spectrum, with *linear, uninteracted models* occupying the opposite extreme.
+
+.pull-left[
+.attn[Saturated models]
+- Fit CEF $(+)$
+- Complex $(-)$
+  - Many dummies
+  - Many interactions
+]
+
+.pull-right[
+.attn[Plain, linear models]
+- Linear approximations $(-)$
+- Simple $(+)$
+]
+
+--
+
+Don't forget the there are many options in between—though some make less sense than others (_e.g._, interactions without main effects).
+
+---
+
+.note[Note] Saturated models perfectly fit the CEF regardless of $\text{Y}_{i}$'s distribution.
+
+--
+
+Continuous, linear probability, logged, non-negative—it works for all.
+---
+layout: false
+class: clear, middle
+
+Now back to causality...
+---
+class: inverse, middle
+
+# Regression and causality
+
+---
+layout: true
+# Regression and causality
+## The return of causality
+
+---
+name: causal_reg
+
+We've spent the last few lectures developing properties/understanding of (.hi-slate[1]) the CEF and (.hi-slate[2]) least-squares regression.
+
+Let's return to our main goal of the course...
+
+.qa[Q] When can we actually interpret a regression as .hi[causal]?.super[.pink[†]]
+
+.footnote[.pink[†] *Hint:* There is no ".mono[reg y x, causal]" command in Stata.]
+
+--
+
+.qa[A] A regression is causal when the CEF it approximates is causal.
+
+---
+
+Great... thanks.
+
+.qa[Q] So when is a CEF causal?
+
+--
+
+.qa[A] First, return to the potential-outcomes framework, describing hypothetical outcomes.
+
+> A CEF is causal when it describes .hi[differences in average potential outcomes] for a fixed reference population.
+
+.grey-light[*MHE*, p. 52 (emphasis added)]
+
+--
+
+Let's work through this "definition" of causal CEFs with an example.
+
+---
+layout: true
+# Regression and causality
+## Causal CEFs
+
+---
+name: causal_cef
+
+.ex[Example] The (causal) effect of schooling on income.
+
+--
+
+The causal effect of schooling for individual $i$ would tell us how $i$'s
+<br>.hi-purple[earnings] $\color{#6A5ACD}{\text{Y}_{i}}$ would change if we varied $i$'s .hi-pink[level of schooling] $\color{#e64173}{s_i}$.
+
+--
+
+Previously, we discussed how experiments randomly assign treatment to .it[ensure the variable of interest is independent of potential outcomes].
+
+--
+
+Now we would like to .hi-slate[extend this framework] to
+
+1. variables that take on .hi-slate[more than two values]
+2. situations that requrire us to .hi-slate[hold many covariates constant] in order to achieve a valid causal interpretation
+
+---
+
+The idea of *holding (many) covariates constant* brings us to one of the cornerstones of applied econometrics: the .attn[conditional independence assumption (CIA)] (also called *selection on observables*).
+
+---
+layout: true
+# Regression and causality
+## The conditional independence assumption
+
+---
+name: cia
+
+.note[Definition(s)]
+
+- Conditional on some set of covariates $\text{X}_{i}$, selection bias disappears.
+
+--
+
+- Conditional on $\text{X}_{i}$, potential outcomes $\left( \color{#6A5ACD}{\text{Y}_{0i}},\, \color{#6A5ACD}{\text{Y}_{1i}} \right)$ are independent of treatment status $\left( \color{#e64173}{\text{D}_{i}} \right)$.
+
+$$
+\begin{align}
+  \def\ci{\perp\mkern-10mu\perp}
+  \left\{ \color{#6A5ACD}{\text{Y}_{0i}},\,\color{#6A5ACD}{\text{Y}_{1i}} \right\} \ci  \color{#e64173}{\text{D}_{i}} | \text{X}_{i}
+\end{align}
+$$
+
+--
+
+To see how CIA eliminates selection bias...
+
+Selection bias $= \mathop{E}\left[ \color{#6A5ACD}{\text{Y}_{0i}} \mid \text{X}_{i},\, \color{#e64173}{\text{D}_{i}= 1} \right] - \mathop{E}\left[ \color{#6A5ACD}{\text{Y}_{0i}} \mid \text{X}_{i},\, \color{#e64173}{\text{D}_{i}= 0} \right]$
+--
+<br>.white[Selection bias] $= \mathop{E}\left[ \color{#6A5ACD}{\text{Y}_{0i}} \mid \text{X}_{i} \right] - \mathop{E}\left[ \color{#6A5ACD}{\text{Y}_{0i}} \mid \text{X}_{i} \right]$
+--
+<br>.white[Selection bias] $= 0$
+
+---
+name: cia_binary
+
+Another way you'll hear CIA: After controlling for some set of variables $\text{X}_{i}$, treatment assignment is .it[.hi-slate[as good as random]].
+
+--
+
+To see how this assumption.super[.pink[†]] buys us a causal interpretation, write out our old difference in means—but now condition on $\text{X}_{i}$.
+
+.footnote[.pink[†] Another way to think about econometric assumptions is as requirements.]
+
+--
+
+$$
+\begin{align}
+  &\mathop{E}\left[ \color{#6A5ACD}{\text{Y}_{i}} \mid \text{X}_{i},\, \color{#e64173}{\text{D}_{i}=1} \right] - \mathop{E}\left[ \color{#6A5ACD}{\text{Y}_{i}} \mid \text{X}_{i},\, \color{#e64173}{\text{D}_{i}=0} \right] \\[0.5em]
+  &= \mathop{E}\left[ \color{#6A5ACD}{\text{Y}_{1i}} \mid \text{X}_{i} \right] - \mathop{E}\left[ \color{#6A5ACD}{\text{Y}_{0i}} \mid \text{X}_{i} \right] \\[0.5em]
+  &= \mathop{E}\left[ \color{#6A5ACD}{\text{Y}_{1i}} - \color{#6A5ACD}{\text{Y}_{0i}} \mid \text{X}_{i} \right]
+\end{align}
+$$
+
+--
+
+Even randomized experiments need the CIA—_e.g._, the STAR experiment's .it[within-school] randomization.
+
+---
+name: cia_multi
+
+Now let's extend this framework to .hi-slate[multi-valued explanatory variables].
+
+--
+
+.ex[Example continued] .pink[Schooling] $\left( \color{#e64173}{s_i} \right)$ takes on integers $\in\left\{ 0,\,1,\,\ldots,\, T \right\}$.
+
+We want to know the effect of an individual's .pink[schooling] on her .purple[wages] $\left( \color{#6A5ACD}{\text{Y}_{i}} \right)$.
+
+--
+
+Previously, $\color{#6A5ACD}{\text{Y}_{1i}}$ denoted individual $i$'s outcome under treatment.
+
+Now, $\color{#6A5ACD}{\text{Y}_{si}}$ denotes individual $i$'s outcome .pink[with] $\color{#e64173}{s}$ .pink[years of schooling].
+
+--
+
+Let each individual have her own function between .pink[schooling] and .purple[earnings].
+
+$$
+\begin{align}
+  \color{#6A5ACD}{\text{Y}_{si}} \equiv \mathop{f_i}(\color{#e64173}{s})
+\end{align}
+$$
+
+$\mathop{f_i}(\color{#e64173}{s})$ answers exactly the type of causal questions that we want to answer.
+
+---
+
+Extending the CIA to this multi-valued setting...
+
+.center[
+$\color{#6A5ACD}{\text{Y}_{si}} \ci \color{#e64173}{s_i} \mid \text{X}_{i}\enspace$ for all $\color{#e64173}{s}$
+]
+
+--
+
+If we apply the CIA to $\color{#6A5ACD}{\text{Y}_{si}} \equiv \mathop{f_i}(\color{#e64173}{s})$, we define the .it[average causal effect] of a one-year increase in .pink[schooling] as
+$$
+\begin{align}
+  \mathop{E}\left[ \mathop{f_i}(\color{#e64173}{s}) - \mathop{f_i}(\color{#e64173}{s-1}) \mid \text{X}_{i} \right]
+\end{align}
+$$
+
+--
+
+However, the data only contain one realization of $f_i(\color{#e64173}{s})$ per $i$—we only see $f_i(\color{#e64173}{s})$ evaluated at exactly one value of $\color{#e64173}{s}$ per $i$, _i.e._, $\color{#6A5ACD}{\text{Y}_{i}} = f_i(\color{#e64173}{s_i})$.
+
+--
+
+The CIA to the rescue!
+--
+ Conditional on $\text{X}_{i}$, $\color{#6A5ACD}{\text{Y}_{si}}$ and $\color{#e64173}{s_i}$ are independent.
+
+---
+
+The CIA to the rescue! Conditional on $\text{X}_{i}$, $\color{#6A5ACD}{\text{Y}_{si}}$ and $\color{#e64173}{s_i}$ are independent.
+
+$$
+\begin{align}
+  &\mathop{E}\left[ \color{#6A5ACD}{\text{Y}_{i}} \mid \text{X}_{i},\, \color{#e64173}{s_i = s} \right] - \mathop{E}\left[ \color{#6A5ACD}{\text{Y}_{i}} \mid \text{X}_{i},\, \color{#e64173}{s_i = s-1} \right] \\[0.5em]
+  &=\mathop{E}\left[ \color{#6A5ACD}{\text{Y}_{si}} \mid \text{X}_{i},\, \color{#e64173}{s_i = s} \right] - \mathop{E}\left[ \color{#6A5ACD}{\text{Y}_{(s-1)i}} \mid \text{X}_{i},\, \color{#e64173}{s_i = s-1} \right] \\[0.5em]
+  &=\mathop{E}\left[ \color{#6A5ACD}{\text{Y}_{si}} \mid \text{X}_{i} \right] - \mathop{E}\left[ \color{#6A5ACD}{\text{Y}_{(s-1)i}} \mid \text{X}_{i} \right] \\[0.5em]
+  &=\mathop{E}\left[ \color{#6A5ACD}{\text{Y}_{si}} - \color{#6A5ACD}{\text{Y}_{(s-1)i}} \mid \text{X}_{i} \right] \\[0.5em]
+  &=\mathop{E}\left[ \mathop{f_i}(\color{#e64173}{s}) - \mathop{f_i}(\color{#e64173}{s-1}) \mid \text{X}_{i} \right]
+\end{align}
+$$
+
+--
+
+With the CIA, a difference in conditional averages allows causal interpretations.
+
+---
+
+.ex[Example] The causal effect of high-school graduation is
+
+--
+
+.big-left[
+$\mathop{E}\left[ \color{#6A5ACD}{\text{Y}_{i}} \mid \text{X}_{i},\, \color{#e64173}{s_i = 12} \right] -   \mathop{E}\left[ \color{#6A5ACD}{\text{Y}_{i}} \mid \text{X}_{i},\, \color{#e64173}{s_i = 11} \right]$
+]
+--
+.big-left[
+$=\mathop{E}\left[ f_i(\color{#e64173}{12}) \mid \text{X}_{i},\, \color{#e64173}{s_i = 12} \right] -   \mathop{E}\left[ f_i(\color{#e64173}{11}) \mid \text{X}_{i},\, \color{#e64173}{s_i = 11} \right]$
+]
+--
+.big-left[
+$=\mathop{E}\left[ f_i(\color{#e64173}{12}) \mid \text{X}_{i},\, \color{#e64173}{s_i = 12} \right] -   \mathop{E}\left[ f_i(\color{#e64173}{11}) \mid \text{X}_{i},\, \color{#e64173}{s_i = 12} \right]$  .grey-light[(from CIA)]
+]
+--
+.big-left[
+$=\mathop{E}\left[ f_i(\color{#e64173}{12}) - f_i(\color{#e64173}{11}) \mid \text{X}_{i},\, \color{#e64173}{s_i = 12} \right]$
+]
+--
+.big-left[
+$=$ The average causal effect of graduation .it[for graduates]
+]
+--
+.big-left[
+$=\mathop{E}\left[ f_i(\color{#e64173}{12}) - f_i(\color{#e64173}{11}) \mid \text{X}_{i} \right]$ .grey-light[(CIA again)]
+]
+--
+.big-left[
+$=$ The (conditional) average causal effect of graduation .it[at] $X_{i}$
+]
+
+---
+
+.qa[Q] What about the .hi-slate[unconditional] average causal effect of graduation?
+
+--
+
+.qa[A] First, remember what we just showed...
+
+--
+
+$$
+\begin{align}
+  \mathop{E}\left[ \color{#6A5ACD}{\text{Y}_{i}} \mid \text{X}_{i},\, \color{#e64173}{s_i = 12} \right] -  \mathop{E}\left[ \color{#6A5ACD}{\text{Y}_{i}} \mid \text{X}_{i},\, \color{#e64173}{s_i = 11} \right] = \mathop{E}\left[ f_i(\color{#e64173}{12}) - f_i(\color{#e64173}{11}) \mid \text{X}_{i} \right]
+\end{align}
+$$
+
+--
+
+Now take the expected value of both sides and apply the LIE.
+
+.big-left[
+$E\!\bigg(\mathop{E}\left[ \color{#6A5ACD}{\text{Y}_{i}} \mid \text{X}_{i},\, \color{#e64173}{s_i = 12} \right] -  \mathop{E}\left[ \color{#6A5ACD}{\text{Y}_{i}} \mid \text{X}_{i},\, \color{#e64173}{s_i = 11} \right] \bigg)$
+]
+.big-left[
+$=E\! \bigg( \mathop{E}\left[ f_i(\color{#e64173}{12}) - f_i(\color{#e64173}{11}) \mid \text{X}_{i}\right] \bigg)$
+]
+--
+.big-left[
+$=\mathop{E}\left[ f_i(\color{#e64173}{12}) - f_i(\color{#e64173}{11}) \right]$ .grey-light[(Iterating expectations)]
+]
+
+---
+
+.note[Takeaways]
+
+1. Conditional independence gives our parameters .hi[causal interpretations] (elminating selection bias).
+
+--
+
+2. The interpretation changes slightly—without iterating expectations, we have .hi[conditional average treatment effects].
+
+--
+
+3. The CIA is challenging—you need to know which set of covariates $\left( \text{X}_{i} \right)$ leads to .hi[as-good-as-random residual variation in your treatment].
+
+--
+
+4. The idea of conditioning on observables to match *comparable* individuals introduces us to .hi[matching estimators]—comparing groups of individuals with the same covariate values.
+
+---
+layout: true
+
+# Regression and causality
+## From the CIA to regression
+
+---
+name: cia_reg
+
+Conditional independence fits into our regression framework in two ways.
+
+--
+
+1. If we assume $f_i(\color{#e64173}{s})$ is (.hi-slate[A]) linear in $\color{#e64173}{s}$ and (.hi-slate[B]) equal across all individuals except for an additive error, linear regression estimates $f(\color{#e64173}{s})$.
+
+--
+
+2. If we allow $f_i(\color{#e64173}{s})$ to be nonlinear in $\color{#e64173}{s}$ and heterogeneous across $i$, regression provides a weighted average of individual-specific differences $f_i(\color{#e64173}{s}) - f_i(\color{#e64173}{s-1})$..super[.pink[†]]
+
+.footnote[.pink[†] Leads to a matching-style estimator.]
+
+--
+
+Let's start with the 'easier' case: a linear, constant-effects (causal) model.
+
+---
+
+Let $f_i(\color{#e64173}{s})$ be linear in $\color{#e64173}{s}$ and equal across $i$ except for an error term, _e.g._,
+
+$$
+\begin{align}
+  f_i(\color{#e64173}{s}) = \alpha + \rho \color{#e64173}{s} + \eta_i \tag{A}
+\end{align}
+$$
+
+--
+
+Substitute in our observed value of $\color{#e64173}{s_i}$ and the outcome $\color{#6A5ACD}{\text{Y}_{i}}$
+
+$$
+\begin{align}
+  \color{#6A5ACD}{\text{Y}_{i}} = \alpha + \rho \color{#e64173}{s_i} + \eta_i \tag{B}
+\end{align}
+$$
+
+--
+
+While $\rho$ in $(\text{A})$ is explicitly causal, regression-based estimates of $\rho$ in $(\text{B})$ need not be causal (selection/OVB for endogenous $s_i$).
+
+---
+
+Continuing with our linear, constant-effect causal model...
+
+$$
+\begin{align}
+  f_i(\color{#e64173}{s}) = \alpha + \rho \color{#e64173}{s} + \eta_i \tag{A}
+\end{align}
+$$
+
+Now impose the conditional independence assumption for covariates $\text{X}_{i}$.
+
+$$
+\begin{align}
+  \eta_i = \text{X}_{i}'\gamma + \nu_i \tag{C}
+\end{align}
+$$
+
+where $\gamma$ is a vector of population coefficients from regressing $\eta_i$ on $\text{X}_{i}$.
+
+--
+
+.note[Note] Least-squares regression implies
+
+1. $\mathop{E}\left[ \eta_i \mid \text{X}_{i} \right] = \text{X}_{i}'\gamma$
+1. $\text{X}_{i}$ is uncorrelated with $\nu_i$.
+
+---
+
+Now write out the conditional expectation function of $f_i(\color{#e64173}{s})$ on $\text{X}_{i}$ and $\color{#e64173}{s_i}$.
+
+.big-left[
+$\mathop{E}\left[ f_i(\color{#e64173}{s}) \mid \text{X}_{i},\, \color{#e64173}{s_i} \right]$
+]
+.big-left[
+$=\mathop{E}\left[ f_i(\color{#e64173}{s}) \mid \text{X}_{i} \right]$ .grey-light[(CIA)]
+]
+--
+.big-left[
+$=\mathop{E}\left[ \alpha + \rho \color{#e64173}{s_i} + \eta_i \mid \text{X}_{i} \right]$
+]
+--
+.big-left[
+$=\alpha + \rho \color{#e64173}{s_i} + \mathop{E}\left[ \eta_i \mid \text{X}_{i} \right]$
+]
+--
+.big-left[
+$=\alpha + \rho \color{#e64173}{s_i} + \text{X}_{i}'\gamma$ .grey-light[(Least-squares regression)]
+]
+
+--
+
+The CEF of $f_i(\color{#e64173}{s_i})$ is linear, which means that the (right.super[.pink[†]]) population regression will be the CEF.
+
+.footnote[
+.pink[†] Here, "right" means conditional on $\text{X}_{i}$.
+]
+
+---
+
+Thus, the linear causal (regression) model is
+$$
+\begin{align}
+  \text{Y}_{i} = \alpha + \rho \color{#e64173}{s_i} + \text{X}_{i}'\gamma + \nu_i
+\end{align}
+$$
+
+The residual $\nu_i$ is uncorrelated with
+
+1. $\color{#e64173}{s_i}$ (from the CIA)
+2. $\text{X}_{i}$ (from defining $\gamma$ via the regression of $\eta$ on $\text{X}_{i}$)
+
+The coefficient $\rho$ gives the causal effect of $\color{#e64173}{s_i}$ on $\color{#6A5ACD}{\text{Y}_{i}}$.
+
+---
+
+As Angrist and Pischke note, this .hi[conditional-independence assumption] (.it[a.k.a.] the selection-on-observables assumption) is the cornerstone of modern empirical work in economics—and many other disciplines.
+
+Nearly any empirical application that wants a causal interpretation involves a (sometimes implicit) argument that .hi[conditional on some set of covariates, treatment is as-good-as random].
+
+--
+
+.ex[Part of our job:] Reasoning through the validity of this assumption.
+
+---
+layout: true
+# Regression and causality
+## CIA example
+
+---
+name: example
+
+Let's continue with the returns to graduation $\left( \text{G}_i \right)$.
+
+Let's imagine
+
+1. Women are more likely to graduate.
+1. Everyone receives the same return to graduation.
+1. Women receive lower wages across the board.
+
+---
+
+First, we need to generate some data.
+
+```{R, ex_data, eval = T}
+# Set seed
+set.seed(12345)
+# Set sample size
+n <- 1e4
+# Generate data
+ex_df <- tibble(
+  female = rep(c(0, 1), each = n/2),
+  grad = runif(n, min = female/3, max = 1) %>% round(0),
+  wage = 100 - 25 * female + 5 * grad + rnorm(n, sd = 3)
+)
+```
+
+---
+
+Now we can estimate our naïve regression
+
+$$
+\begin{align}
+  \text{Wage}_i = \alpha + \beta \text{Grad}_i + \varepsilon_i
+\end{align}
+$$
+
+--
+
+`lm(wage ~ grad, data = ex_df)`
+
+
+```{R, echo = F}
+lm(wage ~ grad, data = ex_df) %>% tidy() %>%
+  select(1:4) %>%
+  mutate(term = c("Intercept", "Graduate")) %>%
+  kable(col.names = c("", "Coef.", "S.E.", "t stat"), digits = 2)
+```
+
+--
+
+Maybe we should have plotted our data...
+
+---
+layout: false
+class: clear, center
+
+```{R, ex_plot1, echo = F}
+# Plot
+ggplot(
+  data = ex_df %>% mutate(Gender = factor(female, labels = c("Female", "Male"))),
+  aes(x = grad, y = wage)
+) +
+geom_jitter(alpha = 0.3, width = 0.1, shape = 1, size = 2.5) +
+geom_smooth(method = lm, se = F, color = orange, size = 0.5) +
+annotate(
+  geom = "point",
+  x = c(0, 1),
+  y = c(mean(filter(ex_df, grad == 0)$wage), mean(filter(ex_df, grad == 1)$wage)),
+  color = orange,
+  size = 6
+) +
+scale_x_continuous("Graduate", breaks = c(0, 1)) +
+ylab("Wage") +
+theme_pander(base_family = "Fira Sans Book", base_size = 20)
+```
+
+---
+class: clear, middle
+
+We're still missing something...
+
+---
+class: clear, center
+
+
+```{R, ex_plot2, echo = F, eval = T}
+# Plot
+ggplot(
+  data = ex_df %>% mutate(Gender = factor(female, labels = c("Female", "Male"))),
+  aes(x = grad, y = wage)
+) +
+geom_jitter(
+  aes(color = Gender),
+  alpha = 0.2, width = 0.1,
+  shape = 1, size = 2.5
+) +
+geom_smooth(
+  data = ex_df %>% filter(female == 1),
+  method = lm, se = F, size = 0.5,
+  color = red_pink
+) +
+geom_smooth(
+  data = ex_df %>% filter(female == 0),
+  method = lm, se = F, size = 0.5,
+  color = slate
+) +
+annotate(
+  geom = "point",
+  x = c(0, 1),
+  y = c(mean(filter(ex_df, grad == 0 & female == 1)$wage), mean(filter(ex_df, grad == 1 & female == 1)$wage)),
+  color = red_pink,
+  size = 6
+) +
+annotate(
+  geom = "point",
+  x = c(0, 1),
+  y = c(mean(filter(ex_df, grad == 0 & female == 0)$wage), mean(filter(ex_df, grad == 1 & female == 0)$wage)),
+  color = slate,
+  size = 6
+) +
+scale_x_continuous("Graduate", breaks = c(0, 1)) +
+ylab("Wage") +
+theme_pander(base_family = "Fira Sans Book", base_size = 20) +
+scale_color_manual(values = c(slate, red_pink)) +
+theme(legend.position = "none")
+```
+
+---
+# Regression and causality
+## CIA example
+
+Now we can estimate our causal regression
+
+$$
+\begin{align}
+  \text{Wage}_i = \alpha + \beta_1 \text{Grad}_i + \beta_2 \text{Female}_i + \varepsilon_i
+\end{align}
+$$
+
+--
+
+`lm(wage ~ grad + female, data = ex_df)`
+
+
+```{R, echo = F}
+lm(wage ~ grad + female, data = ex_df) %>% tidy() %>%
+  select(1:4) %>%
+  mutate(term = c("Intercept", "Graduate", "Female")) %>%
+  kable(col.names = c("", "Coef.", "S.E.", "t stat"), digits = 2)
+```
+
+---
+layout: false
+# Table of contents
+
+.pull-left[
+### Admin
+.smaller[
+
+1. [Last time](#previously)
+1. [Schedule](#schedule)
+1. [Advice](#advice)
+]
+
+]
+
+.pull-right[
+### Regression
+.smaller[
+
+1. [Saturated models](#saturated)
+1. [Model specification](#specification)
+1. [Causal regressions](#causal_reg)
+1. [Causal CEFs](#causal_cef)
+1. [Conditional independence assumption](#cia)
+  - [Binary treatment](#cia_binary)
+  - [Multi-valued treatment](#cia_multi)
+  - [Regression](#cia_reg)
+  - [Example](#example)
+
+]
+]
+---
+exclude: true
+
+```{R, generate pdfs, include = F, eval = T}
+source("../../ScriptsR/unpause.R")
+unpause("05RegressionStuff.Rmd", ".", T, T)
+```

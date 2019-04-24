@@ -407,7 +407,7 @@ $$
   \text{Y}_{i} = 1 + e^{0.5 \text{X}_{i}} + \varepsilon_i
 \end{align}
 $$
-where $\text{X}_{i}\sim\mathop{\text{Uniform}}(0, 10)$ and $\varepsilon_i\sim\mathop{N}(0,1)$.
+where $\text{X}_{i}\sim\mathop{\text{Uniform}}(0, 10)$ and $\varepsilon_i\sim\mathop{N}(0,15^2)$.
 
 --
 

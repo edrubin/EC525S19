@@ -63,6 +63,13 @@ We will use two books.
 **Note formats:** [.html](https://raw.githack.com/edrubin/EC525S19/master/NotesLecture/04Inference/04Inference.html) | [.html (no pause)](https://raw.githack.com/edrubin/EC525S19/master/NotesLecture/04Inference/03WhyRegression_NoPause.html) | [.pdf](https://raw.githack.com/edrubin/EC525S19/master/NotesLecture/04Inference/04Inference.pdf) | [.pdf (no pause)](https://raw.githack.com/edrubin/EC525S19/master/NotesLecture/04Inference/03WhyRegression_NoPause.pdf) | [.Rmd](https://raw.githack.com/edrubin/EC525S19/master/NotesLecture/04Inference/04Inference.Rmd)
 <br>**Readings:** MHE chapter 3
 
+**[Lecture 05: Regression Stuff](https://raw.githack.com/edrubin/EC525S19/master/NotesLecture/04Inference/04Inference.html)**
+
+Regression and the conditional-independence assumption.
+
+**Note formats:** [.html](https://raw.githack.com/edrubin/EC525S19/master/NotesLecture/05RegressionStuff/05RegressionStuff.html) | [.html (no pause)](https://raw.githack.com/edrubin/EC525S19/master/NotesLecture/05RegressionStuff/03WhyRegression_NoPause.html) | [.pdf](https://raw.githack.com/edrubin/EC525S19/master/NotesLecture/05RegressionStuff/05RegressionStuff.pdf) | [.pdf (no pause)](https://raw.githack.com/edrubin/EC525S19/master/NotesLecture/05RegressionStuff/03WhyRegression_NoPause.pdf) | [.Rmd](https://raw.githack.com/edrubin/EC525S19/master/NotesLecture/05RegressionStuff/05RegressionStuff.Rmd)
+<br>**Readings:** Still MHE chapter 3
+
 *Another note on the notes:* I create the slides with [`xaringan`](https://github.com/yihui/xaringan/wiki) in [R](cran.r-project.org). Thanks to [Grant McDermott](grantmcdermott.com/) for encouraging me to make this switch.
 
 ## Lab slides
