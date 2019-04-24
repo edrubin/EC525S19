@@ -63,7 +63,7 @@ We will use two books.
 **Note formats:** [.html](https://raw.githack.com/edrubin/EC525S19/master/NotesLecture/04Inference/04Inference.html) | [.html (no pause)](https://raw.githack.com/edrubin/EC525S19/master/NotesLecture/04Inference/03WhyRegression_NoPause.html) | [.pdf](https://raw.githack.com/edrubin/EC525S19/master/NotesLecture/04Inference/04Inference.pdf) | [.pdf (no pause)](https://raw.githack.com/edrubin/EC525S19/master/NotesLecture/04Inference/03WhyRegression_NoPause.pdf) | [.Rmd](https://raw.githack.com/edrubin/EC525S19/master/NotesLecture/04Inference/04Inference.Rmd)
 <br>**Readings:** MHE chapter 3
 
-**[Lecture 05: Regression Stuff](https://raw.githack.com/edrubin/EC525S19/master/NotesLecture/04Inference/04Inference.html)**
+**[Lecture 05: Regression Stuff](https://raw.githack.com/edrubin/EC525S19/master/NotesLecture/05RegressionStuff/05RegressionStuff.html)**
 
 Regression and the conditional-independence assumption.
 
