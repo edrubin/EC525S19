@@ -221,7 +221,7 @@ $$
 
 ---
 
-For continuous variables, you need an indicator for each potential value.
+For multi-valued variables, you need an indicator for each potential value.
 
 --
 

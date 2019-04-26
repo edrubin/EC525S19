@@ -1,0 +1,474 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <title>.mono[RStudio] + Data i/o with .mono[R]</title>
+    <meta charset="utf-8">
+    <meta name="author" content="Edward Rubin" />
+    <meta name="date" content="2019-04-26" />
+    <link href="03RInput_NoPause_files/remark-css-0.0.1/default.css" rel="stylesheet" />
+    <link href="03RInput_NoPause_files/remark-css-0.0.1/metropolis.css" rel="stylesheet" />
+    <link href="03RInput_NoPause_files/remark-css-0.0.1/metropolis-fonts.css" rel="stylesheet" />
+    <link rel="stylesheet" href="my-css.css" type="text/css" />
+  </head>
+  <body>
+    <textarea id="source">
+class: center, middle, inverse, title-slide
+
+# .mono[RStudio] + Data i/o with .mono[R]
+## EC 425/525, Lab 3
+### Edward Rubin
+### 26 April 2019
+
+---
+
+class: inverse, middle
+
+
+
+# Prologue
+
+---
+name: schedule
+
+# Schedule
+
+## Last time
+
+Working with data in .mono[R]—especially via `dplyr`.
+
+## Today
+
+1. .mono[RStudio] basics
+2. Getting data in and out of .mono[R].
+
+---
+name: review
+
+# Review
+
+Key points from the last lab(s).
+
+1. `dplyr` is your data-work friend.
+
+2. Pipes (`%&gt;%`) make your life easier..super[.pink[†]]
+
+.footnote[.pink[†] Check out `magrittr` for more pipe options, _e.g._, `%&lt;&gt;%`.]
+---
+layout: false
+class: inverse, middle
+# RStudio
+
+---
+name: features
+class: clear
+
+Let's recap some of the major features in .mono[RStudio]...
+
+&lt;img src="RStudio/rstudio.png" width="4309" style="display: block; margin: auto;" /&gt;
+---
+class: clear
+
+First, you write your .mono[R] scripts (source code) in the .hi[Source] pane.
+
+&lt;img src="RStudio/rstudio_source_rec.png" width="4309" style="display: block; margin: auto;" /&gt;
+---
+class: clear
+
+You can use the menubar or .mono[⇧+⌘+N] to create new .mono[R] scripts.
+
+&lt;img src="RStudio/rstudio_source_arrow.png" width="4309" style="display: block; margin: auto;" /&gt;
+---
+class: clear
+
+To execute commands from your .mono[R] script, use .mono[⌘+Enter].
+
+&lt;img src="RStudio/rstudio_source_ex.png" width="4309" style="display: block; margin: auto;" /&gt;
+---
+class: clear
+
+.mono[RStudio] will execute the command in the terminal.
+
+&lt;img src="RStudio/rstudio_source_ex2.png" width="4309" style="display: block; margin: auto;" /&gt;
+---
+class: clear
+
+You can see our new object in the .hi[Environment] pane.
+
+&lt;img src="RStudio/rstudio_source_ex3.png" width="4309" style="display: block; margin: auto;" /&gt;
+---
+class: clear
+
+The .hi-purple[History] tab (next to .hi[Environment]) records your old commands.
+
+&lt;img src="RStudio/rstudio_history.png" width="4309" style="display: block; margin: auto;" /&gt;
+---
+class: clear
+
+The .hi[Files] pane is file explorer.
+
+&lt;img src="RStudio/rstudio_files.png" width="4309" style="display: block; margin: auto;" /&gt;
+---
+class: clear
+
+The .hi[Plots] pane/tab shows... plots.
+
+&lt;img src="RStudio/rstudio_plots.png" width="4309" style="display: block; margin: auto;" /&gt;
+---
+class: clear
+
+.hi[Packages] shows installed packages
+
+&lt;img src="RStudio/rstudio_packages.png" width="4309" style="display: block; margin: auto;" /&gt;
+---
+count: false
+class: clear
+
+.hi[Packages] shows installed packages and whether they are .hi-purple[loaded].
+
+&lt;img src="RStudio/rstudio_packages2.png" width="4309" style="display: block; margin: auto;" /&gt;
+---
+class: clear
+
+The .hi[Help] tab shows help documentation (also accessible via `?`).
+
+&lt;img src="RStudio/rstudio_help.png" width="4309" style="display: block; margin: auto;" /&gt;
+---
+class: clear
+
+Finally, you can customize the actual layout
+
+&lt;img src="RStudio/rstudio_layout.png" width="4309" style="display: block; margin: auto;" /&gt;
+---
+count: false
+class: clear
+
+Finally, you can customize the actual layout and many other items.
+
+&lt;img src="RStudio/rstudio_customize.png" width="4309" style="display: block; margin: auto;" /&gt;
+---
+name: best
+
+# .mono[R] and .mono[RStudio]
+## Best practices
+
+1. Write code in .mono[R] scripts. Troubleshoot in .mono[RStudio]. Then run the scripts.
+
+1. Comment your code. (`# This is a comment`)
+
+1. Name objects and variables with intelligible, standardized names.
+  - .hi-purple[BAD] `ALLCARS`, `Vl123a8`, `a.fun`, `cens.12931`, `cens.12933`
+  - .hi-pink[GOOD] `unique_cars`, `health_df`, `sim_fun`, `is_female`, `age`
+
+1. Set seeds when generating randomness, _e.g._, `set.seed(123)`.
+
+1. Parallelize when possible. (Packages: `parallel`, `purrr`, `foreach`, *etc.*)
+
+1. Use projects in .mono[RStudio] (next). And organize your projects.
+
+---
+layout: true
+# .mono[R] and .mono[RStudio]
+## Projects
+
+---
+name: projects
+
+Projects in .mono[R] offer several benefits:
+
+1. Act as an anchor for working with files.
+
+1. Make your work (projects) easily reproducible..super[.pink[†]]
+
+1. Help you quickly jump back into your work.
+
+.footnote[.pink[†] In this class, we're assuming reproducibility is good/desirable.]
+
+---
+layout: false
+class: clear
+
+To start a new project, hit the .hi[project icon].
+
+&lt;img src="RStudio/rstudio_projects.png" width="4309" style="display: block; margin: auto;" /&gt;
+---
+class: clear
+
+You'll then choose the folder/directory where your project lives.
+
+&lt;img src="RStudio/rstudio_projects2.png" width="4309" style="display: block; margin: auto;" /&gt;
+---
+class: clear
+
+If you open (double click) a project, .mono[RStudio] opens .mono[R] in that location.
+
+&lt;img src="RStudio/rstudio_projects3.png" width="4309" style="display: block; margin: auto;" /&gt;
+---
+count: false
+class: clear
+
+.mono[RStudio] will 'load' your previous setup (pane setup, scripts, *etc.*).
+
+&lt;img src="RStudio/rstudio_projects3.png" width="4309" style="display: block; margin: auto;" /&gt;
+---
+layout: true
+# .mono[R] and .mono[RStudio]
+## Projects
+
+---
+
+.hi-purple[Without a project], you will need to define long file paths that you'll need to keep updating as folder names/locations change.
+
+
+`dir_class &lt;- "/Users/edwardarubin/Dropbox/UO/Teaching/EC525S19/"`
+&lt;br&gt;`dir_labs &lt;- paste0(dir_class, "NotesLab/")`
+&lt;br&gt;`dir_lab03 &lt;- paste0(dir_labs, "03RInput/")`
+&lt;br&gt;`sample_df &lt;- read.csv(paste0(dir_lab03, "sample.csv"))`
+
+
+.hi-pink[With a project], .mono[R] automatically references the project's folder.
+
+`sample_df &lt;- read.csv("sample.csv")`
+
+
+.note[Double-plus bonus] The [`here`](https://github.com/r-lib/here) package extends projects' reproducibility.
+
+---
+layout: true
+# Data i/o
+
+---
+class: inverse, middle
+
+---
+name: reading
+
+## Reading files
+
+Projects solve the hardest part of data input/output in .mono[R], _i.e._, navigating your computer's file structure.
+
+.note[Steps to read in a file]
+
+1. Figure out your .hi-slate[file's location] *relative to your project's location*.
+
+1. .hi-slate[Find the function] that loads your files' file type.
+
+1. .hi-slate[Load the file] with the function (using its location).
+---
+name: dir
+
+
+
+## Reading CSVs
+
+We can check the files in the current (or any) directory with the `dir()`.
+
+
+
+```r
+dir()
+```
+
+```
+#&gt;  [1] "03RInput_cache"         "03RInput_files"        
+#&gt;  [3] "03RInput_NoPause_cache" "03RInput_NoPause.Rmd"  
+#&gt;  [5] "03RInput.html"          "03RInput.Rmd"          
+#&gt;  [7] "03RInput.Rproj"         "my-css.css"            
+#&gt;  [9] "RStudio"                "sample.csv"            
+#&gt; [11] "TODO"
+```
+
+Our current directory has the CSV `sample.csv` that I want to load.
+
+---
+name: read.csv
+
+## Reading CSVs
+
+.mono[R]'s base function for reading CSVs is `read.csv(file)`.
+
+You feed `read.csv()` the directory and name of the CSV..super[.pink[†]]
+
+.footnote[.pink[†] There are many other optional arguments, _e.g._, whether variables are named, variable types, *etc.*]
+
+
+```r
+read.csv("sample.csv") %&gt;% head(4)
+```
+
+```
+#&gt;   pid age first_name is_orange
+#&gt; 1   1  68    Jessica     FALSE
+#&gt; 2   2  80     Andrew     FALSE
+#&gt; 3   3  71     Donald      TRUE
+#&gt; 4   4  81      Jacob     FALSE
+```
+
+`read.csv()` returns a `data.frame` with the CSV's contents.
+
+---
+name: read_csv
+
+## Reading CSVs
+
+The Hadleyverse (technically, the `tidyverse` package) contains a package called `readr`, which contains the `read_csv()` function.
+
+`read_csv()` is pretty fast, guesses variable well, and returns a `tibble`..super[.pink[†]]
+
+.footnote[.pink[†] More speed: `fread()` from `data.table`. Notice `read.csv()` to `read_csv()` give `pid` differing classes.]
+
+
+```r
+p_load(tidyverse)
+read_csv("sample.csv") %&gt;% head(3)
+```
+
+```
+#&gt; # A tibble: 3 x 4
+#&gt;   pid     age first_name is_orange
+#&gt;   &lt;chr&gt; &lt;dbl&gt; &lt;chr&gt;      &lt;lgl&gt;    
+#&gt; 1 001      68 Jessica    FALSE    
+#&gt; 2 002      80 Andrew     FALSE    
+#&gt; 3 003      71 Donald     TRUE
+```
+---
+name: read_other
+
+## Reading other file types
+
+If you've got a file, chances are .mono[R] can read it.
+
+- Stata files: `read_dta` in `haven`
+
+- SAS files: `read_sas` in `haven`
+
+- Fixed-width files: `read_fwf()` in `readr` (also: `iotools`)
+
+- Excel files: `read_excel()` in `readxl`
+
+- Raster files: `raster()` in `raster`
+
+- Shapefiles: `st_read()` in `sf`
+
+---
+name: write
+
+## Writing
+
+If .mono[R] can read it, then .mono[R] can write it.
+
+Generally, there is a `write` or `save` function for each `read` function.
+
+
+```r
+# Read 'sample.csv'
+sample_df &lt;- read_csv("sample.csv")
+# Write sample_df to 'sample_copy.csv'
+write_csv(
+  x = sample_df,
+  file = "sample_copy.csv"
+)
+```
+---
+name: rds
+
+## RDS files
+
+While CSVs can be nice—they are readable without loading into a statistical program—when they get big, they can be slow and inefficient.
+
+.note[Enter] RDS files, .mono[R]'s compressed, faster answer.
+
+The base functions `readRDS()` and `saveRDS()` read and save RDS files.
+
+`readr` offers `read_rds()` and `write_rds()` for more standard naming.
+
+
+```r
+# Write sample_df to 'sample.rds'
+write_rds(x = sample_df, path = "sample.rds")
+# Read 'sample.rds'
+sample_df &lt;- read_rds("sample.rds")
+```
+---
+layout: false
+name: resources
+
+# Additional resources
+
+More resources related to today's materials.
+
+1. .mono[RStudio]'s [cheatsheet for .mono[RStudio]](https://www.rstudio.com/wp-content/uploads/2016/01/rstudio-IDE-cheatsheet.pdf)
+1. [Many other cheatsheets](https://www.rstudio.com/resources/cheatsheets/) from .mono[RStudio]
+
+---
+layout: false
+
+# Table of contents
+
+.pull-left[.hi-slate[Data, .mono[R], and .mono[RStudio]]
+.smaller[
+1. [Schedule](#schedule)
+1. [Review](#review)
+1. [.mono[RStudio] features](#features)
+1. [Best practices](#best)
+1. [Projects](#projects)
+1. [Data i/o](#reading)
+  - [Reading files](#reading)
+  - [`dir()`](#dir)
+  - [`read.csv()`](#read.csv)
+  - [`read_csv()`](#read_csv)
+  - [Other file types](#read_other)
+  - [Writing (output)](#write)
+  - [RDS files](#rds)
+1. [More resources](#resources)
+]]
+
+---
+exclude: true
+    </textarea>
+<script src="https://remarkjs.com/downloads/remark-latest.min.js"></script>
+<script>var slideshow = remark.create({
+"highlightStyle": "github",
+"highlightLines": true,
+"countIncrementalSlides": false
+});
+if (window.HTMLWidgets) slideshow.on('afterShowSlide', function (slide) {
+  window.dispatchEvent(new Event('resize'));
+});
+(function() {
+  var d = document, s = d.createElement("style"), r = d.querySelector(".remark-slide-scaler");
+  if (!r) return;
+  s.type = "text/css"; s.innerHTML = "@page {size: " + r.style.width + " " + r.style.height +"; }";
+  d.head.appendChild(s);
+})();</script>
+
+<script>
+(function() {
+  var i, text, code, codes = document.getElementsByTagName('code');
+  for (i = 0; i < codes.length;) {
+    code = codes[i];
+    if (code.parentNode.tagName !== 'PRE' && code.childElementCount === 0) {
+      text = code.textContent;
+      if (/^\\\((.|\s)+\\\)$/.test(text) || /^\\\[(.|\s)+\\\]$/.test(text) ||
+          /^\$\$(.|\s)+\$\$$/.test(text) ||
+          /^\\begin\{([^}]+)\}(.|\s)+\\end\{[^}]+\}$/.test(text)) {
+        code.outerHTML = code.innerHTML;  // remove <code></code>
+        continue;
+      }
+    }
+    i++;
+  }
+})();
+</script>
+<!-- dynamically load mathjax for compatibility with self-contained -->
+<script>
+(function () {
+  var script = document.createElement('script');
+  script.type = 'text/javascript';
+  script.src  = 'https://mathjax.rstudio.com/latest/MathJax.js?config=TeX-MML-AM_CHTML';
+  if (location.protocol !== 'file:' && /^https?:/.test(script.src))
+    script.src  = script.src.replace(/^https?:/, '');
+  document.getElementsByTagName('head')[0].appendChild(script);
+})();
+</script>
+  </body>
+</html>

@@ -65,7 +65,9 @@ We will use two books.
 
 **[Lecture 05: Regression Stuff](https://raw.githack.com/edrubin/EC525S19/master/NotesLecture/05RegressionStuff/05RegressionStuff.html)**
 
-Regression and the conditional-independence assumption.
+1. Saturated models
+1. When is regression causal?
+1. The conditional-independence assumption
 
 **Note formats:** [.html](https://raw.githack.com/edrubin/EC525S19/master/NotesLecture/05RegressionStuff/05RegressionStuff.html) | [.html (no pause)](https://raw.githack.com/edrubin/EC525S19/master/NotesLecture/05RegressionStuff/03WhyRegression_NoPause.html) | [.pdf](https://raw.githack.com/edrubin/EC525S19/master/NotesLecture/05RegressionStuff/05RegressionStuff.pdf) | [.pdf (no pause)](https://raw.githack.com/edrubin/EC525S19/master/NotesLecture/05RegressionStuff/03WhyRegression_NoPause.pdf) | [.Rmd](https://raw.githack.com/edrubin/EC525S19/master/NotesLecture/05RegressionStuff/05RegressionStuff.Rmd)
 <br>**Readings:** Still MHE chapter 3
@@ -92,6 +94,13 @@ Regression and the conditional-independence assumption.
 1. Data work with `dplyr`
 
 **Note formats:** [.html](https://raw.githack.com/edrubin/EC525S19/master/NotesLab/02RData/02RData.html) | [.html (no pause)](https://raw.githack.com/edrubin/EC525S19/master/NotesLab/02RData/02RData_NoPause.html) | [.pdf](https://raw.githack.com/edrubin/EC525S19/master/NotesLab/02RData/02RData.pdf) | [.pdf (no pause)](https://raw.githack.com/edrubin/EC525S19/master/NotesLab/02RData/02RData_NoPause.pdf) | [.Rmd](https://raw.githack.com/edrubin/EC525S19/master/NotesLab/02RData/02RData.Rmd)
+
+**[Lab 03: Rstudio + Data i/o with R](https://raw.githack.com/edrubin/EC525S19/master/NotesLab/03RInput/03RInput.html)**
+
+1. RStudio
+1. Getting data into and out of R
+
+**Note formats:** [.html](https://raw.githack.com/edrubin/EC525S19/master/NotesLab/03RInput/03RInput.html) | [.html (no pause)](https://raw.githack.com/edrubin/EC525S19/master/NotesLab/03RInput/03RInput_NoPause.html) | [.pdf](https://raw.githack.com/edrubin/EC525S19/master/NotesLab/03RInput/03RInput.pdf) | [.pdf (no pause)](https://raw.githack.com/edrubin/EC525S19/master/NotesLab/03RInput/03RInput_NoPause.pdf) | [.Rmd](https://raw.githack.com/edrubin/EC525S19/master/NotesLab/03RInput/03RInput.Rmd)
 
 ## Problem sets
 
