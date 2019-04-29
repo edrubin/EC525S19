@@ -176,18 +176,9 @@ The conditional independence assumption: $\left\{ \text{Y}_{0i},\, \text{Y}_{1i}
 
 ## Upcoming
 
-Topics: Matching estimators
+- Topics: Matching estimators
+- Admin: Assignment and midterm
 
----
-name: follow_up
-# Follow up
-
-Example from last class.
----
-name: advice
-# Advice
-
-Atom...
 ---
 layout: true
 # Omitted-variable bias
@@ -656,8 +647,6 @@ layout: false
 .smaller[
 
 1. [Schedule](#schedule)
-1. [Follow up](#follow_up)
-1. [Advice](#advice)
 ]
 
 ]
@@ -683,7 +672,7 @@ layout: false
 ---
 exclude: true
 
-```{R, generate pdfs, include = F, eval = F}
+```{R, generate pdfs, include = F, eval = T}
 source("../../ScriptsR/unpause.R")
 unpause("06Controls.Rmd", ".", T, T)
 ```

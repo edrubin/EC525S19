@@ -1,0 +1,726 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <title>Controls</title>
+    <meta charset="utf-8">
+    <meta name="author" content="Edward Rubin" />
+    <meta name="date" content="2019-04-29" />
+    <link href="06Controls_NoPause_files/remark-css-0.0.1/default.css" rel="stylesheet" />
+    <link href="06Controls_NoPause_files/remark-css-0.0.1/metropolis.css" rel="stylesheet" />
+    <link href="06Controls_NoPause_files/remark-css-0.0.1/metropolis-fonts.css" rel="stylesheet" />
+    <script src="06Controls_NoPause_files/kePrint-0.0.1/kePrint.js"></script>
+    <link rel="stylesheet" href="my-css.css" type="text/css" />
+  </head>
+  <body>
+    <textarea id="source">
+class: center, middle, inverse, title-slide
+
+# Controls
+## EC 425/525, Set 6
+### Edward Rubin
+### 29 April 2019
+
+---
+
+class: inverse, middle
+
+
+
+$$
+`\begin{align}
+  \def\ci{\perp\mkern-10mu\perp}
+\end{align}`
+$$
+
+
+# Prologue
+
+---
+name: schedule
+
+# Schedule
+
+## Last time
+
+The conditional independence assumption: `\(\left\{ \text{Y}_{0i},\, \text{Y}_{1i}\right\} \ci \text{D}_{i}\big| \text{X}_{i}\)`
+&lt;br&gt;_I.e._, conditional on some controls `\(\left( \text{X}_{i} \right)\)`, treatment is as-good-as random.
+
+## Today
+
+- Omitted variable bias
+- Good *vs.* bad controls
+
+## Upcoming
+
+- Topics: Matching estimators
+- Admin: Assignment and midterm
+
+---
+layout: true
+# Omitted-variable bias
+
+---
+class: inverse, middle
+name: OVB
+---
+## Revisiting an old friend
+
+Let's start where we left off: Returns to schooling.
+
+We have two linear, population models
+$$
+`\begin{align}
+  \text{Y}_{i} &amp;= \alpha + \rho \text{s}_i + \eta_i \tag{1}
+  \\
+  \text{Y}_{i} &amp;= \alpha + \rho \text{s}_i + \text{X}_{i}'\gamma + \nu_i \tag{2}
+\end{align}`
+$$
+
+
+We should not interpret `\(\hat{\rho}\)` causally in model `\(\left( 1 \right)\)` (for fear of selection bias).
+
+
+For model `\(\left( 2 \right)\)`, we can interpret `\(\hat{\rho}\)` causally .b[*if*] `\(\thinspace\text{Y}_{si}\ci \text{s}_i\big|\text{X}_{i}\thinspace\)` (CIA).
+
+
+In other words, the CIA says that our .hi[observable vector] `\(\color{#e64173}{\text{X}_{i}}\)` .hi[must explain all of correlation between] `\(\color{#e64173}{s_i}\)` .hi[and] `\(\color{#e64173}{\eta_i}\)`.
+
+---
+name: ovb_formula
+## The OVB formula
+
+We can use the omitted-variable bias (OVB) formula to compare regression estimates from .hi-slate[models with different sets of control variables].
+
+
+We're concerned about selection and want to use a set of control variables to account for ability `\(\left( \text{A}_i \right)\)`—family background, motivation, intelligence.
+
+$$
+`\begin{align}
+  \text{Y}_{i} &amp;= \alpha + \beta \text{s}_i + v_i \tag{1}
+  \\
+  \text{Y}_{i} &amp;= \pi + \rho \text{s}_i + \text{A}_{i}'\gamma + e_i \tag{2}
+\end{align}`
+$$
+
+
+What happens if we can't get data on `\(\text{A}_i\)` and opt for `\(\left( 1 \right)\)`?
+
+
+$$
+`\begin{align}
+  \dfrac{\mathop{\text{Cov}} \left( \text{Y}_{i},\, \text{s}_i \right)}{\mathop{\text{Var}} \left( \text{s}_i \right)} = \rho + \gamma' \delta_{As}
+\end{align}`
+$$
+
+where `\(\delta_{As}\)` are coefficients from regressing `\(\text{A}_i\)` on `\(\text{s}_i\)`.
+---
+## Interpretation
+
+Our two regressions
+
+$$
+`\begin{align}
+  \text{Y}_{i} &amp;= \alpha + \beta \text{s}_i + v_i \tag{1}
+  \\
+  \text{Y}_{i} &amp;= \pi + \rho \text{s}_i + \text{A}_{i}'\gamma + e_i \tag{2}
+\end{align}`
+$$
+
+will yield the same estimates for the returns to schooling
+
+$$
+`\begin{align}
+  \dfrac{\mathop{\text{Cov}} \left( \text{Y}_{i},\, \text{s}_i \right)}{\mathop{\text{Var}} \left( \text{s}_i \right)} = \rho + \gamma' \delta_{As}
+\end{align}`
+$$
+
+if (.hi-slate[a]) schooling is uncorrelated with ability `\(\left( \delta_{As} = 0 \right)\)` *or* (.hi-slate[b]) ability is uncorrelated with earnings, conditional on schooling `\(\left( \gamma = 0 \right)\)`.
+---
+name: ovb_ex
+## Example
+
+&lt;table&gt;
+&lt;caption&gt;Table 3.2.1, The returns to schooling&lt;/caption&gt;
+ &lt;thead&gt;
+  &lt;tr&gt;
+   &lt;th style="text-align:left;"&gt;   &lt;/th&gt;
+   &lt;th style="text-align:center;"&gt; 1 &lt;/th&gt;
+   &lt;th style="text-align:center;"&gt; 2 &lt;/th&gt;
+   &lt;th style="text-align:center;"&gt; 3 &lt;/th&gt;
+   &lt;th style="text-align:center;"&gt; 4 &lt;/th&gt;
+  &lt;/tr&gt;
+ &lt;/thead&gt;
+&lt;tbody&gt;
+  &lt;tr&gt;
+   &lt;td style="text-align:left;font-weight: bold;"&gt; Schooling &lt;/td&gt;
+   &lt;td style="text-align:center;"&gt; 0.132 &lt;/td&gt;
+   &lt;td style="text-align:center;"&gt; 0.131 &lt;/td&gt;
+   &lt;td style="text-align:center;"&gt; 0.114 &lt;/td&gt;
+   &lt;td style="text-align:center;"&gt; 0.087 &lt;/td&gt;
+  &lt;/tr&gt;
+  &lt;tr&gt;
+   &lt;td style="text-align:left;font-weight: bold;"&gt;  &lt;/td&gt;
+   &lt;td style="text-align:center;"&gt; (0.007) &lt;/td&gt;
+   &lt;td style="text-align:center;"&gt; (0.007) &lt;/td&gt;
+   &lt;td style="text-align:center;"&gt; (0.007) &lt;/td&gt;
+   &lt;td style="text-align:center;"&gt; (0.009) &lt;/td&gt;
+  &lt;/tr&gt;
+  &lt;tr&gt;
+   &lt;td style="text-align:left;font-weight: bold;"&gt; Controls &lt;/td&gt;
+   &lt;td style="text-align:center;"&gt; None &lt;/td&gt;
+   &lt;td style="text-align:center;"&gt; Age Dum. &lt;/td&gt;
+   &lt;td style="text-align:center;"&gt; 2 + Add'l &lt;/td&gt;
+   &lt;td style="text-align:center;"&gt; 3 + AFQT &lt;/td&gt;
+  &lt;/tr&gt;
+&lt;/tbody&gt;
+&lt;/table&gt;
+
+Here we have four specifications of controls for a regression of log wages on years of schooling (from the NLSY).
+
+---
+## Example
+
+&lt;table&gt;
+&lt;caption&gt;Table 3.2.1, The returns to schooling&lt;/caption&gt;
+ &lt;thead&gt;
+  &lt;tr&gt;
+   &lt;th style="text-align:left;"&gt;   &lt;/th&gt;
+   &lt;th style="text-align:center;"&gt; 1 &lt;/th&gt;
+   &lt;th style="text-align:center;"&gt; 2 &lt;/th&gt;
+   &lt;th style="text-align:center;"&gt; 3 &lt;/th&gt;
+   &lt;th style="text-align:center;"&gt; 4 &lt;/th&gt;
+  &lt;/tr&gt;
+ &lt;/thead&gt;
+&lt;tbody&gt;
+  &lt;tr&gt;
+   &lt;td style="text-align:left;font-weight: bold;"&gt; Schooling &lt;/td&gt;
+   &lt;td style="text-align:center;color: #e64173;"&gt; 0.132 &lt;/td&gt;
+   &lt;td style="text-align:center;"&gt; 0.131 &lt;/td&gt;
+   &lt;td style="text-align:center;"&gt; 0.114 &lt;/td&gt;
+   &lt;td style="text-align:center;"&gt; 0.087 &lt;/td&gt;
+  &lt;/tr&gt;
+  &lt;tr&gt;
+   &lt;td style="text-align:left;font-weight: bold;"&gt;  &lt;/td&gt;
+   &lt;td style="text-align:center;color: #e64173;"&gt; (0.007) &lt;/td&gt;
+   &lt;td style="text-align:center;"&gt; (0.007) &lt;/td&gt;
+   &lt;td style="text-align:center;"&gt; (0.007) &lt;/td&gt;
+   &lt;td style="text-align:center;"&gt; (0.009) &lt;/td&gt;
+  &lt;/tr&gt;
+  &lt;tr&gt;
+   &lt;td style="text-align:left;font-weight: bold;"&gt; Controls &lt;/td&gt;
+   &lt;td style="text-align:center;color: #e64173;"&gt; None &lt;/td&gt;
+   &lt;td style="text-align:center;"&gt; Age Dum. &lt;/td&gt;
+   &lt;td style="text-align:center;"&gt; 2 + Add'l &lt;/td&gt;
+   &lt;td style="text-align:center;"&gt; 3 + AFQT &lt;/td&gt;
+  &lt;/tr&gt;
+&lt;/tbody&gt;
+&lt;/table&gt;
+
+.hi[Column 1] (no control variables) suggests a 13.2% increase in wages for an additional year of schooling.
+---
+## Example
+
+&lt;table&gt;
+&lt;caption&gt;Table 3.2.1, The returns to schooling&lt;/caption&gt;
+ &lt;thead&gt;
+  &lt;tr&gt;
+   &lt;th style="text-align:left;"&gt;   &lt;/th&gt;
+   &lt;th style="text-align:center;"&gt; 1 &lt;/th&gt;
+   &lt;th style="text-align:center;"&gt; 2 &lt;/th&gt;
+   &lt;th style="text-align:center;"&gt; 3 &lt;/th&gt;
+   &lt;th style="text-align:center;"&gt; 4 &lt;/th&gt;
+  &lt;/tr&gt;
+ &lt;/thead&gt;
+&lt;tbody&gt;
+  &lt;tr&gt;
+   &lt;td style="text-align:left;font-weight: bold;"&gt; Schooling &lt;/td&gt;
+   &lt;td style="text-align:center;"&gt; 0.132 &lt;/td&gt;
+   &lt;td style="text-align:center;color: #e64173;"&gt; 0.131 &lt;/td&gt;
+   &lt;td style="text-align:center;"&gt; 0.114 &lt;/td&gt;
+   &lt;td style="text-align:center;"&gt; 0.087 &lt;/td&gt;
+  &lt;/tr&gt;
+  &lt;tr&gt;
+   &lt;td style="text-align:left;font-weight: bold;"&gt;  &lt;/td&gt;
+   &lt;td style="text-align:center;"&gt; (0.007) &lt;/td&gt;
+   &lt;td style="text-align:center;color: #e64173;"&gt; (0.007) &lt;/td&gt;
+   &lt;td style="text-align:center;"&gt; (0.007) &lt;/td&gt;
+   &lt;td style="text-align:center;"&gt; (0.009) &lt;/td&gt;
+  &lt;/tr&gt;
+  &lt;tr&gt;
+   &lt;td style="text-align:left;font-weight: bold;"&gt; Controls &lt;/td&gt;
+   &lt;td style="text-align:center;"&gt; None &lt;/td&gt;
+   &lt;td style="text-align:center;color: #e64173;"&gt; Age Dum. &lt;/td&gt;
+   &lt;td style="text-align:center;"&gt; 2 + Add'l &lt;/td&gt;
+   &lt;td style="text-align:center;"&gt; 3 + AFQT &lt;/td&gt;
+  &lt;/tr&gt;
+&lt;/tbody&gt;
+&lt;/table&gt;
+
+.hi[Column 2] (age dummies) suggests a 13.1% increase in wages for an additional year of schooling.
+---
+## Example
+
+&lt;table&gt;
+&lt;caption&gt;Table 3.2.1, The returns to schooling&lt;/caption&gt;
+ &lt;thead&gt;
+  &lt;tr&gt;
+   &lt;th style="text-align:left;"&gt;   &lt;/th&gt;
+   &lt;th style="text-align:center;"&gt; 1 &lt;/th&gt;
+   &lt;th style="text-align:center;"&gt; 2 &lt;/th&gt;
+   &lt;th style="text-align:center;"&gt; 3 &lt;/th&gt;
+   &lt;th style="text-align:center;"&gt; 4 &lt;/th&gt;
+  &lt;/tr&gt;
+ &lt;/thead&gt;
+&lt;tbody&gt;
+  &lt;tr&gt;
+   &lt;td style="text-align:left;font-weight: bold;"&gt; Schooling &lt;/td&gt;
+   &lt;td style="text-align:center;"&gt; 0.132 &lt;/td&gt;
+   &lt;td style="text-align:center;"&gt; 0.131 &lt;/td&gt;
+   &lt;td style="text-align:center;color: #e64173;"&gt; 0.114 &lt;/td&gt;
+   &lt;td style="text-align:center;"&gt; 0.087 &lt;/td&gt;
+  &lt;/tr&gt;
+  &lt;tr&gt;
+   &lt;td style="text-align:left;font-weight: bold;"&gt;  &lt;/td&gt;
+   &lt;td style="text-align:center;"&gt; (0.007) &lt;/td&gt;
+   &lt;td style="text-align:center;"&gt; (0.007) &lt;/td&gt;
+   &lt;td style="text-align:center;color: #e64173;"&gt; (0.007) &lt;/td&gt;
+   &lt;td style="text-align:center;"&gt; (0.009) &lt;/td&gt;
+  &lt;/tr&gt;
+  &lt;tr&gt;
+   &lt;td style="text-align:left;font-weight: bold;"&gt; Controls &lt;/td&gt;
+   &lt;td style="text-align:center;"&gt; None &lt;/td&gt;
+   &lt;td style="text-align:center;"&gt; Age Dum. &lt;/td&gt;
+   &lt;td style="text-align:center;color: #e64173;"&gt; 2 + Add'l &lt;/td&gt;
+   &lt;td style="text-align:center;"&gt; 3 + AFQT &lt;/td&gt;
+  &lt;/tr&gt;
+&lt;/tbody&gt;
+&lt;/table&gt;
+
+.hi[Column 3] (column 2 controls plus parents' ed. and self demographics) suggests a 11.4% increase in wages for an additional year of schooling.
+---
+## Example
+
+&lt;table&gt;
+&lt;caption&gt;Table 3.2.1, The returns to schooling&lt;/caption&gt;
+ &lt;thead&gt;
+  &lt;tr&gt;
+   &lt;th style="text-align:left;"&gt;   &lt;/th&gt;
+   &lt;th style="text-align:center;"&gt; 1 &lt;/th&gt;
+   &lt;th style="text-align:center;"&gt; 2 &lt;/th&gt;
+   &lt;th style="text-align:center;"&gt; 3 &lt;/th&gt;
+   &lt;th style="text-align:center;"&gt; 4 &lt;/th&gt;
+  &lt;/tr&gt;
+ &lt;/thead&gt;
+&lt;tbody&gt;
+  &lt;tr&gt;
+   &lt;td style="text-align:left;font-weight: bold;"&gt; Schooling &lt;/td&gt;
+   &lt;td style="text-align:center;"&gt; 0.132 &lt;/td&gt;
+   &lt;td style="text-align:center;"&gt; 0.131 &lt;/td&gt;
+   &lt;td style="text-align:center;"&gt; 0.114 &lt;/td&gt;
+   &lt;td style="text-align:center;color: #e64173;"&gt; 0.087 &lt;/td&gt;
+  &lt;/tr&gt;
+  &lt;tr&gt;
+   &lt;td style="text-align:left;font-weight: bold;"&gt;  &lt;/td&gt;
+   &lt;td style="text-align:center;"&gt; (0.007) &lt;/td&gt;
+   &lt;td style="text-align:center;"&gt; (0.007) &lt;/td&gt;
+   &lt;td style="text-align:center;"&gt; (0.007) &lt;/td&gt;
+   &lt;td style="text-align:center;color: #e64173;"&gt; (0.009) &lt;/td&gt;
+  &lt;/tr&gt;
+  &lt;tr&gt;
+   &lt;td style="text-align:left;font-weight: bold;"&gt; Controls &lt;/td&gt;
+   &lt;td style="text-align:center;"&gt; None &lt;/td&gt;
+   &lt;td style="text-align:center;"&gt; Age Dum. &lt;/td&gt;
+   &lt;td style="text-align:center;"&gt; 2 + Add'l &lt;/td&gt;
+   &lt;td style="text-align:center;color: #e64173;"&gt; 3 + AFQT &lt;/td&gt;
+  &lt;/tr&gt;
+&lt;/tbody&gt;
+&lt;/table&gt;
+
+.hi[Column 4] (column 3 controls plus AFQT.super[.pink[†]] score) suggests a 8.7% increase in wages for an additional year of schooling.
+
+.footnote[.pink[†] *AFQT* is *Armed Forces Qualification Test*.]
+---
+## Example
+
+&lt;table&gt;
+&lt;caption&gt;Table 3.2.1, The returns to schooling&lt;/caption&gt;
+ &lt;thead&gt;
+  &lt;tr&gt;
+   &lt;th style="text-align:left;"&gt;   &lt;/th&gt;
+   &lt;th style="text-align:center;"&gt; 1 &lt;/th&gt;
+   &lt;th style="text-align:center;"&gt; 2 &lt;/th&gt;
+   &lt;th style="text-align:center;"&gt; 3 &lt;/th&gt;
+   &lt;th style="text-align:center;"&gt; 4 &lt;/th&gt;
+  &lt;/tr&gt;
+ &lt;/thead&gt;
+&lt;tbody&gt;
+  &lt;tr&gt;
+   &lt;td style="text-align:left;font-weight: bold;"&gt; Schooling &lt;/td&gt;
+   &lt;td style="text-align:center;color: #6A5ACD;"&gt; 0.132 &lt;/td&gt;
+   &lt;td style="text-align:center;"&gt; 0.131 &lt;/td&gt;
+   &lt;td style="text-align:center;"&gt; 0.114 &lt;/td&gt;
+   &lt;td style="text-align:center;color: #e64173;"&gt; 0.087 &lt;/td&gt;
+  &lt;/tr&gt;
+  &lt;tr&gt;
+   &lt;td style="text-align:left;font-weight: bold;"&gt;  &lt;/td&gt;
+   &lt;td style="text-align:center;color: #6A5ACD;"&gt; (0.007) &lt;/td&gt;
+   &lt;td style="text-align:center;"&gt; (0.007) &lt;/td&gt;
+   &lt;td style="text-align:center;"&gt; (0.007) &lt;/td&gt;
+   &lt;td style="text-align:center;color: #e64173;"&gt; (0.009) &lt;/td&gt;
+  &lt;/tr&gt;
+  &lt;tr&gt;
+   &lt;td style="text-align:left;font-weight: bold;"&gt; Controls &lt;/td&gt;
+   &lt;td style="text-align:center;color: #6A5ACD;"&gt; None &lt;/td&gt;
+   &lt;td style="text-align:center;"&gt; Age Dum. &lt;/td&gt;
+   &lt;td style="text-align:center;"&gt; 2 + Add'l &lt;/td&gt;
+   &lt;td style="text-align:center;color: #e64173;"&gt; 3 + AFQT &lt;/td&gt;
+  &lt;/tr&gt;
+&lt;/tbody&gt;
+&lt;/table&gt;
+
+As we ratchet up controls, the estimated returns to schooling drop by 4.5 percentage points (34% drop in the coefficient) from .hi-purple[Column 1] to .hi[Column 4].
+
+
+$$
+`\begin{align}
+  \color{#6A5ACD}{\dfrac{\mathop{\text{Cov}} \left( \text{Y}_{i},\, \text{s}_i \right)}{\mathop{\text{Var}} \left( \text{s}_i \right)}} = \color{#e64173}{\rho} + \color{#20B2AA}{\gamma'} \color{#FFA500}{\delta_{As}}
+\end{align}`
+$$
+
+
+If we think .hi-turquoise[ability positively affects wages], then it looks like we also have .hi-orange[positive selection into schooling].
+---
+layout: false
+class: clear, center, middle
+name: ovb_venn
+
+&lt;img src="06Controls_NoPause_files/figure-html/venn_iv-1.svg" style="display: block; margin: auto;" /&gt;
+---
+layout: true
+# Omitted-variable bias
+
+---
+## Note
+
+This OVB formula .hi-slate[does not] require either of the models to be causal.
+
+The formula compares the regression coefficient in a .hi-purple[short model] to the regression coefficient on the same variable in a .hi-pink[long model]..super[.pink[†]]
+
+.footnote[.pink[†] Here, .hi-pink[*long model*] refers to a model with more controls than the .hi-purple[*short model*].]
+
+---
+name: ovb_cia
+## The OVB formula and the CIA.super[.pink[†]]
+
+.footnote[.pink[†] The title for my first spy novel.]
+
+In addition to helping us think through and sign OVB, the formula
+
+$$
+`\begin{align}
+  \dfrac{\mathop{\text{Cov}} \left( \text{Y}_{i},\, \text{s}_i \right)}{\mathop{\text{Var}} \left( \text{s}_i \right)} = \rho + \gamma' \delta_{As}
+\end{align}`
+$$
+
+drives home the point that we're leaning .it[very] hard on the conditional independence assumption to be able to interpret our coefficients as causal.
+
+
+.qa[Q] When is the CIA plausible?
+
+
+.qa[A] Two potential answers
+1. Randomized experiments
+2. Programs with arbitrary cutoffs/lotteries
+---
+layout: false
+class: clear, middle
+
+Control variables play an enormous role in our quest for causality (the CIA).
+
+.qa[Q] Are "more controls" always better (or at least never worse)?
+---
+class: clear, middle
+
+.qa[A] No. There are such things as...
+---
+layout: true
+# Bad controls
+
+---
+name: bad_controls
+class: inverse, middle
+---
+name: bad_def
+## Defined
+
+.qa[Q] What's a *bad* control—when can a control make a bad situation worse?
+
+
+.qa[A] *Bad controls* are variables that are (also) affected by treatment.
+
+
+.qa[Q] Okay, so why is it bad to control using a variable affected by treatment?
+
+
+.note[Hint] It's a flavor of selection bias.
+
+
+Let's consider an example...
+---
+name: bad_ex
+## Example
+
+Suppose we want to know the .hi-slate[effect of college graduation on wages].
+
+1. There are only two types of jobs: blue collar and white collar.
+1. White-collar jobs, on averge, pay more than blue-collar jobs.
+1. Graduating college increases the likelihood of a white-collar job.
+
+
+.qa[Q] Should we control for occupation type when considering the effect of college graduation on wages? (Will occupation be an omitted variable?)
+
+
+.qa[A] No.
+ Imagine college degrees are randomly assigned.
+ When we condition on occupation,
+ we compare degree-earners who chose blue-collar jobs to non-degree-earners who chose blue-collar jobs.
+ Our assumption of random degrees says .b[nothing] about random job selection.
+---
+name: bad_formal
+## Formal-ish derivation
+
+More formally, let
+
+- `\(\text{W}_i\)` be a dummy for whether `\(i\)` has a white-collar job
+- `\(\text{Y}_i\)` denote `\(i\)`'s earnings
+- `\(\text{C}_i\)` refer to `\(i\)`'s .hi-slate[randomly assigned] college-graduation status
+
+
+$$
+`\begin{align}
+  \text{Y}_{i} &amp;= \text{C}_{i} \color{#e64173}{\text{Y}_{1i}} + \left( 1 - \text{C}_{i} \right) \color{#6A5ACD}{\text{Y}_{0i}}
+  \\
+  \text{W}_{i} &amp;= \text{C}_{i} \color{#e64173}{\text{W}_{1i}} + \left( 1 - \text{C}_{i} \right) \color{#6A5ACD}{\text{W}_{0i}}
+\end{align}`
+$$
+
+
+Becuase we've assumed `\(\text{C}_i\)` is randomly assigned, differences in means yield causal estimates, _i.e._,
+
+$$
+`\begin{align}
+   \mathop{E}\left[ \text{Y}_{i}\mid \color{#e64173}{\text{C}_{i} = 1} \right] - \mathop{E}\left[ \text{Y}_{i} \mid \color{#6A5ACD}{\text{C}_{i} = 0} \right] &amp;= \mathop{E}\left[ \color{#e64173}{\text{Y}_{1i}} - \color{#6A5ACD}{\text{Y}_{0i}} \right]
+   \\
+   \mathop{E}\left[ \text{W}_{i}\mid \color{#e64173}{\text{C}_{i} = 1} \right] - \mathop{E}\left[ \text{W}_{i} \mid \color{#6A5ACD}{\text{C}_{i} = 0} \right] &amp;= \mathop{E}\left[ \color{#e64173}{\text{W}_{1i}} - \color{#6A5ACD}{\text{W}_{0i}} \right]
+\end{align}`
+$$
+---
+## Formal-ish derivation, continued
+
+Let's see what happens when we throw in some controls—_e.g._, focusing on the the wage-effect of college graduation for white-collar jobs.
+
+
+`\(\mathop{E}\left[ \text{Y}_{i} \mid \text{W}_i = 1,\, \color{#e64173}{\text{C}_i = 1} \right] - \mathop{E}\left[ \text{Y}_{i} \mid \text{W}_i = 1,\, \color{#6A5ACD}{\text{C}_i = 0} \right]\)`
+
+.pad-left[
+`\(= \mathop{E}\left[ \color{#e64173}{\text{Y}_{1i}} \mid \color{#e64173}{\text{W}_{1i}} = 1,\, \color{#e64173}{\text{C}_i = 1} \right] - \mathop{E}\left[ \color{#6A5ACD}{\text{Y}_{0i}} \mid \color{#6A5ACD}{\text{W}_{0i}} = 1,\, \color{#6A5ACD}{\text{C}_i = 0} \right]\)`
+]
+
+.pad-left[
+`\(= \mathop{E}\left[ \color{#e64173}{\text{Y}_{1i}} \mid \color{#e64173}{\text{W}_{1i}} = 1\right] - \mathop{E}\left[ \color{#6A5ACD}{\text{Y}_{0i}} \mid \color{#6A5ACD}{\text{W}_{0i}} = 1\right]\)`
+]
+
+.pad-left[
+`\(=\mathop{E}\left[ \color{#e64173}{\text{Y}_{1i}} \mid \color{#e64173}{\text{W}_{1i}} = 1\right] - \mathop{E}\left[ \color{#6A5ACD}{\text{Y}_{0i}} \mid \color{#e64173}{\text{W}_{1i}} = 1\right]\)`
+&lt;br&gt; `\(\color{#ffffff}{=} + \mathop{E}\left[ \color{#6A5ACD}{\text{Y}_{0i}} \mid \color{#e64173}{\text{W}_{1i}} = 1\right] - \mathop{E}\left[ \color{#6A5ACD}{\text{Y}_{0i}} \mid \color{#6A5ACD}{\text{W}_{0i}} = 1\right]\)`
+]
+
+.pad-left[
+`\(= \underbrace{\mathop{E}\left[ \color{#e64173}{\text{Y}_{1i}} - \color{#6A5ACD}{\text{Y}_{0i}} \mid \color{#e64173}{\text{W}_{1i}} = 1\right]}_{\text{Causal effect on white-collar workers}} + \underbrace{\mathop{E}\left[ \color{#6A5ACD}{\text{Y}_{0i}} \mid \color{#e64173}{\text{W}_{1i}} = 1\right] - \mathop{E}\left[ \color{#6A5ACD}{\text{Y}_{0i}} \mid \color{#6A5ACD}{\text{W}_{0i}} = 1\right]}_{\text{Selection bias}}\)`
+]
+---
+## Formal-ish derivation, continued
+
+By introducing a bad control, we introduced selection bias into a setting that did not have selection bias without controls.
+
+
+Specifically, the selection bias term
+$$
+`\begin{align}
+  \mathop{E}\left[ \color{#6A5ACD}{\text{Y}_{0i}} \mid \color{#e64173}{\text{W}_{1i}} = 1\right] - \mathop{E}\left[ \color{#6A5ACD}{\text{Y}_{0i}} \mid \color{#6A5ACD}{\text{W}_{0i}} = 1\right]
+\end{align}`
+$$
+describes how college graduation changes the composition of the pool of white-class workers.
+
+
+.note[Note] Even if the causal effect is zero, this selection bias need not be zero.
+---
+name: bad_tricky_ex
+## A trickier example
+
+A timely/trickier example: Wage gaps (_e.g._, female-male or black-white).
+
+
+.qa[Q] Should we control for occupation when we consider wage gaps?
+
+
+- What are we trying to capture?
+
+- If we're concerned about discrimination, it seems likely that discrimination also affects occupational choice and hiring outcomes.
+
+- Some motivate occuption controls with groups' differential preferences.
+
+
+What's the answer?
+---
+name: bad_proxy
+## Proxy variables
+
+Angrist and Pischke bring up an interesting scenario that intersects omitted-variable bias and bad controls.
+
+- We want to estimate the returns to education.
+- Ability is omitted.
+- We have a proxy for ability—a test taken after schooling finishes.
+
+
+We're a bit stuck.
+
+1. If we omit the test altogether, we've got omitted-variable bias.
+1. If we include our proxy, we've got a back control.
+
+
+With some math/luck, we can bound the true effect with these estimates.
+---
+name: bad_emp
+## Example
+
+Returning to our OVB-motivated example, we control for occupation.
+
+&lt;table&gt;
+&lt;caption&gt;Table 3.2.1, The returns to schooling&lt;/caption&gt;
+ &lt;thead&gt;
+  &lt;tr&gt;
+   &lt;th style="text-align:left;"&gt;   &lt;/th&gt;
+   &lt;th style="text-align:center;"&gt; 1 &lt;/th&gt;
+   &lt;th style="text-align:center;"&gt; 2 &lt;/th&gt;
+   &lt;th style="text-align:center;"&gt; 3 &lt;/th&gt;
+   &lt;th style="text-align:center;"&gt; 4 &lt;/th&gt;
+   &lt;th style="text-align:center;"&gt; 5 &lt;/th&gt;
+  &lt;/tr&gt;
+ &lt;/thead&gt;
+&lt;tbody&gt;
+  &lt;tr&gt;
+   &lt;td style="text-align:left;font-weight: bold;"&gt; Schooling &lt;/td&gt;
+   &lt;td style="text-align:center;"&gt; 0.132 &lt;/td&gt;
+   &lt;td style="text-align:center;"&gt; 0.131 &lt;/td&gt;
+   &lt;td style="text-align:center;"&gt; 0.114 &lt;/td&gt;
+   &lt;td style="text-align:center;"&gt; 0.087 &lt;/td&gt;
+   &lt;td style="text-align:center;color: #e64173;"&gt; 0.066 &lt;/td&gt;
+  &lt;/tr&gt;
+  &lt;tr&gt;
+   &lt;td style="text-align:left;font-weight: bold;"&gt;  &lt;/td&gt;
+   &lt;td style="text-align:center;"&gt; (0.007) &lt;/td&gt;
+   &lt;td style="text-align:center;"&gt; (0.007) &lt;/td&gt;
+   &lt;td style="text-align:center;"&gt; (0.007) &lt;/td&gt;
+   &lt;td style="text-align:center;"&gt; (0.009) &lt;/td&gt;
+   &lt;td style="text-align:center;color: #e64173;"&gt; (0.010) &lt;/td&gt;
+  &lt;/tr&gt;
+  &lt;tr&gt;
+   &lt;td style="text-align:left;font-weight: bold;"&gt; Controls &lt;/td&gt;
+   &lt;td style="text-align:center;"&gt; None &lt;/td&gt;
+   &lt;td style="text-align:center;"&gt; Age Dum. &lt;/td&gt;
+   &lt;td style="text-align:center;"&gt; 2 + Add'l &lt;/td&gt;
+   &lt;td style="text-align:center;"&gt; 3 + AFQT &lt;/td&gt;
+   &lt;td style="text-align:center;color: #e64173;"&gt; 4 + Occupation &lt;/td&gt;
+  &lt;/tr&gt;
+&lt;/tbody&gt;
+&lt;/table&gt;
+
+Schooling likely affects occupation; how do we interpret the new results?
+---
+## Conclusion
+
+Timing matters.
+
+The right controls can help tremendously, but bad controls hurt.
+---
+layout: false
+# Table of contents
+
+.pull-left[
+### Admin
+.smaller[
+
+1. [Schedule](#schedule)
+]
+
+]
+
+.pull-right[
+### Controls
+.smaller[
+
+1. [Omitted-variable bias](#ovb)
+  - [The formula](#ovb_formula)
+  - [Example](#ovb_ex)
+  - [OVB Venn](#ovb_venn)
+  - [OVB and the CIA](#ovb_cia)
+1. [Bad controls](#bad_controls)
+  - [Defined](#bad_def)
+  - [Example](#bad_ex)
+  - [Formalization(ish)](#bad_formal)
+  - [Trickier example](#bad_tricky_ex)
+  - [Bad proxy conundrum](#bad_proxy)
+  - [Empirical example](#bad_emp)
+]
+]
+---
+exclude: true
+    </textarea>
+<script src="https://remarkjs.com/downloads/remark-latest.min.js"></script>
+<script>var slideshow = remark.create({
+"highlightStyle": "github",
+"highlightLines": true,
+"countIncrementalSlides": false
+});
+if (window.HTMLWidgets) slideshow.on('afterShowSlide', function (slide) {
+  window.dispatchEvent(new Event('resize'));
+});
+(function() {
+  var d = document, s = d.createElement("style"), r = d.querySelector(".remark-slide-scaler");
+  if (!r) return;
+  s.type = "text/css"; s.innerHTML = "@page {size: " + r.style.width + " " + r.style.height +"; }";
+  d.head.appendChild(s);
+})();</script>
+
+<script>
+(function() {
+  var i, text, code, codes = document.getElementsByTagName('code');
+  for (i = 0; i < codes.length;) {
+    code = codes[i];
+    if (code.parentNode.tagName !== 'PRE' && code.childElementCount === 0) {
+      text = code.textContent;
+      if (/^\\\((.|\s)+\\\)$/.test(text) || /^\\\[(.|\s)+\\\]$/.test(text) ||
+          /^\$\$(.|\s)+\$\$$/.test(text) ||
+          /^\\begin\{([^}]+)\}(.|\s)+\\end\{[^}]+\}$/.test(text)) {
+        code.outerHTML = code.innerHTML;  // remove <code></code>
+        continue;
+      }
+    }
+    i++;
+  }
+})();
+</script>
+<!-- dynamically load mathjax for compatibility with self-contained -->
+<script>
+(function () {
+  var script = document.createElement('script');
+  script.type = 'text/javascript';
+  script.src  = 'https://mathjax.rstudio.com/latest/MathJax.js?config=TeX-MML-AM_CHTML';
+  if (location.protocol !== 'file:' && /^https?:/.test(script.src))
+    script.src  = script.src.replace(/^https?:/, '');
+  document.getElementsByTagName('head')[0].appendChild(script);
+})();
+</script>
+  </body>
+</html>

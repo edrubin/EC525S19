@@ -72,6 +72,14 @@ We will use two books.
 **Note formats:** [.html](https://raw.githack.com/edrubin/EC525S19/master/NotesLecture/05RegressionStuff/05RegressionStuff.html) | [.html (no pause)](https://raw.githack.com/edrubin/EC525S19/master/NotesLecture/05RegressionStuff/03WhyRegression_NoPause.html) | [.pdf](https://raw.githack.com/edrubin/EC525S19/master/NotesLecture/05RegressionStuff/05RegressionStuff.pdf) | [.pdf (no pause)](https://raw.githack.com/edrubin/EC525S19/master/NotesLecture/05RegressionStuff/03WhyRegression_NoPause.pdf) | [.Rmd](https://raw.githack.com/edrubin/EC525S19/master/NotesLecture/05RegressionStuff/05RegressionStuff.Rmd)
 <br>**Readings:** Still MHE chapter 3
 
+**[Lecture 06: Controls](https://raw.githack.com/edrubin/EC525S19/master/NotesLecture/06Controls/06Controls.html)**
+
+1. Omitted-variable bias
+1. Good and bad controls
+
+**Note formats:** [.html](https://raw.githack.com/edrubin/EC525S19/master/NotesLecture/06Controls/06Controls.html) | [.html (no pause)](https://raw.githack.com/edrubin/EC525S19/master/NotesLecture/06Controls/03WhyRegression_NoPause.html) | [.pdf](https://raw.githack.com/edrubin/EC525S19/master/NotesLecture/06Controls/06Controls.pdf) | [.pdf (no pause)](https://raw.githack.com/edrubin/EC525S19/master/NotesLecture/06Controls/03WhyRegression_NoPause.pdf) | [.Rmd](https://raw.githack.com/edrubin/EC525S19/master/NotesLecture/06Controls/06Controls.Rmd)
+<br>**Readings:** Still MHE chapter 3
+
 *Another note on the notes:* I create the slides with [`xaringan`](https://github.com/yihui/xaringan/wiki) in [R](cran.r-project.org). Thanks to [Grant McDermott](grantmcdermott.com/) for encouraging me to make this switch.
 
 ## Lab slides
