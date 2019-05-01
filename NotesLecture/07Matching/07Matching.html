@@ -1,0 +1,745 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <title>Matching</title>
+    <meta charset="utf-8">
+    <meta name="author" content="Edward Rubin" />
+    <meta name="date" content="2019-05-01" />
+    <link href="07Matching_files/remark-css-0.0.1/default.css" rel="stylesheet" />
+    <link href="07Matching_files/remark-css-0.0.1/metropolis.css" rel="stylesheet" />
+    <link href="07Matching_files/remark-css-0.0.1/metropolis-fonts.css" rel="stylesheet" />
+    <link rel="stylesheet" href="my-css.css" type="text/css" />
+  </head>
+  <body>
+    <textarea id="source">
+class: center, middle, inverse, title-slide
+
+# Matching
+## EC 425/525, Set 7
+### Edward Rubin
+### 01 May 2019
+
+---
+
+class: inverse, middle
+
+
+
+$$
+`\begin{align}
+  \def\ci{\perp\mkern-10mu\perp}
+\end{align}`
+$$
+
+
+# Prologue
+
+---
+name: schedule
+
+# Schedule
+
+## Last time
+
+- The conditional independence assumption: `\(\left( \text{Y}_{0i},\, \text{Y}_{1i}\right) \ci \text{D}_{i}\big| \text{X}_{i}\)`
+- Omitted variable bias
+- Good *vs.* bad controls
+
+## Today
+
+- Return first round of project proposals.
+- Matching estimators (*MHE* 3.2 and Cameron and Trivedi 25.4).
+
+## Upcoming
+
+- Admin: Assignment and midterm
+- Next round of the project proposal
+
+---
+name: follow-up
+
+# Follow up
+
+## OLS weighting
+
+At the beginnign of the lecture, we discussed OLS weights—especially for heterogeneous treatment effects.
+
+We should keep our questions clear.
+
+1. Which weights on `\(\beta_1\)` and `\(\beta_2\)` recover `\(\beta_{12}\)`, where `\(\beta_i\)` comes from a regression using observations in group `\(i\)`?
+
+2. What does `\(\beta\)` represent when the treatment effect is heterogeneous?
+
+More soon.
+
+---
+layout: true
+# Matching
+
+---
+class: inverse, middle
+---
+name: gist
+## The gist
+
+Remember the .hi[conditional independence assumption].super[.pink[†]] in a setting—_i.e._, treatment is as-good-as random conditional on a known set of covariates?
+
+.footnote[.pink[†] AKA "selection on observables"]
+
+--
+
+.hi[Matching estimators] take us at our word.
+
+--
+
+If we really believe `\(\left(\text{Y}_{1i},\, \text{Y}_{0i} \right)\ci \text{D}_{i}|\text{X}_{i}\)`, then we can just calculate a bunch of treatment effects conditional on `\(\text{X}_{i}\)`, _i.e._,
+$$
+`\begin{align}
+  \tau(x) = \mathop{E}\left[ \text{Y}_{1i} - \text{Y}_{0i} \mid \text{X}_{i} = x \right]
+\end{align}`
+$$
+
+--
+
+.note[The idea:] Estimate a treatment effect only using observations with (nearly?) identical values of `\(\text{X}_{i}\)`.
+--
+ The CIA buys us causality within these groups.
+---
+name: goals
+## Goals
+
+Let's return to .b[the fundamental problem of causal inference] for a moment.
+
+1. We want/need to know `\(\tau_i = \text{Y}_{1i} - \text{Y}_{0i}\)`.
+2. We cannot simultaneously observe *both* `\(\text{Y}_{1i}\)` *and* `\(\text{Y}_{0i}\)`.
+
+--
+
+Most empirical strategies boil to strategies to estimate `\(\text{Y}_{0i}\)` for treated individuals—the unobservable counterfactual for the treatment group.
+
+--
+
+Matching is no different.
+
+We match untreated observations to treated observations using `\(\text{X}_{i}\)`, _i.e._, calculate a `\(\widehat{\text{Y}_{0i}}\)` for each `\(\text{Y}_{1i}\)`, based upon "matched" untreated individuals.
+---
+## More formally
+
+We want to construct a counterfactual for each individual with `\(\text{D}_{i}=1\)`.
+
+--
+
+The counterfactual for `\(i\)` should only use individuals that match `\(\text{X}_{i}\)`.
+
+--
+
+Let there be `\(N_T\)` treated individuals and `\(N_C\)` control individuals. We want
+- `\(N_T\)` sets of weights
+- with `\(N_C\)` weights in each set
+--
+: `\(w_i(j)\, \left( i = 1,\,\ldots,\, N_T;\, j=1,\,\ldots,\, N_C \right)\)`
+
+--
+
+Assume `\(\sum_j w_i(j) = 1\)`. Our estimate for the counterfactual of treated `\(i\)` is
+$$
+`\begin{align}
+  \widehat{\text{Y}_{0i}} = \sum_{j\in \left( D=0 \right)} w_i(j) \text{Y}_{i}
+\end{align}`
+$$
+---
+name: generic
+## More formally
+
+If our estimated counterfactual for treated individual `\(i\)` is
+$$
+`\begin{align}
+  \widehat{\text{Y}_{0i}} = \sum_j w_i(j) \text{Y}_{i}
+\end{align}`
+$$
+then our estimated treatment effect (for individual `\(i\)`) is
+$$
+`\begin{align}
+  \hat{\tau}_i = \text{Y}_{1i} - \widehat{\text{Y}_{0i}} = \text{Y}_{1i} - \sum_j w_i(j) \text{Y}_{i}
+\end{align}`
+$$
+
+--
+
+∴ a generic matching estimator for the treatment effect on the treated is
+$$
+`\begin{align}
+  \hat{\tau}_M = \dfrac{1}{N_T} \sum_{i \in \left( \text{D}=1 \right)} \left( \text{Y}_{1i} - \widehat{\text{Y}_{0i}} \right) = \dfrac{1}{N_T} \sum_{i \in \left( \text{D}=1 \right)} \left( \text{Y}_{1i} - \sum_{j\in \left( D=0 \right)} w_i(j) \text{Y}_{i} \right)
+\end{align}`
+$$
+---
+name: weights
+## Weight for it.super[.pink[†]]
+
+So all we need is those weights and we're done..super[.pink[††]]
+
+.footnote[
+.pink[†] 🤦 .pink[††] Plus an interesting, policy-relevant setting with valid conditional independence. And data.
+]
+
+--
+
+.qa[Q] Where does one find these handy weights?
+
+--
+
+.qa[A] You've got options, but you need to choose carefully/responsibly.
+
+*E.g.*, if `\(w_i(j) = \frac{1}{N_C}\)` for all `\((i,j)\)`, then we're back to a difference in means.
+&lt;br&gt; This weighting doesn't abide by our conditional independence assumption.
+
+--
+
+.note[The plan] Choose weights `\(w_i(j)\)` that indicate .hi-slate[*how close*] `\(\text{X}_{j}\)` is to `\(\text{X}_{i}\)`.
+---
+name: discrete
+## Proximity
+
+Our weights `\(w_i(j)\)` should be a measure of .hi-slate[*how close*] `\(\text{X}_{j}\)` is to `\(\text{X}_{i}\)`.
+
+--
+
+If `\(\text{X}\)` is .hi-pink[discrete], then we can consider equality, _i.e._, `\(w_i(j) = \mathbb{I}(\text{X}_{i} = \text{X}_{j})\)`, scaling as necessary to get `\(\sum_j w_i(j) = 1\)`.
+
+---
+name: nn-euclidean
+## Proximity
+
+Our weights `\(w_i(j)\)` should be a measure of .hi-slate[*how close*] `\(\text{X}_{j}\)` is to `\(\text{X}_{i}\)`.
+
+If `\(\text{X}\)` is .hi-purple[continuous], then we need .it[proximity] rather than .it[equality].
+
+--
+
+.purple[*Nearest-neighbor* matching] chooses the single closest control observation using the Euclidean distance between `\(\text{X}_{i}\)` and `\(\text{X}_{j}\)`, _i.e._,
+
+$$
+`\begin{align}
+  \text{d}_{i,j} = \left( \text{X}_{i} - \text{X}_{j} \right)'\left(\text{X}_{i} - \text{X}_{j}\right)
+\end{align}`
+$$
+
+--
+
+- `\(\hat{\tau}_i = \text{Y}_{1i} - \text{Y}_{0j}^i\)`, where `\(\text{Y}_{0j}^i\)` is `\(i\)`'s nearest neighbor in the control group.
+- .hi-slate[Estimator:] `\(\hat{\tau}_M = \frac{1}{N_T} \sum_i \hat{\tau}_i\)`
+- Produces causal estimates if CIA is valid *and* we have sufficient overlap.
+- Suffers from arbitrary choices of units.
+
+---
+name: nn-mahalanobis
+## Proximity
+
+Our weights `\(w_i(j)\)` should be a measure of .hi-slate[*how close*] `\(\text{X}_{j}\)` is to `\(\text{X}_{i}\)`.
+
+If `\(\text{X}\)` is .hi-purple[continuous], then we need .it[proximity] rather than .it[equality].
+
+.purple[*Nearest-neighbor* matching with Mahalanobis distance] chooses the single closest control using .purple[Mahalanobis] distance between `\(\text{X}_{i}\)` and `\(\text{X}_{j}\)`, _i.e._,
+
+$$
+`\begin{align}
+  \text{d}_{i,j} = \left( \text{X}_{i} - \text{X}_{j} \right)' \Sigma_{X}^{-1} \left(\text{X}_{i} - \text{X}_{j}\right)
+\end{align}`
+$$
+where `\(\Sigma_{X}^{-1}\)` is the covariance matrix of `\(\text{X}\)`.
+
+--
+
+- .hi-slate[Estimator:] `\(\hat{\tau}_M = \frac{1}{N_T} \sum_i \hat{\tau}_i\)` where `\(\left(\hat{\tau}_i = \text{Y}_{1i} - \text{Y}_{0j}^i\right)\)`
+- Produces causal estimates if CIA is valid *and* we have sufficient overlap.
+- Does not suffer from arbitrary choices of units.
+---
+## More neighbors?
+
+Why limit ourselves to a .b[single] "best" match?
+
+If we're going to let a function/algorithm choose the *nearest* match, can't we also let the function/algorithm choose *how many* matches?
+
+Furthermore, if `\(N_C \gg N_T\)`, it we're throwing away *a lot* of information.
+
+We could instead use this information and be more efficient.
+
+---
+name: kernel
+## More neighbors!
+
+.purple[Kernel matching] gives positive weight to all control observations within some .hi-slate[bandwidth] `\(h\)`, with higher weight for closer matches determined by some .hi-slate[kernel function] `\(K(\cdot)\)`,
+$$
+`\begin{align}
+  w_i(j) = \dfrac{K\!\!\left( \dfrac{\text{X}_{j} - \text{X}_{i}}{h} \right)}{\sum_{j\in(D=0)} K\!\!\left(\dfrac{\text{X}_{j} - \text{X}_{i}}{h} \right)}
+\end{align}`
+$$
+
+--
+
+.ex[Example] The *Epanechnikov kernel* is defined as
+$$
+`\begin{align}
+  K(z) = \dfrac{3}{4} \left( 1 - z^2 \right) \times \mathbb{I}\!\left( |z| &lt; 1 \right)
+\end{align}`
+$$
+
+---
+layout: false
+class: clear
+
+.hi-orange[The Epanechnikov kernel] `\(K(z) = \frac{3}{4} \left( 1 - z^2 \right) \times \mathbb{I}\!\left( |z| &lt; 1 \right)\)`
+
+&lt;img src="07Matching_files/figure-html/epanechnikov-1.svg" style="display: block; margin: auto;" /&gt;
+---
+layout: false
+class: clear
+
+&lt;img src="07Matching_files/figure-html/ex_epanechnikov-1.svg" style="display: block; margin: auto;" /&gt;
+
+---
+class: clear
+count: false
+
+&lt;img src="07Matching_files/figure-html/ex_epa_point-1.svg" style="display: block; margin: auto;" /&gt;
+
+--
+
+&lt;img src="07Matching_files/figure-html/ex_weights-1.svg" style="display: block; margin: auto;" /&gt;
+---
+layout: false
+class: clear
+
+.hi-orange[The Epanechnikov kernel] `\(K(z) = \frac{3}{4} \left( 1 - z^2 \right) \times \mathbb{I}\!\left( |z| &lt; 1 \right)\)`
+
+&lt;img src="07Matching_files/figure-html/epanechnikov2-1.svg" style="display: block; margin: auto;" /&gt;
+---
+layout: false
+class: clear
+
+.hi-orange[The Triangle kernel] `\(K(z) = \left( 1 - |z| \right) \times \mathbb{I}\!\left( |z| &lt; 1 \right)\)`
+
+&lt;img src="07Matching_files/figure-html/triangle-1.svg" style="display: block; margin: auto;" /&gt;
+---
+layout: false
+class: clear
+
+.hi-orange[The Uniform kernel] `\(K(z) = \frac{1}{2} \times \mathbb{I}\!\left( |z| &lt; 1 \right)\)`
+
+&lt;img src="07Matching_files/figure-html/uniform-1.svg" style="display: block; margin: auto;" /&gt;
+---
+layout: false
+class: clear
+
+.hi-orange[The Gaussian kernel] `\(K(z) = \left( 2\pi \right)^{-1/2}  \exp\left(-z^2/2 \right)\)`
+
+&lt;img src="07Matching_files/figure-html/gaussian-1.svg" style="display: block; margin: auto;" /&gt;
+---
+# Kernels
+## Aside
+
+Kernel functions are good for more than just matching.
+
+You will most commonly see/use them smoothing out densities—providing a smooth, moving-window average.
+
+--
+
+_E.g._, .mono[R]'s (`ggplot2`'s) smooth, density-plotting function `geom_density()`.
+
+`geom_density()` defaults to `kernel = "gaussian"`, but you can specify many other kernel functions (including `"epanechnikov"`).
+
+--
+
+You can also change the `bandwidth` argument. The default is a bandwidth-choosing function called `bw.nrd0()`.
+---
+layout: true
+# Matching
+
+---
+## Adding neighbors
+
+As we add more neighbors—either moving from `\(1\)` to `\(n&gt;1\)` or increasing our bandwidth—we potentially increase the efficiency of our estimator.
+
+--
+
+We need to .hi[be careful not to add *too many* controls] for each treated `\(i\)`.
+
+--
+
+CIA requires that we're actually conditioning on the observables—it does not allow us to take a simple average across all control observations.
+---
+## The curse of dimensionality.super[.pink[†]]
+
+.footnote[.pink[†] I'm not sure if this is a title for Harry Potter or Indiana Jones... crossover anyone?]
+
+It turns out kernel- and bandwidth-selection are not our biggest enemies.
+
+--
+
+As the dimension of `\(\text{X}\)` expands (matching on more variables), it becomes .hi[harder and harder to find a nice, close control] for each treated unit.
+
+--
+
+We need a way to shrink the dimensionality of `\(\text{X}\)`.
+---
+layout: true
+# Propensity-score methods
+
+---
+class: inverse, middle
+---
+name: setup
+## Setup
+
+Let's begin with two assumptions—one old and one new.
+
+1. .hi-purple[Conditional independence:] `\(\left( \text{Y}_{0i},\, \text{Y}_{1i} \right) \ci \text{D}_{i}|\text{X}_{i}\)`
+
+2. .hi-purple[Overlap:] `\(0 &lt; \mathop{\text{Pr}}\left(\text{D}_{i} = 1 \mid \text{X}_{i}\right) &lt; 1\)`
+
+--
+
+We can estimate an average treatment effect by conditioning on `\(\text{X}_{i}\)`.
+
+--
+
+However, overlap may fail if the dimensions of `\(X\)` are large and `\(N\)` is finite.
+
+--
+
+.hi[Propensity scores provide a solution] to this mess.
+---
+name: magic
+## The magic
+
+It turns out that if `\(\left( \text{Y}_{0i},\,\text{Y}_{1i} \right) \ci \text{D}_{i}|\text{X}_{i},\,\)` then we actually only need to match/condition on `\(p(\text{X}_{i}) = \mathop{E}\left[ \text{D}_{i} | \text{X}_{i} \right]\)`.
+
+--
+
+`\(p(\text{X}_{i})\)` is the .attn[propensity score]
+--
+, the probability of treatment given `\(\text{X}_{i}.\)`
+
+--
+
+.attn[Propensity-score theorem] If `\(\left( \text{Y}_{0i},\,\text{Y}_{1i} \right) \ci \text{D}_{i}|\text{X}_{i},\,\)` then `\(\left( \text{Y}_{0i},\,\text{Y}_{1i} \right) \ci \text{D}_{i}|p(\text{X}_{i}).\)`
+
+--
+
+This theorem extends our CIA to a one-dimensional score, avoiding the curse of dimensionality.
+---
+layout: true
+# Propensity-score methods
+
+.note[Theorem] If `\(\left( \text{Y}_{0i},\,\text{Y}_{1i} \right) \ci \text{D}_{i}|\text{X}_{i},\,\)` then `\(\left( \text{Y}_{0i},\,\text{Y}_{1i} \right) \ci \text{D}_{i}|p(\text{X}_{i}).\)`
+
+## Proof
+
+---
+name: proof
+
+--
+
+To prove this theorem, we will show `\(\mathop{\text{Pr}}\left(\text{D}_{i}=1 \mid \text{Y}_{0i},\, \text{Y}_{1i},\, p(\text{X}_{i})\right) = p(\text{X}_{i})\)`, _i.e._, `\(\text{D}_{i}\)` is independent of `\(\left( \text{Y}_{0i},\, \text{Y}_{1i} \right)\)` after conditioning on `\(p(\text{X}_{i})\)`.
+
+---
+count: false
+
+`\(\mathop{\text{Pr}}\!\bigg[\text{D}_{i}=1 \bigg| \text{Y}_{0i},\, \text{Y}_{1i},\, p(\text{X}_{i})\bigg]\)`
+
+--
+.pad-left[
+`\(=\mathop{E}\!\bigg[\text{D}_i \bigg| \text{Y}_{0i},\, \text{Y}_{1i},\, p(\text{X}_{i})\bigg]\)`
+]
+
+--
+.pad-left[
+`\(=\mathop{E}\!\bigg[ \mathop{E}\!\bigg(\text{D}_i \bigg| \text{Y}_{0i},\, \text{Y}_{1i},\, p(\text{X}_{i}),\, \text{X}_{i} \bigg) \bigg| \text{Y}_{0i},\, \text{Y}_{1i},\, p(\text{X}_{i})\bigg]\)`
+]
+
+--
+.pad-left[
+`\(=\mathop{E}\!\bigg[ \mathop{E}\!\bigg(\text{D}_i \bigg| \text{Y}_{0i},\, \text{Y}_{1i},\, \text{X}_{i} \bigg) \bigg| \text{Y}_{0i},\, \text{Y}_{1i},\, p(\text{X}_{i})\bigg]\)`
+]
+---
+
+`\(\mathop{\text{Pr}}\!\bigg[\text{D}_{i}=1 \bigg| \text{Y}_{0i},\, \text{Y}_{1i},\, p(\text{X}_{i})\bigg]= \cdots =\mathop{E}\!\bigg[ \mathop{E}\!\bigg(\text{D}_i \bigg| \text{Y}_{0i},\, \text{Y}_{1i},\, \text{X}_{i} \bigg) \bigg| \text{Y}_{0i},\, \text{Y}_{1i},\, p(\text{X}_{i})\bigg]\)`
+
+--
+.pad-left[
+`\(=\mathop{E}\!\bigg[ \mathop{E}\!\bigg(\text{D}_i \bigg| \text{X}_{i} \bigg) \bigg| \text{Y}_{0i},\, \text{Y}_{1i},\, p(\text{X}_{i})\bigg]\)`
+]
+
+--
+.pad-left[
+`\(=\mathop{E}\!\bigg[ p(\text{X}_{i}) \bigg| \text{Y}_{0i},\, \text{Y}_{1i},\, p(\text{X}_{i})\bigg]\)`
+]
+
+--
+.pad-left[
+`\(=p(\text{X}_{i})\)`
+]
+
+--
+
+∴ `\(\left( \text{Y}_{0i},\,\text{Y}_{1i} \right) \ci \text{D}_{i}|\text{X}_{i} \implies \left( \text{Y}_{0i},\,\text{Y}_{1i} \right) \ci \text{D}_{i}|p(\text{X}_{i})\)` ✔
+---
+layout: true
+# Propensity-score methods
+
+---
+name: intuition
+## Intuition
+
+.qa[Q] What's going on here?
+
+`\(\text{X}_{i}\)` carries way more information than `\(p(\text{X}_{i})\)`, so how can we still get conditional independence of treatment by only conditioning on `\(p(\text{X}_{i})\)`?
+
+--
+
+.qa[A].sub[.pink[1]] Conditional independence of treatment isn't about extracting all of the information possible from `\(\text{X}_{i}\)`. We actually only care about creating a situation in which `\(\text{D}_{i}|\)`something is independent of `\(\left( \text{Y}_{0i},\,\text{Y}_{1i} \right)\)`.
+
+--
+
+.qa[A].sub[.pink[2]] Back to our main concern: .hi[selection bias]. People select into treatment. If `\(\text{X}\)` says two people were equally likely to be treated, and if `\(\text{X}_{i}\)` explains all of selection (CIA), then cannot be selection between these two people.
+---
+name: estimation
+## Estimation
+
+So where do propensity scores come from?
+
+--
+
+We estimate them—and there are a lot of ways to do that.
+
+1. Flexible (_i.e._, interactions) logit specification
+2. Kernel regression (remember kernel functions?)
+3. Many others—machine learning, series-logit estimator, *etc.*
+
+--
+
+.qa[Q] Can we just use plain OLS (linear probability model)?
+
+--
+
+.qa[A] Sort of. Think about FWL. This route is going to be the same as a regression conditioning on `\(\text{X}_{i}\)`.
+
+---
+## Estimation
+
+From *MHE* (p. 83)
+
+.qa[Question]
+
+&gt; A big question here is how to best model and estimate `\(p(\text{X}_{i})\)`...
+
+.qa[Answer]
+
+&gt; The answer to this is inherently application-specific. A growing empirical literature suggests that a logit model for the propensity score with a few polynomial terms in continuous covariates works well in practice...
+---
+name: application
+## Application
+
+So you have some estimated propensity scores `\(\hat{p}(\text{X}_{i})\)`. What next?
+
+--
+
+.note[Option 1] Conditioning via regression
+
+--
+
+.note[Option 1a] Use a .b[regression to condition] on `\(p(\text{X}_{i})\)`, _i.e._,
+$$
+`\begin{align}
+   \text{Y}_{i} = \alpha + \delta \text{D}_{i} + \beta p(\text{X}_{i}) + u_i \tag{1a}
+\end{align}`
+$$
+
+--
+
+.note[Option 1b] If we think treatment effects are heterogeneous and may covary with `\(\text{X}\)`, then we might want to also .b[interact] treatment with `\(p(\text{X}_{i})\)`, _i.e._,
+$$
+`\begin{align}
+   \text{Y}_{i} = \alpha + \delta_1 \text{D}_{i} + \delta_2 \text{D}_{i} p(\text{X}_{i}) + \beta p(\text{X}_{i}) + u_i \tag{1b}
+\end{align}`
+$$
+---
+name: heterogeneity
+## Heterogeneity with regression
+
+Let's think a bit more about heterogeneous treatment effects in this setting.
+$$
+`\begin{align}
+  \text{Y}_{0i} &amp;= \alpha + \beta \text{X}_{i} + u_i \\
+  \text{Y}_{1i} &amp;= \text{Y}_{0i} + \delta_1 + \delta_2 \text{X}_{i}
+\end{align}`
+$$
+_i.e._, the treatment effect depends upon `\(\text{X}_{i}\)`.
+
+--
+
+`\(\text{Y}_{i} = \text{D}_{i}\text{Y}_{1i} + \left( 1 - \text{D}_{i} \right) \text{Y}_{0i}\)`
+
+--
+.pad-left[
+`\(= \text{D}_{i}\bigg( \text{Y}_{0i} + \delta_1 + \delta_2 \text{X}_{i} \bigg) + \left( 1 - \text{D}_{i} \right) \text{Y}_{0i}\)`
+]
+
+--
+.pad-left[
+`\(= \text{Y}_{0i} + \delta_1 \text{D}_{i} + \delta_2 \text{D}_{i} \text{X}_{i}\)`
+]
+
+--
+.pad-left[
+`\(= \alpha + \delta_1 \text{D}_{i} + \delta_2 \text{D}_{i} \text{X}_{i} + \beta \text{X}_{i} + u_i\)`
+]
+
+---
+## Heterogeneity
+
+This final equation
+$$
+`\begin{align}
+  \text{Y}_{i} = \alpha + \delta_1 \text{D}_{i} + \delta_2 \text{D}_{i} \text{X}_{i} + \beta \text{X}_{i} + u_i
+\end{align}`
+$$
+
+--
+
+suggests that we want `\(p(\text{X}_{i})\)` *and* `\(\text{D}_{i}p(\text{X}_{i})\)`, _i.e._,
+$$
+`\begin{align}
+   \text{Y}_{i} = \alpha + \delta_1 \text{D}_{i} + \delta_2 \text{D}_{i} p(\text{X}_{i}) + \beta p(\text{X}_{i}) + u_i \tag{1b}
+\end{align}`
+$$
+
+--
+
+which yields
+1. a .hi-slate[group-specific treatment effect] `\(\delta_1 + \delta_2 \text{X}_{i}\)` for each `\(\text{X}_{i}\)`
+
+2. an .hi-slate[average treatment effect] `\(\delta_1 + \delta_2 \overline{p}(\text{X}_{i})\)`
+---
+## More flexibility
+
+We motivated propensity scores with a desire to reduce dimensionality and estimate/choose/assume fewer parameters.
+
+Adding `\(p(\text{X}_{i})\)` and `\(\text{D}_{i}p(\text{X}_{i})\)` as covariates in a linear regression doesn't quite exhaust our potential for flexible/nonparametric estimation.
+
+---
+name: blocking
+## Blocking
+
+.note[Option 2] Block (stratify) on propensity scores.
+
+--
+
+1. Divide the range of `\(\hat{p}(\text{X}_{i})\)` into `\(K\)` blocks (_e.g._, 0.05-wide blocks).
+
+1. Place each observation into a block via its `\(\hat{p}(\text{X}_{i})\)`.
+
+1. Calculate `\(\hat{\tau}_k\)` for each block via difference in means.
+
+1. Average the `\(\hat{\tau}_k\)` using their shares of the sample, _i.e._,
+
+$$
+`\begin{align}
+  \hat{\tau} = \sum_{k = 1}^K  \hat{\tau}_k \dfrac{N_{1k} + N_{0k}}{N}
+\end{align}`
+$$
+
+
+---
+layout: false
+# Table of contents
+
+.pull-left[
+### Admin
+.smaller[
+
+1. [Schedule](#schedule)
+1. [Follow up](#follow-up)
+]
+
+### General matching
+.smaller[
+
+1. [The gist](#gist)
+1. [Goals](#goals)
+1. [Generic matching](#generic)
+1. [Weights](#weights)
+  - [Discrete `\(\text{X}\)`](#discrete)
+  - [Nearest neighbor, Euclidean](#nn-euclidean)
+  - [Nearest neighbor, Mahalanobis](#nn-mahalanobis)
+  - [Kernel matching](#kernel)
+]
+]
+
+.pull-right[
+
+### Propensity-score methods
+.smaller[
+
+1. [Setup](#setup)
+1. [Propensity-score theorem](#magic)
+  - [The magic](#magic)
+  - [The proof](#proof)
+  - [Intuition](#intuition)
+1. [Estimation](#estimation)
+1. [Application](#application)
+  - [Regression](#application)
+  - [Heterogeneity](#heterogeneity)
+  - [Blocking](#blocking)
+]
+]
+---
+exclude: true
+    </textarea>
+<script src="https://remarkjs.com/downloads/remark-latest.min.js"></script>
+<script>var slideshow = remark.create({
+"highlightStyle": "github",
+"highlightLines": true,
+"countIncrementalSlides": false
+});
+if (window.HTMLWidgets) slideshow.on('afterShowSlide', function (slide) {
+  window.dispatchEvent(new Event('resize'));
+});
+(function() {
+  var d = document, s = d.createElement("style"), r = d.querySelector(".remark-slide-scaler");
+  if (!r) return;
+  s.type = "text/css"; s.innerHTML = "@page {size: " + r.style.width + " " + r.style.height +"; }";
+  d.head.appendChild(s);
+})();</script>
+
+<script>
+(function() {
+  var i, text, code, codes = document.getElementsByTagName('code');
+  for (i = 0; i < codes.length;) {
+    code = codes[i];
+    if (code.parentNode.tagName !== 'PRE' && code.childElementCount === 0) {
+      text = code.textContent;
+      if (/^\\\((.|\s)+\\\)$/.test(text) || /^\\\[(.|\s)+\\\]$/.test(text) ||
+          /^\$\$(.|\s)+\$\$$/.test(text) ||
+          /^\\begin\{([^}]+)\}(.|\s)+\\end\{[^}]+\}$/.test(text)) {
+        code.outerHTML = code.innerHTML;  // remove <code></code>
+        continue;
+      }
+    }
+    i++;
+  }
+})();
+</script>
+<!-- dynamically load mathjax for compatibility with self-contained -->
+<script>
+(function () {
+  var script = document.createElement('script');
+  script.type = 'text/javascript';
+  script.src  = 'https://mathjax.rstudio.com/latest/MathJax.js?config=TeX-MML-AM_CHTML';
+  if (location.protocol !== 'file:' && /^https?:/.test(script.src))
+    script.src  = script.src.replace(/^https?:/, '');
+  document.getElementsByTagName('head')[0].appendChild(script);
+})();
+</script>
+  </body>
+</html>

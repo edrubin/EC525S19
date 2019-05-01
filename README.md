@@ -82,6 +82,16 @@ We will use two books.
 
 *Another note on the notes:* I create the slides with [`xaringan`](https://github.com/yihui/xaringan/wiki) in [R](cran.r-project.org). Thanks to [Grant McDermott](grantmcdermott.com/) for encouraging me to make this switch.
 
+**[Lecture 07: Matching](https://raw.githack.com/edrubin/EC525S19/master/NotesLecture/07Matching/07Matching.html)**
+
+1. Omitted-variable bias
+1. Good and bad controls
+
+**Note formats:** [.html](https://raw.githack.com/edrubin/EC525S19/master/NotesLecture/07Matching/07Matching.html) | [.html (no pause)](https://raw.githack.com/edrubin/EC525S19/master/NotesLecture/07Matching/03WhyRegression_NoPause.html) | [.pdf](https://raw.githack.com/edrubin/EC525S19/master/NotesLecture/07Matching/07Matching.pdf) | [.pdf (no pause)](https://raw.githack.com/edrubin/EC525S19/master/NotesLecture/07Matching/03WhyRegression_NoPause.pdf) | [.Rmd](https://raw.githack.com/edrubin/EC525S19/master/NotesLecture/07Matching/07Matching.Rmd)
+<br>**Readings:** Still MHE chapter 3
+
+*Another note on the notes:* I create the slides with [`xaringan`](https://github.com/yihui/xaringan/wiki) in [R](cran.r-project.org). Thanks to [Grant McDermott](grantmcdermott.com/) for encouraging me to make this switch.
+
 ## Lab slides
 
 **[Lab 01: R Intro/Review](https://raw.githack.com/edrubin/EC525S19/master/NotesLab/01RBasics/01RBasics.html)**
