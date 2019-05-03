@@ -62,7 +62,7 @@ name: follow-up
 
 ## OLS weighting
 
-At the beginnign of the lecture, we discussed OLS weights—especially for heterogeneous treatment effects.
+At the beginning of the lecture, we discussed OLS weights—especially for heterogeneous treatment effects.
 
 We should keep our questions clear.
 
@@ -144,7 +144,7 @@ Let there be `\(N_T\)` treated individuals and `\(N_C\)` control individuals. We
 Assume `\(\sum_j w_i(j) = 1\)`. Our estimate for the counterfactual of treated `\(i\)` is
 $$
 `\begin{align}
-  \widehat{\text{Y}_{0i}} = \sum_{j\in \left( D=0 \right)} w_i(j) \text{Y}_{i}
+  \widehat{\text{Y}_{0i}} = \sum_{j\in \left( D=0 \right)} w_i(j) \text{Y}_{j}
 \end{align}`
 $$
 ---
@@ -154,13 +154,13 @@ name: generic
 If our estimated counterfactual for treated individual `\(i\)` is
 $$
 `\begin{align}
-  \widehat{\text{Y}_{0i}} = \sum_j w_i(j) \text{Y}_{i}
+  \widehat{\text{Y}_{0i}} = \sum_j w_i(j) \text{Y}_{j}
 \end{align}`
 $$
 then our estimated treatment effect (for individual `\(i\)`) is
 $$
 `\begin{align}
-  \hat{\tau}_i = \text{Y}_{1i} - \widehat{\text{Y}_{0i}} = \text{Y}_{1i} - \sum_j w_i(j) \text{Y}_{i}
+  \hat{\tau}_i = \text{Y}_{1i} - \widehat{\text{Y}_{0i}} = \text{Y}_{1i} - \sum_j w_i(j) \text{Y}_{j}
 \end{align}`
 $$
 
@@ -169,7 +169,7 @@ $$
 ∴ a generic matching estimator for the treatment effect on the treated is
 $$
 `\begin{align}
-  \hat{\tau}_M = \dfrac{1}{N_T} \sum_{i \in \left( \text{D}=1 \right)} \left( \text{Y}_{1i} - \widehat{\text{Y}_{0i}} \right) = \dfrac{1}{N_T} \sum_{i \in \left( \text{D}=1 \right)} \left( \text{Y}_{1i} - \sum_{j\in \left( D=0 \right)} w_i(j) \text{Y}_{i} \right)
+  \hat{\tau}_M = \dfrac{1}{N_T} \sum_{i \in \left( \text{D}=1 \right)} \left( \text{Y}_{1i} - \widehat{\text{Y}_{0i}} \right) = \dfrac{1}{N_T} \sum_{i \in \left( \text{D}=1 \right)} \left( \text{Y}_{1i} - \sum_{j\in \left( D=0 \right)} w_i(j) \text{Y}_{j} \right)
 \end{align}`
 $$
 ---
@@ -649,6 +649,49 @@ $$
 \end{align}`
 $$
 
+--
+
+.note[Note] Blocking is similar to NN/kernel matching using `\(p(\text{X}_{i})\)` as distance.
+---
+## Choosing blocks
+
+Blocking on propensity scores requires defining defining blocks.
+
+One common route involves some iteration.
+
+1. .hi[Choose blocks].
+
+1. Check the .hi[balance of the covariates] within each block..super[.pink[†]]
+
+  - If covariates are .pink[not balanced], then split your blocks and repeat.
+
+  - If covariates are .pink[balanced], then stop.
+
+.footnote[.pink[†] Keep multiple-hypothesis testing in mind. With many covariates and many blocks, you are bound to find statistically significant relationships—even if you are balanced in truth.]
+
+---
+## Overlap
+
+Blocking emphasizes our overlap assumption, _i.e._, `\(0&lt;\mathop{\text{Pr}}\left(\text{D}_{i} | \text{X}_{i}\right)&lt;1\)`.
+
+If a block contains zero treated/control units, we cannot calculate `\(\hat{\tau}_k\)`.
+
+--
+
+.attn[Caution] Logit can hid a violation because it forces `\(0 &lt; \hat{p}(\text{X}_{i}) &lt; 1\)`.
+
+--
+
+.note[Common practice] To empirically enforce overlap:
+
+- Drop control units with `\(\hat{p}(\text{X}_{i})\)` below the minimum propensity score in the treatment group.
+
+- Drop treated units with `\(\hat{p}(\text{X}_{i})\)` above the maximum propensity score in the control group.
+---
+name: weightign
+## Weighting
+
+.note[Option 3] Weight observations by the inverse propensity score.
 
 ---
 layout: false
@@ -690,7 +733,8 @@ layout: false
 1. [Application](#application)
   - [Regression](#application)
   - [Heterogeneity](#heterogeneity)
-  - [Blocking](#blocking)
+  - [Blocking on `\(p(\text{X}_{i})\)`](#blocking)
+  - [Weighting with `\(p(\text{X}_{i})\)`](#weighting)
 ]
 ]
 ---

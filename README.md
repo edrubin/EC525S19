@@ -113,12 +113,20 @@ We will use two books.
 
 **Note formats:** [.html](https://raw.githack.com/edrubin/EC525S19/master/NotesLab/02RData/02RData.html) | [.html (no pause)](https://raw.githack.com/edrubin/EC525S19/master/NotesLab/02RData/02RData_NoPause.html) | [.pdf](https://raw.githack.com/edrubin/EC525S19/master/NotesLab/02RData/02RData.pdf) | [.pdf (no pause)](https://raw.githack.com/edrubin/EC525S19/master/NotesLab/02RData/02RData_NoPause.pdf) | [.Rmd](https://raw.githack.com/edrubin/EC525S19/master/NotesLab/02RData/02RData.Rmd)
 
-**[Lab 03: Rstudio + Data i/o with R](https://raw.githack.com/edrubin/EC525S19/master/NotesLab/03RInput/03RInput.html)**
+**[Lab 03: RStudio + Data i/o with R](https://raw.githack.com/edrubin/EC525S19/master/NotesLab/03RInput/03RInput.html)**
 
 1. RStudio
 1. Getting data into and out of R
 
 **Note formats:** [.html](https://raw.githack.com/edrubin/EC525S19/master/NotesLab/03RInput/03RInput.html) | [.html (no pause)](https://raw.githack.com/edrubin/EC525S19/master/NotesLab/03RInput/03RInput_NoPause.html) | [.pdf](https://raw.githack.com/edrubin/EC525S19/master/NotesLab/03RInput/03RInput.pdf) | [.pdf (no pause)](https://raw.githack.com/edrubin/EC525S19/master/NotesLab/03RInput/03RInput_NoPause.pdf) | [.Rmd](https://raw.githack.com/edrubin/EC525S19/master/NotesLab/03RInput/03RInput.Rmd)
+
+**[Lab 04: Regression in R](https://raw.githack.com/edrubin/EC525S19/master/NotesLab/04RReg/04RReg.html)**
+
+1. `lm()` and `lm` objects
+1. `estimatr` and `lm_robust()`
+1. Other regressions, *e.g.*, `glm()`
+
+**Note formats:** [.html](https://raw.githack.com/edrubin/EC525S19/master/NotesLab/04RReg/04RReg.html) | [.html (no pause)](https://raw.githack.com/edrubin/EC525S19/master/NotesLab/04RReg/03RInput_NoPause.html) | [.pdf](https://raw.githack.com/edrubin/EC525S19/master/NotesLab/04RReg/04RReg.pdf) | [.pdf (no pause)](https://raw.githack.com/edrubin/EC525S19/master/NotesLab/04RReg/03RInput_NoPause.pdf) | [.Rmd](https://raw.githack.com/edrubin/EC525S19/master/NotesLab/04RReg/04RReg.Rmd)
 
 ## Problem sets
 
