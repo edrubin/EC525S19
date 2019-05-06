@@ -841,7 +841,7 @@ $=p(\text{X}_{i})$
 
 --
 
-∴ $\left( \text{Y}_{0i},\,\text{Y}_{1i} \right) \ci \text{D}_{i}|\text{X}_{i} \implies \left( \text{Y}_{0i},\,\text{Y}_{1i} \right) \ci \text{D}_{i}|p(\text{X}_{i})$ ✔
+∴ $\left( \text{Y}_{0i},\,\text{Y}_{1i} \right) \ci \text{D}_{i}|\text{X}_{i} \implies \left( \text{Y}_{0i},\,\text{Y}_{1i} \right) \ci \text{D}_{i}|p(\text{X}_{i})$ .orange[✔]
 ---
 layout: true
 # Propensity-score methods
@@ -860,7 +860,7 @@ $\text{X}_{i}$ carries way more information than $p(\text{X}_{i})$, so how can w
 
 --
 
-.qa[A].sub[.pink[2]] Back to our main concern: .hi[selection bias]. People select into treatment. If $\text{X}$ says two people were equally likely to be treated, and if $\text{X}_{i}$ explains all of selection (CIA), then cannot be selection between these two people.
+.qa[A].sub[.pink[2]] Back to our main concern: .hi[selection bias]. People select into treatment. If $\text{X}$ says two people were equally likely to be treated, and if $\text{X}_{i}$ explains all of selection (CIA), then there cannot be selection between these two people.
 ---
 name: estimation
 ## Estimation
@@ -1004,7 +1004,7 @@ name: blocking
 
 $$
 \begin{align}
-  \hat{\tau} = \sum_{k = 1}^K  \hat{\tau}_k \dfrac{N_{1k} + N_{0k}}{N}
+  \hat{\tau}_\text{Block} = \sum_{k = 1}^K  \hat{\tau}_k \dfrac{N_{1k} + N_{0k}}{N}
 \end{align}
 $$
 
@@ -1037,20 +1037,298 @@ If a block contains zero treated/control units, we cannot calculate $\hat{\tau}_
 
 --
 
-.attn[Caution] Logit can hid a violation because it forces $0 < \hat{p}(\text{X}_{i}) < 1$.
+.attn[Caution] Logit can hide violations—it forces $0 < \hat{p}(\text{X}_{i}) < 1$.
 
 --
 
-.note[Common practice] To empirically enforce overlap:
+.note[Common practice] Empirically enforce overlap:
 
 - Drop control units with $\hat{p}(\text{X}_{i})$ below the minimum propensity score in the treatment group.
 
 - Drop treated units with $\hat{p}(\text{X}_{i})$ above the maximum propensity score in the control group.
 ---
-name: weightign
+name: weighting
 ## Weighting
 
 .note[Option 3] Weight observations by the inverse propensity score.
+
+--
+
+.qa[Q] How does weighting by $1/\hat{p}(\text{X}_{i})$ make sense?
+
+--
+
+.qa[A] Consider our old (likely biased) friend the difference in means, _i.e._,
+$$
+\begin{align}
+  \hat{\tau}_\text{Diff} = \overline{\text{Y}}_\text{T} - \overline{\text{Y}}_\text{C} = \dfrac{\sum_i \text{D}_{i} \text{Y}_{i}}{\sum_i \text{D}_{i}} - \dfrac{\sum_i \left(1 - \text{D}_{i}\right) \text{Y}_{i}}{\sum_i \left(1 - \text{D}_{i}\right)}
+\end{align}
+$$
+--
+which we've discussed is biased due to selection into treatment, _i.e._,
+$$
+\begin{align}
+  \mathop{E}\left[ \text{Y}_{0i} | \text{D}_{i} = 1 \right] \neq \mathop{E}\left[ \text{Y}_{0i} \right]
+\end{align}
+$$
+---
+## Weighting, justified
+
+Suppose we know $p(\text{X}_{i})$ and we weight each .hi-pink[treated] individual by $1/p(\text{X}_{i})$
+
+--
+
+$\mathop{E}\left[ \dfrac{\text{D}_{i} \text{Y}_{i}}{p(\text{X}_{i})} \right]$
+
+--
+ $= \mathop{E}\left[ \dfrac{\text{D}_{i}\left(\text{D}_{i}\text{Y}_{1i} + (1-\text{D}_{i})\text{Y}_{0i}\right)}{p(\text{X}_{i})} \right]$
+
+--
+ $= \mathop{E}\left[ \dfrac{\text{D}_{i} \text{Y}_{1i}}{p(\text{X}_{i})} \right]$
+
+--
+<br><br>  $= \mathop{E}\!\bigg( \mathop{E}\left[ \dfrac{\text{D}_{i}\text{Y}_{1i}}{p(\text{X}_{i})} \;\middle|\; \text{X}_{i} \right] \bigg)$
+
+--
+ $= \mathop{E}\!\bigg( \dfrac{\mathop{E}\left[ \text{D}_{i} \mid \text{X}_{i} \right] \mathop{E}\left[ \text{Y}_{1i} \mid \text{X}_{i} \right]}{p(\text{X}_{i})} \bigg)$
+
+--
+<br><br>  $= \mathop{E}\!\bigg( \dfrac{p(\text{X}_{i}) \mathop{E}\left[ \text{Y}_{1i} \mid \text{X}_{i} \right]}{p(\text{X}_{i})} \bigg)$
+
+--
+ $= \mathop{E}\!\bigg( \mathop{E}\left[ \text{Y}_{1i} \mid \text{X}_{i} \right] \bigg)$
+
+--
+ $\color{#e64173}{= \mathop{E}\left[ \text{Y}_{1i} \right]}$
+
+--
+
+Similarly, weighting .hi-purple[control] individuals by $1/(1-p(\text{X}_{i}))$ yields
+$$
+\begin{align}
+  \mathop{E}\left[ \dfrac{(1-\text{D}_{i})\text{Y}_{i}}{1-p(\text{X}_{i})} \right] = \color{#6A5ACD}{\mathop{E}\left[ \text{Y}_{0i} \right]}
+\end{align}
+$$
+---
+## Weighting: The estimator
+
+Thus, we can estimate an unbiased treatment effect via
+$$
+\begin{align}
+  \hat{\tau}_{p\text{Weight}} = \dfrac{1}{N} \sum_{i=1}^N \left[ \dfrac{\text{D}_{i}\text{Y}_{i}}{p(\text{X}_{i})} - \dfrac{(1-\text{D}_{i}\text{Y}_{i})}{1 - p(\text{X}_{i})} \right]
+\end{align}
+$$
+
+--
+
+.note[Intuition] We're trying to overcome selection bias, _i.e._, treated individuals were more likely to be treated as a function of $\text{X}_{i}$—producing higher $p(\text{X}_{i})$.
+
+--
+
+We want to get back to *as-good-as random* variation in treatment.
+
+So we upweight .pink[(**1**) .hi-pink[treated] individuals with low] $\color{#e64173}{p(\text{X}_{i})}$ and .purple[(**2**) .hi-purple[control] observations with high] $\color{#6A5ACD}{p(\text{X}_{i})}$.
+---
+## Weighting: The example
+
+Suppose for some individual $i$, $p(\text{X}_{i}) = 0.80$.
+
+--
+
+This propensity score says someone with this set of $\text{X}_{i}$ was four-times more likely to be .hi-pink[treated] than .hi-purple[control].
+
+--
+
+Our weights fix this imbalance for each $\text{X}_{i}$.
+
+--
+
+- If $i$ is .hi-pink[treated], then her weight is $1/p(\text{X}_{i}) = 1/0.80 = 1.25$
+
+--
+
+- If $i$ is .hi-purple[control], then her weight is $1/(1-p(\text{X}_{i})) = 1/(1-0.80) = 5$
+
+--
+
+And guess what $5/1.25$ is...
+
+--
+ $4$!
+
+--
+ This weighting scheme gets us back to equal representation for each set of $\text{X}_{i}$.
+---
+## Weighting: Last issue
+
+.note[Practical issue] Nothing guarantees $\sum_i \hat{p}(\text{X}_{i}) = 1$.
+
+--
+
+.note[Solution] Normalize weights by their total sum.
+
+--
+
+Applying the normalized (and estimated) propensity scores
+$$
+\begin{align}
+  \hat{\tau}_{p\text{Weight}} = \sum_{i=1}^N \dfrac{ \dfrac{\text{D}_{i}\text{Y}_{i}}{\hat{p}(\text{X}_{i})} }{\sum_{i} \dfrac{\text{D}_{i}}{\hat{p}(\text{X}_{i})}} -
+  \sum_{i=1}^N \dfrac{ \dfrac{(1-\text{D}_{i})\text{Y}_{i}}{1-\hat{p}(\text{X}_{i})} }{\sum_{i} \dfrac{(1-\text{D}_{i})}{1-\hat{p}(\text{X}_{i})}}
+\end{align}
+$$
+
+--
+
+Hirano, Imbens, and Ridder (2003) suggests this estimator is efficient.
+---
+name: two
+## Why choose one?
+
+There's nothing special about weighted averages—regression can weight.
+
+Thus, a .hi-slate[regression-based estimate]
+$$
+\begin{align}
+  \text{Y}_{i} = \alpha + \text{X}_{i}\beta + \tau \text{D}_{i} + u_i
+\end{align}
+$$
+--
+with .hi-slate[weights]
+$$
+\begin{align}
+  w_i = \sqrt{\dfrac{\text{D}_{i}}{\hat{p}(\text{X}_{i})} + \dfrac{(1-\text{D}_{i})}{1-\hat{p}(\text{X}_{i})}}
+\end{align}
+$$
+--
+offers a *doubly robust* property—you have two chances to be right: $p(\text{X}_{i})$ or the regression specification.
+---
+## Why choose one? Part two
+
+An alternative, doubly robust method combines propensity-score blocking with regression.
+
+--
+
+.note[Step 1] For each block $k$, we run the regression
+$$
+\begin{align}
+  \text{Y}_{i} = \alpha_k + \text{X}_{i} \beta_k + \tau_k \text{D}_{i} + u_i
+\end{align}
+$$
+
+--
+
+.note[Step 2] Aggregate block-level treatment-effect estimates
+$$
+\begin{align}
+  \hat{\tau} = \sum_{k=1}^K \hat{\tau}_k \dfrac{N_{1k} + N_{0k}}{N}
+\end{align}
+$$
+---
+## Major requirements
+
+Don't get (too) caught up in the bells and whistles.
+
+We still have two .hi-slate[major] requirements for any of these methods to work?
+
+--
+
+1. Is the .hi-slate[conditional-independence assumption] true?
+
+--
+
+2. Do we have .hi-slate[overlap] between treatment and control units.
+
+--
+
+We can look for evidence of (.hi-slate[2]) in the data—particularly if we're using propensity-score methods..super[.pink[†]]
+
+How? Plot the distributions of $p(\text{X}_{i})$ for .hi-pink[T] and .hi-purple[C].
+
+.footnote[.pink[†] Checking for overlap in $\text{X}$-space, can be tough as the dimensions of $\text{X}$ expand.
+]
+---
+layout: false
+class: clear, middle
+
+Overlap in $\hat{p}(\text{X}_{i})$
+```{R, ex-overlap, echo = F}
+# Set seed
+set.seed(123)
+# Sample size
+n <- 1e3
+# Generate data
+overlap <- tibble(
+  x = runif(n = n, min = 10, max = 90),
+  e = rnorm(n),
+  p = (x + e) / 100,
+  trt = rbinom(n = n, size = 1, prob = p),
+)
+overlap$p_hat <- glm(trt ~ x, data = overlap, family = "binomial")$fitted.values
+# Plot
+ggplot(
+  data = overlap,
+  aes(
+    x = p_hat,
+    fill = factor(trt, labels = c("C", "T"))
+  )
+) +
+geom_density(color = NA, alpha = 0.8) +
+geom_hline(yintercept = 0) +
+scale_fill_manual("", values = c(purple, red_pink)) +
+theme_minimal(base_size = 20, base_family = "Fira Sans Book") +
+xlab("Est. Pr(D=1|X)") +
+ylab("Density") +
+theme(
+  axis.title = element_text(family = "STIXGeneral", size = 22, face = "italic"),
+  panel.grid.major = element_line(size = 0.5, color = "grey95"),
+  panel.grid.minor = element_line(size = 0.5, color = "grey95"),
+  legend.position = "bottom"
+)
+```
+---
+class: clear, middle
+
+.note[Note] Overlap in 1 dimension does not guarantee in 2D
+```{R, ex-overlap2, echo = F}
+# Data
+t_df <- tibble(
+  race = rep(c(0, 1), times = 2),
+  gender = rep(c(0, 1), each = 2),
+  p = c(1, 0, 0, 1) %>% as.factor()
+)
+c_df <- tibble(
+  race = rep(c(0, 1), times = 2),
+  gender = rep(c(0, 1), each = 2),
+  p = c(0, 1, 1, 0) %>% as.factor()
+)
+gg_t <- ggplot(data = t_df, aes(x = race, y = gender, fill = p)) +
+geom_tile(color = "black") +
+theme_minimal(base_size = 22, base_family = "Fira Sans Book") +
+coord_equal() +
+scale_fill_manual("Prop. score", values = c("grey10", "white")) +
+scale_y_continuous("", breaks = c(0,1), labels = c("Male", "Female")) +
+scale_x_continuous("", breaks = c(0,1), labels = c("Black", "White")) +
+ggtitle("Treatment") +
+theme(
+  panel.grid.major = element_blank(),
+  panel.grid.minor = element_blank(),
+  legend.position = "none"
+)
+gg_c <- ggplot(data = c_df, aes(x = race, y = gender, fill = p)) +
+geom_tile(color = "black") +
+theme_minimal(base_size = 22, base_family = "Fira Sans Book") +
+coord_equal() +
+scale_fill_manual("Prop. score", values = c("grey10", "white")) +
+scale_y_continuous("", breaks = c(0,1), labels = c("Male", "Female")) +
+scale_x_continuous("", breaks = c(0,1), labels = c("Black", "White")) +
+ggtitle("Control") +
+theme(
+  panel.grid.major = element_blank(),
+  panel.grid.minor = element_blank(),
+  legend.position = "none"
+)
+grid.arrange(gg_t, gg_c, ncol = 2)
+```
 
 ---
 layout: false
@@ -1094,6 +1372,7 @@ layout: false
   - [Heterogeneity](#heterogeneity)
   - [Blocking on $p(\text{X}_{i})$](#blocking)
   - [Weighting with $p(\text{X}_{i})$](#weighting)
+  - [Doubly robust methods](#two)
 ]
 ]
 ---

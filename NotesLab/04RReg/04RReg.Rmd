@@ -478,6 +478,7 @@ Regression with `estimatr`
 
 Logit models (logistic regression)
 
+- [Discussion of logit models in metrics and finance](https://www.sciencedirect.com/topics/economics-econometrics-and-finance/logit-model)
 - [Examples and discussion](https://stats.idre.ucla.edu/r/dae/logit-regression/)
 - [Interpretting results from logit models](https://stats.idre.ucla.edu/other/mult-pkg/faq/general/faq-how-do-i-interpret-odds-ratios-in-logistic-regression/)
 ---

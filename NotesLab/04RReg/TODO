@@ -1,2 +1,5 @@
 
-- Regression
+- Typo (two 1.'s for `felm` and `lm_robust`)
+- 12/31 add categorical variables
+- Interpretation (additional discussion?) for `logit`?
+- Least absolute deviations regression?

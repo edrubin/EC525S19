@@ -1,0 +1,1293 @@
+---
+title: "Matching"
+subtitle: "EC 425/525, Set 7"
+author: "Edward Rubin"
+date: "`r format(Sys.time(), '%d %B %Y')`"
+output:
+  xaringan::moon_reader:
+    css: ['default', 'metropolis', 'metropolis-fonts', 'my-css.css']
+    # self_contained: true
+    nature:
+      highlightStyle: github
+      highlightLines: true
+      countIncrementalSlides: false
+---
+class: inverse, middle
+
+```{R, setup, include = F}
+# devtools::install_github("dill/emoGG")
+library(pacman)
+p_load(
+  broom, tidyverse,
+  ggplot2, ggthemes, ggforce, ggridges,
+  latex2exp, viridis, extrafont, gridExtra,
+  kableExtra, snakecase, janitor,
+  data.table, dplyr,
+  lubridate, knitr,
+  estimatr, here, magrittr
+)
+# Define pink color
+red_pink <- "#e64173"
+turquoise <- "#20B2AA"
+orange <- "#FFA500"
+red <- "#fb6107"
+blue <- "#3b3b9a"
+green <- "#8bb174"
+grey_light <- "grey70"
+grey_mid <- "grey50"
+grey_dark <- "grey20"
+purple <- "#6A5ACD"
+slate <- "#314f4f"
+# Dark slate grey: #314f4f
+# Knitr options
+opts_chunk$set(
+  comment = "#>",
+  fig.align = "center",
+  fig.height = 7,
+  fig.width = 10.5,
+  warning = F,
+  message = F
+)
+opts_chunk$set(dev = "svg")
+options(device = function(file, width, height) {
+  svg(tempfile(), width = width, height = height)
+})
+options(crayon.enabled = F)
+options(knitr.table.format = "html")
+# A blank theme for ggplot
+theme_empty <- theme_bw() + theme(
+  line = element_blank(),
+  rect = element_blank(),
+  strip.text = element_blank(),
+  axis.text = element_blank(),
+  plot.title = element_blank(),
+  axis.title = element_blank(),
+  plot.margin = structure(c(0, 0, -0.5, -1), unit = "lines", valid.unit = 3L, class = "unit"),
+  legend.position = "none"
+)
+theme_simple <- theme_bw() + theme(
+  line = element_blank(),
+  panel.grid = element_blank(),
+  rect = element_blank(),
+  strip.text = element_blank(),
+  axis.text.x = element_text(size = 18, family = "STIXGeneral"),
+  axis.text.y = element_blank(),
+  axis.ticks = element_blank(),
+  plot.title = element_blank(),
+  axis.title = element_blank(),
+  # plot.margin = structure(c(0, 0, -1, -1), unit = "lines", valid.unit = 3L, class = "unit"),
+  legend.position = "none"
+)
+theme_axes_math <- theme_void() + theme(
+  text = element_text(family = "MathJax_Math"),
+  axis.title = element_text(size = 22),
+  axis.title.x = element_text(hjust = .95, margin = margin(0.15, 0, 0, 0, unit = "lines")),
+  axis.title.y = element_text(vjust = .95, margin = margin(0, 0.15, 0, 0, unit = "lines")),
+  axis.line = element_line(
+    color = "grey70",
+    size = 0.25,
+    arrow = arrow(angle = 30, length = unit(0.15, "inches")
+  )),
+  plot.margin = structure(c(1, 0, 1, 0), unit = "lines", valid.unit = 3L, class = "unit"),
+  legend.position = "none"
+)
+theme_axes_serif <- theme_void() + theme(
+  text = element_text(family = "MathJax_Main"),
+  axis.title = element_text(size = 22),
+  axis.title.x = element_text(hjust = .95, margin = margin(0.15, 0, 0, 0, unit = "lines")),
+  axis.title.y = element_text(vjust = .95, margin = margin(0, 0.15, 0, 0, unit = "lines")),
+  axis.line = element_line(
+    color = "grey70",
+    size = 0.25,
+    arrow = arrow(angle = 30, length = unit(0.15, "inches")
+  )),
+  plot.margin = structure(c(1, 0, 1, 0), unit = "lines", valid.unit = 3L, class = "unit"),
+  legend.position = "none"
+)
+theme_axes <- theme_void() + theme(
+  text = element_text(family = "Fira Sans Book"),
+  axis.title = element_text(size = 18),
+  axis.title.x = element_text(hjust = .95, margin = margin(0.15, 0, 0, 0, unit = "lines")),
+  axis.title.y = element_text(vjust = .95, margin = margin(0, 0.15, 0, 0, unit = "lines")),
+  axis.line = element_line(
+    color = grey_light,
+    size = 0.25,
+    arrow = arrow(angle = 30, length = unit(0.15, "inches")
+  )),
+  plot.margin = structure(c(1, 0, 1, 0), unit = "lines", valid.unit = 3L, class = "unit"),
+  legend.position = "none"
+)
+theme_set(theme_gray(base_size = 20))
+# Column names for regression results
+reg_columns <- c("Term", "Est.", "S.E.", "t stat.", "p-Value")
+# Function for formatting p values
+format_pvi <- function(pv) {
+  return(ifelse(
+    pv < 0.0001,
+    "<0.0001",
+    round(pv, 4) %>% format(scientific = F)
+  ))
+}
+format_pv <- function(pvs) lapply(X = pvs, FUN = format_pvi) %>% unlist()
+# Tidy regression results table
+tidy_table <- function(x, terms, highlight_row = 1, highlight_color = "black", highlight_bold = T, digits = c(NA, 3, 3, 2, 5), title = NULL) {
+  x %>%
+    tidy() %>%
+    select(1:5) %>%
+    mutate(
+      term = terms,
+      p.value = p.value %>% format_pv()
+    ) %>%
+    kable(
+      col.names = reg_columns,
+      escape = F,
+      digits = digits,
+      caption = title
+    ) %>%
+    kable_styling(font_size = 20) %>%
+    row_spec(1:nrow(tidy(x)), background = "white") %>%
+    row_spec(highlight_row, bold = highlight_bold, color = highlight_color)
+}
+```
+
+$$
+\begin{align}
+  \def\ci{\perp\mkern-10mu\perp}
+\end{align}
+$$
+
+
+# Prologue
+
+---
+name: schedule
+
+# Schedule
+
+## Last time
+
+- The conditional independence assumption: $\left( \text{Y}_{0i},\, \text{Y}_{1i}\right) \ci \text{D}_{i}\big| \text{X}_{i}$
+- Omitted variable bias
+- Good *vs.* bad controls
+
+## Today
+
+- Return first round of project proposals.
+- Matching estimators (*MHE* 3.2 and Cameron and Trivedi 25.4).
+
+## Upcoming
+
+- Admin: Assignment and midterm
+- Next round of the project proposal
+
+---
+name: follow-up
+
+# Follow up
+
+## OLS weighting
+
+At the beginning of the lecture, we discussed OLS weights—especially for heterogeneous treatment effects.
+
+We should keep our questions clear.
+
+1. Which weights on $\beta_1$ and $\beta_2$ recover $\beta_{12}$, where $\beta_i$ comes from a regression using observations in group $i$?
+
+2. What does $\beta$ represent when the treatment effect is heterogeneous?
+
+More soon.
+
+---
+layout: true
+# Matching
+
+---
+class: inverse, middle
+---
+name: gist
+## The gist
+
+Remember the .hi[conditional independence assumption].super[.pink[†]] in a setting—_i.e._, treatment is as-good-as random conditional on a known set of covariates?
+
+.footnote[.pink[†] AKA "selection on observables"]
+
+
+.hi[Matching estimators] take us at our word.
+
+
+If we really believe $\left(\text{Y}_{1i},\, \text{Y}_{0i} \right)\ci \text{D}_{i}|\text{X}_{i}$, then we can just calculate a bunch of treatment effects conditional on $\text{X}_{i}$, _i.e._,
+$$
+\begin{align}
+  \tau(x) = \mathop{E}\left[ \text{Y}_{1i} - \text{Y}_{0i} \mid \text{X}_{i} = x \right]
+\end{align}
+$$
+
+
+.note[The idea:] Estimate a treatment effect only using observations with (nearly?) identical values of $\text{X}_{i}$.
+ The CIA buys us causality within these groups.
+---
+name: goals
+## Goals
+
+Let's return to .b[the fundamental problem of causal inference] for a moment.
+
+1. We want/need to know $\tau_i = \text{Y}_{1i} - \text{Y}_{0i}$.
+2. We cannot simultaneously observe *both* $\text{Y}_{1i}$ *and* $\text{Y}_{0i}$.
+
+
+Most empirical strategies boil to strategies to estimate $\text{Y}_{0i}$ for treated individuals—the unobservable counterfactual for the treatment group.
+
+
+Matching is no different.
+
+We match untreated observations to treated observations using $\text{X}_{i}$, _i.e._, calculate a $\widehat{\text{Y}_{0i}}$ for each $\text{Y}_{1i}$, based upon "matched" untreated individuals.
+---
+## More formally
+
+We want to construct a counterfactual for each individual with $\text{D}_{i}=1$.
+
+
+The counterfactual for $i$ should only use individuals that match $\text{X}_{i}$.
+
+
+Let there be $N_T$ treated individuals and $N_C$ control individuals. We want
+- $N_T$ sets of weights
+- with $N_C$ weights in each set
+: $w_i(j)\, \left( i = 1,\,\ldots,\, N_T;\, j=1,\,\ldots,\, N_C \right)$
+
+
+Assume $\sum_j w_i(j) = 1$. Our estimate for the counterfactual of treated $i$ is
+$$
+\begin{align}
+  \widehat{\text{Y}_{0i}} = \sum_{j\in \left( D=0 \right)} w_i(j) \text{Y}_{j}
+\end{align}
+$$
+---
+name: generic
+## More formally
+
+If our estimated counterfactual for treated individual $i$ is
+$$
+\begin{align}
+  \widehat{\text{Y}_{0i}} = \sum_j w_i(j) \text{Y}_{j}
+\end{align}
+$$
+then our estimated treatment effect (for individual $i$) is
+$$
+\begin{align}
+  \hat{\tau}_i = \text{Y}_{1i} - \widehat{\text{Y}_{0i}} = \text{Y}_{1i} - \sum_j w_i(j) \text{Y}_{j}
+\end{align}
+$$
+
+
+∴ a generic matching estimator for the treatment effect on the treated is
+$$
+\begin{align}
+  \hat{\tau}_M = \dfrac{1}{N_T} \sum_{i \in \left( \text{D}=1 \right)} \left( \text{Y}_{1i} - \widehat{\text{Y}_{0i}} \right) = \dfrac{1}{N_T} \sum_{i \in \left( \text{D}=1 \right)} \left( \text{Y}_{1i} - \sum_{j\in \left( D=0 \right)} w_i(j) \text{Y}_{j} \right)
+\end{align}
+$$
+---
+name: weights
+## Weight for it.super[.pink[†]]
+
+So all we need is those weights and we're done..super[.pink[††]]
+
+.footnote[
+.pink[†] 🤦 .pink[††] Plus an interesting, policy-relevant setting with valid conditional independence. And data.
+]
+
+
+.qa[Q] Where does one find these handy weights?
+
+
+.qa[A] You've got options, but you need to choose carefully/responsibly.
+
+*E.g.*, if $w_i(j) = \frac{1}{N_C}$ for all $(i,j)$, then we're back to a difference in means.
+<br> This weighting doesn't abide by our conditional independence assumption.
+
+
+.note[The plan] Choose weights $w_i(j)$ that indicate .hi-slate[*how close*] $\text{X}_{j}$ is to $\text{X}_{i}$.
+---
+name: discrete
+## Proximity
+
+Our weights $w_i(j)$ should be a measure of .hi-slate[*how close*] $\text{X}_{j}$ is to $\text{X}_{i}$.
+
+
+If $\text{X}$ is .hi-pink[discrete], then we can consider equality, _i.e._, $w_i(j) = \mathbb{I}(\text{X}_{i} = \text{X}_{j})$, scaling as necessary to get $\sum_j w_i(j) = 1$.
+
+---
+name: nn-euclidean
+## Proximity
+
+Our weights $w_i(j)$ should be a measure of .hi-slate[*how close*] $\text{X}_{j}$ is to $\text{X}_{i}$.
+
+If $\text{X}$ is .hi-purple[continuous], then we need .it[proximity] rather than .it[equality].
+
+
+.purple[*Nearest-neighbor* matching] chooses the single closest control observation using the Euclidean distance between $\text{X}_{i}$ and $\text{X}_{j}$, _i.e._,
+
+$$
+\begin{align}
+  \text{d}_{i,j} = \left( \text{X}_{i} - \text{X}_{j} \right)'\left(\text{X}_{i} - \text{X}_{j}\right)
+\end{align}
+$$
+
+
+- $\hat{\tau}_i = \text{Y}_{1i} - \text{Y}_{0j}^i$, where $\text{Y}_{0j}^i$ is $i$'s nearest neighbor in the control group.
+- .hi-slate[Estimator:] $\hat{\tau}_M = \frac{1}{N_T} \sum_i \hat{\tau}_i$
+- Produces causal estimates if CIA is valid *and* we have sufficient overlap.
+- Suffers from arbitrary choices of units.
+
+---
+name: nn-mahalanobis
+## Proximity
+
+Our weights $w_i(j)$ should be a measure of .hi-slate[*how close*] $\text{X}_{j}$ is to $\text{X}_{i}$.
+
+If $\text{X}$ is .hi-purple[continuous], then we need .it[proximity] rather than .it[equality].
+
+.purple[*Nearest-neighbor* matching with Mahalanobis distance] chooses the single closest control using .purple[Mahalanobis] distance between $\text{X}_{i}$ and $\text{X}_{j}$, _i.e._,
+
+$$
+\begin{align}
+  \text{d}_{i,j} = \left( \text{X}_{i} - \text{X}_{j} \right)' \Sigma_{X}^{-1} \left(\text{X}_{i} - \text{X}_{j}\right)
+\end{align}
+$$
+where $\Sigma_{X}^{-1}$ is the covariance matrix of $\text{X}$.
+
+
+- .hi-slate[Estimator:] $\hat{\tau}_M = \frac{1}{N_T} \sum_i \hat{\tau}_i$ where $\left(\hat{\tau}_i = \text{Y}_{1i} - \text{Y}_{0j}^i\right)$
+- Produces causal estimates if CIA is valid *and* we have sufficient overlap.
+- Does not suffer from arbitrary choices of units.
+---
+## More neighbors?
+
+Why limit ourselves to a .b[single] "best" match?
+
+If we're going to let a function/algorithm choose the *nearest* match, can't we also let the function/algorithm choose *how many* matches?
+
+Furthermore, if $N_C \gg N_T$, it we're throwing away *a lot* of information.
+
+We could instead use this information and be more efficient.
+
+---
+name: kernel
+## More neighbors!
+
+.purple[Kernel matching] gives positive weight to all control observations within some .hi-slate[bandwidth] $h$, with higher weight for closer matches determined by some .hi-slate[kernel function] $K(\cdot)$,
+$$
+\begin{align}
+  w_i(j) = \dfrac{K\!\!\left( \dfrac{\text{X}_{j} - \text{X}_{i}}{h} \right)}{\sum_{j\in(D=0)} K\!\!\left(\dfrac{\text{X}_{j} - \text{X}_{i}}{h} \right)}
+\end{align}
+$$
+
+
+.ex[Example] The *Epanechnikov kernel* is defined as
+$$
+\begin{align}
+  K(z) = \dfrac{3}{4} \left( 1 - z^2 \right) \times \mathbb{I}\!\left( |z| < 1 \right)
+\end{align}
+$$
+
+---
+layout: false
+class: clear
+
+.hi-orange[The Epanechnikov kernel] $K(z) = \frac{3}{4} \left( 1 - z^2 \right) \times \mathbb{I}\!\left( |z| < 1 \right)$
+
+```{R, epanechnikov, echo = F}
+ggplot(
+  data = data.frame(x = c(-2.5, 2.5)),
+  aes(x = x)
+) +
+geom_hline(
+  yintercept = 0,
+  color = "grey70"
+) +
+stat_function(
+  fun = function(x) 3/4 * (abs(x) <= 1) * (1 - x^2),
+  color = orange,
+  size = 2.5
+) +
+ylim(0, 1) +
+xlab("z") +
+ylab("K(z)") +
+theme_minimal(base_size = 20, base_family = "Fira Sans Book") +
+theme(
+  axis.title = element_text(family = "STIXGeneral", face = "italic", size = 22),
+  panel.grid.major = element_line(size = 0.5, color = "grey95"),
+  panel.grid.minor = element_line(size = 0.5, color = "grey95")
+)
+```
+---
+layout: false
+class: clear
+
+```{R, ex_epanechnikov, echo = F, fig.height = 3.7}
+ggplot(
+  data = data.frame(x = c(-2.5, 2.5)),
+  aes(x = x)
+) +
+geom_hline(
+  yintercept = 0,
+  color = "grey70"
+) +
+stat_function(
+  fun = function(x) 3/4 * (abs(x) <= 1) * (1 - x^2),
+  color = orange,
+  size = 2.5
+) +
+ylim(0, 1) +
+xlab("z") +
+ylab("K(z)") +
+theme_minimal(base_size = 20, base_family = "Fira Sans Book") +
+theme(
+  axis.title = element_text(family = "STIXGeneral", face = "italic", size = 22),
+  panel.grid.major = element_line(size = 0.5, color = "grey95"),
+  panel.grid.minor = element_line(size = 0.5, color = "grey95")
+)
+```
+
+---
+class: clear
+count: false
+
+```{R, ex_epa_point, echo = F, fig.height = 3.7}
+epa_fun <- function(x) 3/4 * (abs(x) <= 1) * (1 - x^2)
+set.seed(123)
+tmp <- tibble(x = runif(7, -2, 2), y = 0, k = epa_fun(x), w = k / sum(k))
+ggplot(
+  data = data.frame(x = c(-2.5, 2.5)),
+  aes(x = x)
+) +
+geom_hline(
+  yintercept = 0,
+  color = "grey70"
+) +
+stat_function(
+  fun = function(x) 3/4 * (abs(x) <= 1) * (1 - x^2),
+  color = orange,
+  size = 2.5
+) +
+geom_segment(
+  data = tmp,
+  aes(x = x, xend = x, y = y, yend = k),
+  color = slate,
+  linetype = "solid"
+) +
+geom_point(
+  data = tmp,
+  aes(x, k),
+  color = slate,
+  size = 4.5
+) +
+geom_point(
+  data = tmp,
+  aes(x, y),
+  color = slate,
+  fill = "white",
+  size = 4.5,
+  shape = 21
+) +
+annotate(
+  geom = "text",
+  x = -2.5, y = 0.875,
+  label = "Mapping data into the kernel",
+  family = "Fira Sans Book",
+  size = 7,
+  hjust = 0,
+  vjust = 0,
+  color = slate
+) +
+ylim(0, 1) +
+xlab("z") +
+ylab("K(z)") +
+theme_minimal(base_size = 20, base_family = "Fira Sans Book") +
+theme(
+  axis.title = element_text(family = "STIXGeneral", face = "italic", size = 22),
+  panel.grid.major = element_line(size = 0.5, color = "grey95"),
+  panel.grid.minor = element_line(size = 0.5, color = "grey95")
+)
+```
+
+
+```{R, ex_weights, echo = F, fig.height = 3.7}
+ggplot(
+  data = data.frame(x = c(-2.5, 2.5)),
+  aes(x = x)
+) +
+geom_hline(
+  yintercept = 0,
+  color = "grey70"
+) +
+stat_function(
+  fun = function(x) 3/4 * (abs(x) <= 1) * (1 - x^2),
+  color = NA,
+  size = 2.5
+) +
+geom_point(
+  data = tmp,
+  aes(x, w),
+  color = purple,
+  size = 4.5
+) +
+annotate(
+  geom = "text",
+  x = -2.5, y = 0.45,
+  label = "Observations' weights",
+  family = "Fira Sans Book",
+  size = 7,
+  hjust = 0,
+  vjust = 0,
+  color = purple
+) +
+ylim(0, 0.5) +
+xlab("z") +
+ylab("w") +
+theme_minimal(base_size = 20, base_family = "Fira Sans Book") +
+theme(
+  axis.title = element_text(family = "STIXGeneral", face = "italic", size = 22),
+  panel.grid.major = element_line(size = 0.5, color = "grey95"),
+  panel.grid.minor = element_line(size = 0.5, color = "grey95")
+)
+```
+---
+layout: false
+class: clear
+
+.hi-orange[The Epanechnikov kernel] $K(z) = \frac{3}{4} \left( 1 - z^2 \right) \times \mathbb{I}\!\left( |z| < 1 \right)$
+
+```{R, epanechnikov2, echo = F}
+ggplot(
+  data = data.frame(x = c(-2.5, 2.5)),
+  aes(x = x)
+) +
+geom_hline(
+  yintercept = 0,
+  color = "grey70"
+) +
+stat_function(
+  fun = function(x) 3/4 * (abs(x) <= 1) * (1 - x^2),
+  color = orange,
+  size = 2.5
+) +
+ylim(0, 1) +
+xlab("z") +
+ylab("K(z)") +
+theme_minimal(base_size = 20, base_family = "Fira Sans Book") +
+theme(
+  axis.title = element_text(family = "STIXGeneral", face = "italic", size = 22),
+  panel.grid.major = element_line(size = 0.5, color = "grey95"),
+  panel.grid.minor = element_line(size = 0.5, color = "grey95")
+)
+```
+---
+layout: false
+class: clear
+
+.hi-orange[The Triangle kernel] $K(z) = \left( 1 - |z| \right) \times \mathbb{I}\!\left( |z| < 1 \right)$
+
+```{R, triangle, echo = F}
+ggplot(
+  data = data.frame(x = c(-2.5, 2.5)),
+  aes(x = x)
+) +
+geom_hline(
+  yintercept = 0,
+  color = "grey70"
+) +
+stat_function(
+  fun = function(x) (abs(x) <= 1) * (1 - abs(x)),
+  color = orange,
+  size = 2.5
+) +
+ylim(0, 1) +
+xlab("z") +
+ylab("K(z)") +
+theme_minimal(base_size = 20, base_family = "Fira Sans Book") +
+theme(
+  axis.title = element_text(family = "STIXGeneral", face = "italic", size = 22),
+  panel.grid.major = element_line(size = 0.5, color = "grey95"),
+  panel.grid.minor = element_line(size = 0.5, color = "grey95")
+)
+```
+---
+layout: false
+class: clear
+
+.hi-orange[The Uniform kernel] $K(z) = \frac{1}{2} \times \mathbb{I}\!\left( |z| < 1 \right)$
+
+```{R, uniform, echo = F}
+ggplot(
+  data = data.frame(x = c(-2.5, 2.5)),
+  aes(x = x)
+) +
+geom_hline(
+  yintercept = 0,
+  color = "grey70"
+) +
+stat_function(
+  fun = function(x) (abs(x) <= 1) * 1/2,
+  n = 1e3,
+  color = orange,
+  size = 2.5
+) +
+ylim(0, 1) +
+xlab("z") +
+ylab("K(z)") +
+theme_minimal(base_size = 20, base_family = "Fira Sans Book") +
+theme(
+  axis.title = element_text(family = "STIXGeneral", face = "italic", size = 22),
+  panel.grid.major = element_line(size = 0.5, color = "grey95"),
+  panel.grid.minor = element_line(size = 0.5, color = "grey95")
+)
+```
+---
+layout: false
+class: clear
+
+.hi-orange[The Gaussian kernel] $K(z) = \left( 2\pi \right)^{-1/2}  \exp\left(-z^2/2 \right)$
+
+```{R, gaussian, echo = F}
+ggplot(
+  data = data.frame(x = c(-2.5, 2.5)),
+  aes(x = x)
+) +
+geom_hline(
+  yintercept = 0,
+  color = "grey70"
+) +
+stat_function(
+  fun = function(x) (2 * pi)^(-1/2) * exp(-x^2/2),
+  color = orange,
+  size = 2.5
+) +
+ylim(0, 1) +
+xlab("z") +
+ylab("K(z)") +
+theme_minimal(base_size = 20, base_family = "Fira Sans Book") +
+theme(
+  axis.title = element_text(family = "STIXGeneral", face = "italic", size = 22),
+  panel.grid.major = element_line(size = 0.5, color = "grey95"),
+  panel.grid.minor = element_line(size = 0.5, color = "grey95")
+)
+```
+---
+# Kernels
+## Aside
+
+Kernel functions are good for more than just matching.
+
+You will most commonly see/use them smoothing out densities—providing a smooth, moving-window average.
+
+
+_E.g._, .mono[R]'s (`ggplot2`'s) smooth, density-plotting function `geom_density()`.
+
+`geom_density()` defaults to `kernel = "gaussian"`, but you can specify many other kernel functions (including `"epanechnikov"`).
+
+
+You can also change the `bandwidth` argument. The default is a bandwidth-choosing function called `bw.nrd0()`.
+---
+layout: true
+# Matching
+
+---
+## Adding neighbors
+
+As we add more neighbors—either moving from $1$ to $n>1$ or increasing our bandwidth—we potentially increase the efficiency of our estimator.
+
+
+We need to .hi[be careful not to add *too many* controls] for each treated $i$.
+
+
+CIA requires that we're actually conditioning on the observables—it does not allow us to take a simple average across all control observations.
+---
+## The curse of dimensionality.super[.pink[†]]
+
+.footnote[.pink[†] I'm not sure if this is a title for Harry Potter or Indiana Jones... crossover anyone?]
+
+It turns out kernel- and bandwidth-selection are not our biggest enemies.
+
+
+As the dimension of $\text{X}$ expands (matching on more variables), it becomes .hi[harder and harder to find a nice, close control] for each treated unit.
+
+
+We need a way to shrink the dimensionality of $\text{X}$.
+---
+layout: true
+# Propensity-score methods
+
+---
+class: inverse, middle
+---
+name: setup
+## Setup
+
+Let's begin with two assumptions—one old and one new.
+
+1. .hi-purple[Conditional independence:] $\left( \text{Y}_{0i},\, \text{Y}_{1i} \right) \ci \text{D}_{i}|\text{X}_{i}$
+
+2. .hi-purple[Overlap:] $0 < \mathop{\text{Pr}}\left(\text{D}_{i} = 1 \mid \text{X}_{i}\right) < 1$
+
+
+We can estimate an average treatment effect by conditioning on $\text{X}_{i}$.
+
+
+However, overlap may fail if the dimensions of $X$ are large and $N$ is finite.
+
+
+.hi[Propensity scores provide a solution] to this mess.
+---
+name: magic
+## The magic
+
+It turns out that if $\left( \text{Y}_{0i},\,\text{Y}_{1i} \right) \ci \text{D}_{i}|\text{X}_{i},\,$ then we actually only need to match/condition on $p(\text{X}_{i}) = \mathop{E}\left[ \text{D}_{i} | \text{X}_{i} \right]$.
+
+
+$p(\text{X}_{i})$ is the .attn[propensity score]
+, the probability of treatment given $\text{X}_{i}.$
+
+
+.attn[Propensity-score theorem] If $\left( \text{Y}_{0i},\,\text{Y}_{1i} \right) \ci \text{D}_{i}|\text{X}_{i},\,$ then $\left( \text{Y}_{0i},\,\text{Y}_{1i} \right) \ci \text{D}_{i}|p(\text{X}_{i}).$
+
+
+This theorem extends our CIA to a one-dimensional score, avoiding the curse of dimensionality.
+---
+layout: true
+# Propensity-score methods
+
+.note[Theorem] If $\left( \text{Y}_{0i},\,\text{Y}_{1i} \right) \ci \text{D}_{i}|\text{X}_{i},\,$ then $\left( \text{Y}_{0i},\,\text{Y}_{1i} \right) \ci \text{D}_{i}|p(\text{X}_{i}).$
+
+## Proof
+
+---
+name: proof
+
+
+To prove this theorem, we will show $\mathop{\text{Pr}}\left(\text{D}_{i}=1 \mid \text{Y}_{0i},\, \text{Y}_{1i},\, p(\text{X}_{i})\right) = p(\text{X}_{i})$, _i.e._, $\text{D}_{i}$ is independent of $\left( \text{Y}_{0i},\, \text{Y}_{1i} \right)$ after conditioning on $p(\text{X}_{i})$.
+
+---
+count: false
+
+$\mathop{\text{Pr}}\!\bigg[\text{D}_{i}=1 \bigg| \text{Y}_{0i},\, \text{Y}_{1i},\, p(\text{X}_{i})\bigg]$
+
+.pad-left[
+$=\mathop{E}\!\bigg[\text{D}_i \bigg| \text{Y}_{0i},\, \text{Y}_{1i},\, p(\text{X}_{i})\bigg]$
+]
+
+.pad-left[
+$=\mathop{E}\!\bigg[ \mathop{E}\!\bigg(\text{D}_i \bigg| \text{Y}_{0i},\, \text{Y}_{1i},\, p(\text{X}_{i}),\, \text{X}_{i} \bigg) \bigg| \text{Y}_{0i},\, \text{Y}_{1i},\, p(\text{X}_{i})\bigg]$
+]
+
+.pad-left[
+$=\mathop{E}\!\bigg[ \mathop{E}\!\bigg(\text{D}_i \bigg| \text{Y}_{0i},\, \text{Y}_{1i},\, \text{X}_{i} \bigg) \bigg| \text{Y}_{0i},\, \text{Y}_{1i},\, p(\text{X}_{i})\bigg]$
+]
+---
+
+$\mathop{\text{Pr}}\!\bigg[\text{D}_{i}=1 \bigg| \text{Y}_{0i},\, \text{Y}_{1i},\, p(\text{X}_{i})\bigg]= \cdots =\mathop{E}\!\bigg[ \mathop{E}\!\bigg(\text{D}_i \bigg| \text{Y}_{0i},\, \text{Y}_{1i},\, \text{X}_{i} \bigg) \bigg| \text{Y}_{0i},\, \text{Y}_{1i},\, p(\text{X}_{i})\bigg]$
+
+.pad-left[
+$=\mathop{E}\!\bigg[ \mathop{E}\!\bigg(\text{D}_i \bigg| \text{X}_{i} \bigg) \bigg| \text{Y}_{0i},\, \text{Y}_{1i},\, p(\text{X}_{i})\bigg]$
+]
+
+.pad-left[
+$=\mathop{E}\!\bigg[ p(\text{X}_{i}) \bigg| \text{Y}_{0i},\, \text{Y}_{1i},\, p(\text{X}_{i})\bigg]$
+]
+
+.pad-left[
+$=p(\text{X}_{i})$
+]
+
+
+∴ $\left( \text{Y}_{0i},\,\text{Y}_{1i} \right) \ci \text{D}_{i}|\text{X}_{i} \implies \left( \text{Y}_{0i},\,\text{Y}_{1i} \right) \ci \text{D}_{i}|p(\text{X}_{i})$ .orange[✔]
+---
+layout: true
+# Propensity-score methods
+
+---
+name: intuition
+## Intuition
+
+.qa[Q] What's going on here?
+
+$\text{X}_{i}$ carries way more information than $p(\text{X}_{i})$, so how can we still get conditional independence of treatment by only conditioning on $p(\text{X}_{i})$?
+
+
+.qa[A].sub[.pink[1]] Conditional independence of treatment isn't about extracting all of the information possible from $\text{X}_{i}$. We actually only care about creating a situation in which $\text{D}_{i}|$something is independent of $\left( \text{Y}_{0i},\,\text{Y}_{1i} \right)$.
+
+
+.qa[A].sub[.pink[2]] Back to our main concern: .hi[selection bias]. People select into treatment. If $\text{X}$ says two people were equally likely to be treated, and if $\text{X}_{i}$ explains all of selection (CIA), then there cannot be selection between these two people.
+---
+name: estimation
+## Estimation
+
+So where do propensity scores come from?
+
+
+We estimate them—and there are a lot of ways to do that.
+
+1. Flexible (_i.e._, interactions) logit specification
+2. Kernel regression (remember kernel functions?)
+3. Many others—machine learning, series-logit estimator, *etc.*
+
+
+.qa[Q] Can we just use plain OLS (linear probability model)?
+
+
+.qa[A] Sort of. Think about FWL. This route is going to be the same as a regression conditioning on $\text{X}_{i}$.
+
+---
+## Estimation
+
+From *MHE* (p. 83)
+
+.qa[Question]
+
+> A big question here is how to best model and estimate $p(\text{X}_{i})$...
+
+.qa[Answer]
+
+> The answer to this is inherently application-specific. A growing empirical literature suggests that a logit model for the propensity score with a few polynomial terms in continuous covariates works well in practice...
+---
+name: application
+## Application
+
+So you have some estimated propensity scores $\hat{p}(\text{X}_{i})$. What next?
+
+
+.note[Option 1] Conditioning via regression
+
+
+.note[Option 1a] Use a .b[regression to condition] on $p(\text{X}_{i})$, _i.e._,
+$$
+\begin{align}
+   \text{Y}_{i} = \alpha + \delta \text{D}_{i} + \beta p(\text{X}_{i}) + u_i \tag{1a}
+\end{align}
+$$
+
+
+.note[Option 1b] If we think treatment effects are heterogeneous and may covary with $\text{X}$, then we might want to also .b[interact] treatment with $p(\text{X}_{i})$, _i.e._,
+$$
+\begin{align}
+   \text{Y}_{i} = \alpha + \delta_1 \text{D}_{i} + \delta_2 \text{D}_{i} p(\text{X}_{i}) + \beta p(\text{X}_{i}) + u_i \tag{1b}
+\end{align}
+$$
+---
+name: heterogeneity
+## Heterogeneity with regression
+
+Let's think a bit more about heterogeneous treatment effects in this setting.
+$$
+\begin{align}
+  \text{Y}_{0i} &= \alpha + \beta \text{X}_{i} + u_i \\
+  \text{Y}_{1i} &= \text{Y}_{0i} + \delta_1 + \delta_2 \text{X}_{i}
+\end{align}
+$$
+_i.e._, the treatment effect depends upon $\text{X}_{i}$.
+
+
+$\text{Y}_{i} = \text{D}_{i}\text{Y}_{1i} + \left( 1 - \text{D}_{i} \right) \text{Y}_{0i}$
+
+.pad-left[
+$= \text{D}_{i}\bigg( \text{Y}_{0i} + \delta_1 + \delta_2 \text{X}_{i} \bigg) + \left( 1 - \text{D}_{i} \right) \text{Y}_{0i}$
+]
+
+.pad-left[
+$= \text{Y}_{0i} + \delta_1 \text{D}_{i} + \delta_2 \text{D}_{i} \text{X}_{i}$
+]
+
+.pad-left[
+$= \alpha + \delta_1 \text{D}_{i} + \delta_2 \text{D}_{i} \text{X}_{i} + \beta \text{X}_{i} + u_i$
+]
+
+---
+## Heterogeneity
+
+This final equation
+$$
+\begin{align}
+  \text{Y}_{i} = \alpha + \delta_1 \text{D}_{i} + \delta_2 \text{D}_{i} \text{X}_{i} + \beta \text{X}_{i} + u_i
+\end{align}
+$$
+
+
+suggests that we want $p(\text{X}_{i})$ *and* $\text{D}_{i}p(\text{X}_{i})$, _i.e._,
+$$
+\begin{align}
+   \text{Y}_{i} = \alpha + \delta_1 \text{D}_{i} + \delta_2 \text{D}_{i} p(\text{X}_{i}) + \beta p(\text{X}_{i}) + u_i \tag{1b}
+\end{align}
+$$
+
+
+which yields
+1. a .hi-slate[group-specific treatment effect] $\delta_1 + \delta_2 \text{X}_{i}$ for each $\text{X}_{i}$
+
+2. an .hi-slate[average treatment effect] $\delta_1 + \delta_2 \overline{p}(\text{X}_{i})$
+---
+## More flexibility
+
+We motivated propensity scores with a desire to reduce dimensionality and estimate/choose/assume fewer parameters.
+
+Adding $p(\text{X}_{i})$ and $\text{D}_{i}p(\text{X}_{i})$ as covariates in a linear regression doesn't quite exhaust our potential for flexible/nonparametric estimation.
+
+---
+name: blocking
+## Blocking
+
+.note[Option 2] Block (stratify) on propensity scores.
+
+
+1. Divide the range of $\hat{p}(\text{X}_{i})$ into $K$ blocks (_e.g._, 0.05-wide blocks).
+
+1. Place each observation into a block via its $\hat{p}(\text{X}_{i})$.
+
+1. Calculate $\hat{\tau}_k$ for each block via difference in means.
+
+1. Average the $\hat{\tau}_k$ using their shares of the sample, _i.e._,
+
+$$
+\begin{align}
+  \hat{\tau}_\text{Block} = \sum_{k = 1}^K  \hat{\tau}_k \dfrac{N_{1k} + N_{0k}}{N}
+\end{align}
+$$
+
+
+.note[Note] Blocking is similar to NN/kernel matching using $p(\text{X}_{i})$ as distance.
+---
+## Choosing blocks
+
+Blocking on propensity scores requires defining defining blocks.
+
+One common route involves some iteration.
+
+1. .hi[Choose blocks].
+
+1. Check the .hi[balance of the covariates] within each block..super[.pink[†]]
+
+  - If covariates are .pink[not balanced], then split your blocks and repeat.
+
+  - If covariates are .pink[balanced], then stop.
+
+.footnote[.pink[†] Keep multiple-hypothesis testing in mind. With many covariates and many blocks, you are bound to find statistically significant relationships—even if you are balanced in truth.]
+
+---
+## Overlap
+
+Blocking emphasizes our overlap assumption, _i.e._, $0<\mathop{\text{Pr}}\left(\text{D}_{i} | \text{X}_{i}\right)<1$.
+
+If a block contains zero treated/control units, we cannot calculate $\hat{\tau}_k$.
+
+
+.attn[Caution] Logit can hide violations—it forces $0 < \hat{p}(\text{X}_{i}) < 1$.
+
+
+.note[Common practice] Empirically enforce overlap:
+
+- Drop control units with $\hat{p}(\text{X}_{i})$ below the minimum propensity score in the treatment group.
+
+- Drop treated units with $\hat{p}(\text{X}_{i})$ above the maximum propensity score in the control group.
+---
+name: weighting
+## Weighting
+
+.note[Option 3] Weight observations by the inverse propensity score.
+
+
+.qa[Q] How does weighting by $1/\hat{p}(\text{X}_{i})$ make sense?
+
+
+.qa[A] Consider our old (likely biased) friend the difference in means, _i.e._,
+$$
+\begin{align}
+  \hat{\tau}_\text{Diff} = \overline{\text{Y}}_\text{T} - \overline{\text{Y}}_\text{C} = \dfrac{\sum_i \text{D}_{i} \text{Y}_{i}}{\sum_i \text{D}_{i}} - \dfrac{\sum_i \left(1 - \text{D}_{i}\right) \text{Y}_{i}}{\sum_i \left(1 - \text{D}_{i}\right)}
+\end{align}
+$$
+which we've discussed is biased due to selection into treatment, _i.e._,
+$$
+\begin{align}
+  \mathop{E}\left[ \text{Y}_{0i} | \text{D}_{i} = 1 \right] \neq \mathop{E}\left[ \text{Y}_{0i} \right]
+\end{align}
+$$
+---
+## Weighting, justified
+
+Suppose we know $p(\text{X}_{i})$ and we weight each .hi-pink[treated] individual by $1/p(\text{X}_{i})$
+
+
+$\mathop{E}\left[ \dfrac{\text{D}_{i} \text{Y}_{i}}{p(\text{X}_{i})} \right]$
+
+ $= \mathop{E}\left[ \dfrac{\text{D}_{i}\left(\text{D}_{i}\text{Y}_{1i} + (1-\text{D}_{i})\text{Y}_{0i}\right)}{p(\text{X}_{i})} \right]$
+
+ $= \mathop{E}\left[ \dfrac{\text{D}_{i} \text{Y}_{1i}}{p(\text{X}_{i})} \right]$
+
+<br><br>  $= \mathop{E}\!\bigg( \mathop{E}\left[ \dfrac{\text{D}_{i}\text{Y}_{1i}}{p(\text{X}_{i})} \;\middle|\; \text{X}_{i} \right] \bigg)$
+
+ $= \mathop{E}\!\bigg( \dfrac{\mathop{E}\left[ \text{D}_{i} \mid \text{X}_{i} \right] \mathop{E}\left[ \text{Y}_{1i} \mid \text{X}_{i} \right]}{p(\text{X}_{i})} \bigg)$
+
+<br><br>  $= \mathop{E}\!\bigg( \dfrac{p(\text{X}_{i}) \mathop{E}\left[ \text{Y}_{1i} \mid \text{X}_{i} \right]}{p(\text{X}_{i})} \bigg)$
+
+ $= \mathop{E}\!\bigg( \mathop{E}\left[ \text{Y}_{1i} \mid \text{X}_{i} \right] \bigg)$
+
+ $\color{#e64173}{= \mathop{E}\left[ \text{Y}_{1i} \right]}$
+
+
+Similarly, weighting .hi-purple[control] individuals by $1/(1-p(\text{X}_{i}))$ yields
+$$
+\begin{align}
+  \mathop{E}\left[ \dfrac{(1-\text{D}_{i})\text{Y}_{i}}{1-p(\text{X}_{i})} \right] = \color{#6A5ACD}{\mathop{E}\left[ \text{Y}_{0i} \right]}
+\end{align}
+$$
+---
+## Weighting: The estimator
+
+Thus, we can estimate an unbiased treatment effect via
+$$
+\begin{align}
+  \hat{\tau}_{p\text{Weight}} = \dfrac{1}{N} \sum_{i=1}^N \left[ \dfrac{\text{D}_{i}\text{Y}_{i}}{p(\text{X}_{i})} - \dfrac{(1-\text{D}_{i}\text{Y}_{i})}{1 - p(\text{X}_{i})} \right]
+\end{align}
+$$
+
+
+.note[Intuition] We're trying to overcome selection bias, _i.e._, treated individuals were more likely to be treated as a function of $\text{X}_{i}$—producing higher $p(\text{X}_{i})$.
+
+
+We want to get back to *as-good-as random* variation in treatment.
+
+So we upweight .pink[(**1**) .hi-pink[treated] individuals with low] $\color{#e64173}{p(\text{X}_{i})}$ and .purple[(**2**) .hi-purple[control] observations with high] $\color{#6A5ACD}{p(\text{X}_{i})}$.
+---
+## Weighting: The example
+
+Suppose for some individual $i$, $p(\text{X}_{i}) = 0.80$.
+
+
+This propensity score says someone with this set of $\text{X}_{i}$ was four-times more likely to be .hi-pink[treated] than .hi-purple[control].
+
+
+Our weights fix this imbalance for each $\text{X}_{i}$.
+
+
+- If $i$ is .hi-pink[treated], then her weight is $1/p(\text{X}_{i}) = 1/0.80 = 1.25$
+
+
+- If $i$ is .hi-purple[control], then her weight is $1/(1-p(\text{X}_{i})) = 1/(1-0.80) = 5$
+
+
+And guess what $5/1.25$ is...
+
+ $4$!
+
+ This weighting scheme gets us back to equal representation for each set of $\text{X}_{i}$.
+---
+## Weighting: Last issue
+
+.note[Practical issue] Nothing guarantees $\sum_i \hat{p}(\text{X}_{i}) = 1$.
+
+
+.note[Solution] Normalize weights by their total sum.
+
+
+Applying the normalized (and estimated) propensity scores
+$$
+\begin{align}
+  \hat{\tau}_{p\text{Weight}} = \sum_{i=1}^N \dfrac{ \dfrac{\text{D}_{i}\text{Y}_{i}}{\hat{p}(\text{X}_{i})} }{\sum_{i} \dfrac{\text{D}_{i}}{\hat{p}(\text{X}_{i})}} -
+  \sum_{i=1}^N \dfrac{ \dfrac{(1-\text{D}_{i})\text{Y}_{i}}{1-\hat{p}(\text{X}_{i})} }{\sum_{i} \dfrac{(1-\text{D}_{i})}{1-\hat{p}(\text{X}_{i})}}
+\end{align}
+$$
+
+
+Hirano, Imbens, and Ridder (2003) suggests this estimator is efficient.
+---
+name: two
+## Why choose one?
+
+There's nothing special about weighted averages—regression can weight.
+
+Thus, a .hi-slate[regression-based estimate]
+$$
+\begin{align}
+  \text{Y}_{i} = \alpha + \text{X}_{i}\beta + \tau \text{D}_{i} + u_i
+\end{align}
+$$
+with .hi-slate[weights]
+$$
+\begin{align}
+  w_i = \sqrt{\dfrac{\text{D}_{i}}{\hat{p}(\text{X}_{i})} + \dfrac{(1-\text{D}_{i})}{1-\hat{p}(\text{X}_{i})}}
+\end{align}
+$$
+offers a *doubly robust* property—you have two chances to be right: $p(\text{X}_{i})$ or the regression specification.
+---
+## Why choose one? Part two
+
+An alternative, doubly robust method combines propensity-score blocking with regression.
+
+
+.note[Step 1] For each block $k$, we run the regression
+$$
+\begin{align}
+  \text{Y}_{i} = \alpha_k + \text{X}_{i} \beta_k + \tau_k \text{D}_{i} + u_i
+\end{align}
+$$
+
+
+.note[Step 2] Aggregate block-level treatment-effect estimates
+$$
+\begin{align}
+  \hat{\tau} = \sum_{k=1}^K \hat{\tau}_k \dfrac{N_{1k} + N_{0k}}{N}
+\end{align}
+$$
+---
+## Major requirements
+
+Don't get (too) caught up in the bells and whistles.
+
+We still have two .hi-slate[major] requirements for any of these methods to work?
+
+
+1. Is the .hi-slate[conditional-independence assumption] true?
+
+
+2. Do we have .hi-slate[overlap] between treatment and control units.
+
+
+We can look for evidence of (.hi-slate[2]) in the data—particularly if we're using propensity-score methods..super[.pink[†]]
+
+How? Plot the distributions of $p(\text{X}_{i})$ for .hi-pink[T] and .hi-purple[C].
+
+.footnote[.pink[†] Checking for overlap in $\text{X}$-space, can be tough as the dimensions of $\text{X}$ expand.
+]
+---
+layout: false
+class: clear, middle
+
+Overlap in $\hat{p}(\text{X}_{i})$
+```{R, ex-overlap, message = F, echo = F}
+# Set seed
+set.seed(123)
+# Sample size
+n <- 1e3
+# Generate data
+overlap <- tibble(
+  x = runif(n = n, min = 10, max = 90),
+  e = rnorm(n),
+  p = (x + e) / 100,
+  trt = rbinom(n = n, size = 1, prob = p),
+  p_hat = glm(trt ~ x, data = overlap, family = "binomial")$fitted.values
+)
+# Plot
+ggplot(
+  data = overlap,
+  aes(
+    x = p_hat,
+    fill = factor(trt, labels = c("C", "T"))
+  )
+) +
+geom_density(color = NA, alpha = 0.8) +
+geom_hline(yintercept = 0) +
+scale_fill_manual("", values = c(purple, red_pink)) +
+theme_minimal(base_size = 20, base_family = "Fira Sans Book") +
+xlab("Est. Pr(D=1|X)") +
+ylab("Density") +
+theme(
+  axis.title = element_text(family = "STIXGeneral", size = 22, face = "italic"),
+  panel.grid.major = element_line(size = 0.5, color = "grey95"),
+  panel.grid.minor = element_line(size = 0.5, color = "grey95"),
+  legend.position = "bottom"
+)
+```
+---
+class: clear, middle
+
+.note[Note] Overlap in 1 dimension does not guarantee in 2D
+```{R, ex-overlap2, echo = F}
+# Data
+t_df <- tibble(
+  race = rep(c(0, 1), times = 2),
+  gender = rep(c(0, 1), each = 2),
+  p = c(1, 0, 0, 1) %>% as.factor()
+)
+c_df <- tibble(
+  race = rep(c(0, 1), times = 2),
+  gender = rep(c(0, 1), each = 2),
+  p = c(0, 1, 1, 0) %>% as.factor()
+)
+gg_t <- ggplot(data = t_df, aes(x = race, y = gender, fill = p)) +
+geom_tile(color = "black") +
+theme_minimal(base_size = 22, base_family = "Fira Sans Book") +
+coord_equal() +
+scale_fill_manual("Prop. score", values = c("grey10", "white")) +
+scale_y_continuous("", breaks = c(0,1), labels = c("Male", "Female")) +
+scale_x_continuous("", breaks = c(0,1), labels = c("Black", "White")) +
+ggtitle("Treatment") +
+theme(
+  panel.grid.major = element_blank(),
+  panel.grid.minor = element_blank(),
+  legend.position = "none"
+)
+gg_c <- ggplot(data = c_df, aes(x = race, y = gender, fill = p)) +
+geom_tile(color = "black") +
+theme_minimal(base_size = 22, base_family = "Fira Sans Book") +
+coord_equal() +
+scale_fill_manual("Prop. score", values = c("grey10", "white")) +
+scale_y_continuous("", breaks = c(0,1), labels = c("Male", "Female")) +
+scale_x_continuous("", breaks = c(0,1), labels = c("Black", "White")) +
+ggtitle("Control") +
+theme(
+  panel.grid.major = element_blank(),
+  panel.grid.minor = element_blank(),
+  legend.position = "none"
+)
+grid.arrange(gg_t, gg_c, ncol = 2)
+```
+
+---
+layout: false
+# Table of contents
+
+.pull-left[
+### Admin
+.smaller[
+
+1. [Schedule](#schedule)
+1. [Follow up](#follow-up)
+]
+
+### General matching
+.smaller[
+
+1. [The gist](#gist)
+1. [Goals](#goals)
+1. [Generic matching](#generic)
+1. [Weights](#weights)
+  - [Discrete $\text{X}$](#discrete)
+  - [Nearest neighbor, Euclidean](#nn-euclidean)
+  - [Nearest neighbor, Mahalanobis](#nn-mahalanobis)
+  - [Kernel matching](#kernel)
+]
+]
+
+.pull-right[
+
+### Propensity-score methods
+.smaller[
+
+1. [Setup](#setup)
+1. [Propensity-score theorem](#magic)
+  - [The magic](#magic)
+  - [The proof](#proof)
+  - [Intuition](#intuition)
+1. [Estimation](#estimation)
+1. [Application](#application)
+  - [Regression](#application)
+  - [Heterogeneity](#heterogeneity)
+  - [Blocking on $p(\text{X}_{i})$](#blocking)
+  - [Weighting with $p(\text{X}_{i})$](#weighting)
+  - [Doubly robust methods](#two)
+]
+]
+---
+exclude: true
+
+```{R, generate pdfs, include = F, eval = T}
+source("../../ScriptsR/unpause.R")
+```
