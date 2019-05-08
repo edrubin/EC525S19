@@ -5,5 +5,10 @@ Topics
 - Derive OVB formula (3.2.11)
 - Simulations
 - The effects of heterogeneous treatment effects (see pp.13–14 in Lecture 06 of ARE 213)
+- Simulation of bias for 1/b (b is estimate from OLS)
+  - Theory: Compare consistency and unbiasedness
+  - Does median regression help?
+- Simulation: Is a nonlinear first-stage unbiased/consistent?
+
 
 - Angrist 1998

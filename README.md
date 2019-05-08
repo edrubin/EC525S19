@@ -60,7 +60,7 @@ We will use two books.
 3. How can we learn about inference from simulation?
 4. How do we run (parallelized) simulations in R?
 
-**Note formats:** [.html](https://raw.githack.com/edrubin/EC525S19/master/NotesLecture/04Inference/04Inference.html) | [.html (no pause)](https://raw.githack.com/edrubin/EC525S19/master/NotesLecture/04Inference/03WhyRegression_NoPause.html) | [.pdf](https://raw.githack.com/edrubin/EC525S19/master/NotesLecture/04Inference/04Inference.pdf) | [.pdf (no pause)](https://raw.githack.com/edrubin/EC525S19/master/NotesLecture/04Inference/03WhyRegression_NoPause.pdf) | [.Rmd](https://raw.githack.com/edrubin/EC525S19/master/NotesLecture/04Inference/04Inference.Rmd)
+**Note formats:** [.html](https://raw.githack.com/edrubin/EC525S19/master/NotesLecture/04Inference/04Inference.html) | [.html (no pause)](https://raw.githack.com/edrubin/EC525S19/master/NotesLecture/04Inference/04Inference_NoPause.html) | [.pdf](https://raw.githack.com/edrubin/EC525S19/master/NotesLecture/04Inference/04Inference.pdf) | [.pdf (no pause)](https://raw.githack.com/edrubin/EC525S19/master/NotesLecture/04Inference/04Inference_NoPause.pdf) | [.Rmd](https://raw.githack.com/edrubin/EC525S19/master/NotesLecture/04Inference/04Inference.Rmd)
 <br>**Readings:** MHE chapter 3
 
 **[Lecture 05: Regression Stuff](https://raw.githack.com/edrubin/EC525S19/master/NotesLecture/05RegressionStuff/05RegressionStuff.html)**
@@ -69,7 +69,7 @@ We will use two books.
 1. When is regression causal?
 1. The conditional-independence assumption
 
-**Note formats:** [.html](https://raw.githack.com/edrubin/EC525S19/master/NotesLecture/05RegressionStuff/05RegressionStuff.html) | [.html (no pause)](https://raw.githack.com/edrubin/EC525S19/master/NotesLecture/05RegressionStuff/03WhyRegression_NoPause.html) | [.pdf](https://raw.githack.com/edrubin/EC525S19/master/NotesLecture/05RegressionStuff/05RegressionStuff.pdf) | [.pdf (no pause)](https://raw.githack.com/edrubin/EC525S19/master/NotesLecture/05RegressionStuff/03WhyRegression_NoPause.pdf) | [.Rmd](https://raw.githack.com/edrubin/EC525S19/master/NotesLecture/05RegressionStuff/05RegressionStuff.Rmd)
+**Note formats:** [.html](https://raw.githack.com/edrubin/EC525S19/master/NotesLecture/05RegressionStuff/05RegressionStuff.html) | [.html (no pause)](https://raw.githack.com/edrubin/EC525S19/master/NotesLecture/05RegressionStuff/05RegressionStuff_NoPause.html) | [.pdf](https://raw.githack.com/edrubin/EC525S19/master/NotesLecture/05RegressionStuff/05RegressionStuff.pdf) | [.pdf (no pause)](https://raw.githack.com/edrubin/EC525S19/master/NotesLecture/05RegressionStuff/05RegressionStuff_NoPause.pdf) | [.Rmd](https://raw.githack.com/edrubin/EC525S19/master/NotesLecture/05RegressionStuff/05RegressionStuff.Rmd)
 <br>**Readings:** Still MHE chapter 3
 
 **[Lecture 06: Controls](https://raw.githack.com/edrubin/EC525S19/master/NotesLecture/06Controls/06Controls.html)**
@@ -77,18 +77,26 @@ We will use two books.
 1. Omitted-variable bias
 1. Good and bad controls
 
-**Note formats:** [.html](https://raw.githack.com/edrubin/EC525S19/master/NotesLecture/06Controls/06Controls.html) | [.html (no pause)](https://raw.githack.com/edrubin/EC525S19/master/NotesLecture/06Controls/03WhyRegression_NoPause.html) | [.pdf](https://raw.githack.com/edrubin/EC525S19/master/NotesLecture/06Controls/06Controls.pdf) | [.pdf (no pause)](https://raw.githack.com/edrubin/EC525S19/master/NotesLecture/06Controls/03WhyRegression_NoPause.pdf) | [.Rmd](https://raw.githack.com/edrubin/EC525S19/master/NotesLecture/06Controls/06Controls.Rmd)
+**Note formats:** [.html](https://raw.githack.com/edrubin/EC525S19/master/NotesLecture/06Controls/06Controls.html) | [.html (no pause)](https://raw.githack.com/edrubin/EC525S19/master/NotesLecture/06Controls/06Controls_NoPause.html) | [.pdf](https://raw.githack.com/edrubin/EC525S19/master/NotesLecture/06Controls/06Controls.pdf) | [.pdf (no pause)](https://raw.githack.com/edrubin/EC525S19/master/NotesLecture/06Controls/06Controls_NoPause.pdf) | [.Rmd](https://raw.githack.com/edrubin/EC525S19/master/NotesLecture/06Controls/06Controls.Rmd)
 <br>**Readings:** Still MHE chapter 3
 
 *Another note on the notes:* I create the slides with [`xaringan`](https://github.com/yihui/xaringan/wiki) in [R](cran.r-project.org). Thanks to [Grant McDermott](grantmcdermott.com/) for encouraging me to make this switch.
 
 **[Lecture 07: Matching](https://raw.githack.com/edrubin/EC525S19/master/NotesLecture/07Matching/07Matching.html)**
 
-1. Omitted-variable bias
-1. Good and bad controls
+1. Matching estimators: Nearest neighbor and kernel
+1. Propensity-score methods: Regression control, treatment-effect heterogeneity, blocking, weighting, *doubly robust*
 
-**Note formats:** [.html](https://raw.githack.com/edrubin/EC525S19/master/NotesLecture/07Matching/07Matching.html) | [.html (no pause)](https://raw.githack.com/edrubin/EC525S19/master/NotesLecture/07Matching/03WhyRegression_NoPause.html) | [.pdf](https://raw.githack.com/edrubin/EC525S19/master/NotesLecture/07Matching/07Matching.pdf) | [.pdf (no pause)](https://raw.githack.com/edrubin/EC525S19/master/NotesLecture/07Matching/03WhyRegression_NoPause.pdf) | [.Rmd](https://raw.githack.com/edrubin/EC525S19/master/NotesLecture/07Matching/07Matching.Rmd)
-<br>**Readings:** Still MHE chapter 3
+**Note formats:** [.html](https://raw.githack.com/edrubin/EC525S19/master/NotesLecture/07Matching/07Matching.html) | [.html (no pause)](https://raw.githack.com/edrubin/EC525S19/master/NotesLecture/07Matching/07Matching_NoPause.html) | [.pdf](https://raw.githack.com/edrubin/EC525S19/master/NotesLecture/07Matching/07Matching.pdf) | [.pdf (no pause)](https://raw.githack.com/edrubin/EC525S19/master/NotesLecture/07Matching/07Matching_NoPause.pdf) | [.Rmd](https://raw.githack.com/edrubin/EC525S19/master/NotesLecture/07Matching/07Matching.Rmd)
+<br>**Readings:** MHE chapter 3 + Cameron and Trivedi section 25.4
+
+**[Lecture 08: Instrument Variables](https://raw.githack.com/edrubin/EC525S19/master/NotesLecture/08IV/08IV.html)**
+
+1. Matching estimators: Nearest neighbor and kernel
+1. Propensity-score methods: Regression control, treatment-effect heterogeneity, blocking, weighting, *doubly robust*
+
+**Note formats:** [.html](https://raw.githack.com/edrubin/EC525S19/master/NotesLecture/08IV/08IV.html) | [.html (no pause)](https://raw.githack.com/edrubin/EC525S19/master/NotesLecture/08IV/08IV_NoPause.html) | [.pdf](https://raw.githack.com/edrubin/EC525S19/master/NotesLecture/08IV/08IV.pdf) | [.pdf (no pause)](https://raw.githack.com/edrubin/EC525S19/master/NotesLecture/08IV/08IV_NoPause.pdf) | [.Rmd](https://raw.githack.com/edrubin/EC525S19/master/NotesLecture/08IV/08IV.Rmd)
+<br>**Readings:** MHE chapter 3 + Cameron and Trivedi section 25.4
 
 *Another note on the notes:* I create the slides with [`xaringan`](https://github.com/yihui/xaringan/wiki) in [R](cran.r-project.org). Thanks to [Grant McDermott](grantmcdermott.com/) for encouraging me to make this switch.
 
@@ -144,7 +152,7 @@ Step 1: **Research question (causal relationship of interest) and motivation.**
 
 **Metrics books**
 
-- [Cameron and Trivedi](https://www.cambridge.org/us/academic/subjects/economics/econometrics-statistics-and-mathematical-economics/microeconometrics-methods-and-applications?format=HB&isbn=9780521848053)
+- [**Cameron and Trivedi**](https://www.cambridge.org/us/academic/subjects/economics/econometrics-statistics-and-mathematical-economics/microeconometrics-methods-and-applications?format=HB&isbn=9780521848053) [My recommendation]
 - [Hayashi's *Econometrics*](https://press.princeton.edu/titles/6946.html)
 - [Kennedy](https://www.wiley.com/en-us/A+Guide+to+Econometrics)
 - [*Mastering 'Metrics*](http://masteringmetrics.com/) (undergrad version of *Mostly Harmless*)

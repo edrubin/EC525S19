@@ -1157,36 +1157,46 @@ How? Plot the distributions of $p(\text{X}_{i})$ for .hi-pink[T] and .hi-purple[
 .footnote[.pink[†] Checking for overlap in $\text{X}$-space, can be tough as the dimensions of $\text{X}$ expand.
 ]
 ---
+name: overlap
 layout: false
 class: clear, middle
 
-Overlap in $\hat{p}(\text{X}_{i})$
-```{R, ex-overlap, message = F, echo = F}
+Missing overlap in $p(\text{X}_{i})$
+```{R, ex-no-overlap, echo = F}
 # Set seed
 set.seed(123)
 # Sample size
 n <- 1e3
 # Generate data
-overlap <- tibble(
-  x = runif(n = n, min = 10, max = 90),
+no_overlap <- tibble(
+  x = runif(n = n, min = 15, max = 85),
   e = rnorm(n),
   p = (x + e) / 100,
-  trt = rbinom(n = n, size = 1, prob = p),
-  p_hat = glm(trt ~ x, data = overlap, family = "binomial")$fitted.values
-)
+  trt = rbinom(n = n, size = 1, prob = p)
+) %>% bind_rows(., tibble(
+  x = c(runif(100, min = 0, max = 15), runif(100, min = 85, max = 100)),
+  e = 0,
+  p = x / 100,
+  trt = rep(c(0,1), each = 100)
+))
+no_overlap$p_hat <- glm(trt ~ x, data = no_overlap, family = "binomial")$fitted.values
 # Plot
 ggplot(
-  data = overlap,
+  data = no_overlap,
   aes(
-    x = p_hat,
+    x = p,
     fill = factor(trt, labels = c("C", "T"))
   )
 ) +
-geom_density(color = NA, alpha = 0.8) +
+geom_density(
+  kernel = "epanechnikov",
+  color = NA,
+  alpha = 0.7
+) +
 geom_hline(yintercept = 0) +
 scale_fill_manual("", values = c(purple, red_pink)) +
 theme_minimal(base_size = 20, base_family = "Fira Sans Book") +
-xlab("Est. Pr(D=1|X)") +
+scale_x_continuous("p(X)", limits = c(0, 1)) +
 ylab("Density") +
 theme(
   axis.title = element_text(family = "STIXGeneral", size = 22, face = "italic"),
@@ -1198,7 +1208,68 @@ theme(
 ---
 class: clear, middle
 
-.note[Note] Overlap in 1 dimension does not guarantee in 2D
+Authentic (enforced) overlap in $p(\text{X}_{i})$
+```{R, ex-overlap-p, echo = F}
+# Plot
+ggplot(
+  data = no_overlap %>% filter(between(p, 0.15, 0.85)),
+  aes(
+    x = p,
+    fill = factor(trt, labels = c("C", "T"))
+  )
+) +
+geom_density(
+  kernel = "epanechnikov",
+  color = NA,
+  alpha = 0.7
+) +
+geom_hline(yintercept = 0) +
+scale_fill_manual("", values = c(purple, red_pink)) +
+theme_minimal(base_size = 20, base_family = "Fira Sans Book") +
+scale_x_continuous("Est. p(X)", limits = c(0.15, 0.85)) +
+ylab("Density") +
+theme(
+  axis.title = element_text(family = "STIXGeneral", size = 22, face = "italic"),
+  panel.grid.major = element_line(size = 0.5, color = "grey95"),
+  panel.grid.minor = element_line(size = 0.5, color = "grey95"),
+  legend.position = "bottom"
+)
+```
+---
+class: clear, middle
+
+Logit-based $\hat{p}(\text{X}_{i})$ hiding some of the missing overlap in $p(\text{X}_{i})$
+```{R, ex-no-overlap-logit, echo = F}
+# Plot
+ggplot(
+  data = no_overlap,
+  aes(
+    x = p_hat,
+    fill = factor(trt, labels = c("C", "T"))
+  )
+) +
+geom_density(
+  kernel = "epanechnikov",
+  color = NA,
+  alpha = 0.7
+) +
+geom_hline(yintercept = 0) +
+scale_fill_manual("", values = c(purple, red_pink)) +
+theme_minimal(base_size = 20, base_family = "Fira Sans Book") +
+scale_x_continuous("Est. p(X)", limits = c(0, 1)) +
+ylab("Density") +
+theme(
+  axis.title = element_text(family = "STIXGeneral", size = 22, face = "italic"),
+  panel.grid.major = element_line(size = 0.5, color = "grey95"),
+  panel.grid.minor = element_line(size = 0.5, color = "grey95"),
+  legend.position = "bottom"
+)
+```
+---
+class: clear, middle
+
+Overlap in one dimension does not guarantee in two dimensions.
+<br>.smallest[.note[Note] Shading denotes .hi-slate[share of treatment:] .gw[.grey-light[l]**white**.grey-light[l]]=0% and .hi-pink[pink]=100%.]
 ```{R, ex-overlap2, echo = F}
 # Data
 t_df <- tibble(
@@ -1206,40 +1277,42 @@ t_df <- tibble(
   gender = rep(c(0, 1), each = 2),
   p = c(1, 0, 0, 1) %>% as.factor()
 )
-c_df <- tibble(
-  race = rep(c(0, 1), times = 2),
-  gender = rep(c(0, 1), each = 2),
-  p = c(0, 1, 1, 0) %>% as.factor()
-)
+# c_df <- tibble(
+#   race = rep(c(0, 1), times = 2),
+#   gender = rep(c(0, 1), each = 2),
+#   p = c(0, 1, 1, 0) %>% as.factor()
+# )
 gg_t <- ggplot(data = t_df, aes(x = race, y = gender, fill = p)) +
-geom_tile(color = "black") +
+geom_tile(color = "grey80", size = 0.35) +
 theme_minimal(base_size = 22, base_family = "Fira Sans Book") +
 coord_equal() +
-scale_fill_manual("Prop. score", values = c("grey10", "white")) +
+scale_fill_manual("Prop. score", values = c(red_pink, "white")) +
 scale_y_continuous("", breaks = c(0,1), labels = c("Male", "Female")) +
 scale_x_continuous("", breaks = c(0,1), labels = c("Black", "White")) +
-ggtitle("Treatment") +
+# ggtitle("Treatment") +
 theme(
+  plot.title = element_text(color = red_pink),
   panel.grid.major = element_blank(),
   panel.grid.minor = element_blank(),
   legend.position = "none"
 )
-gg_c <- ggplot(data = c_df, aes(x = race, y = gender, fill = p)) +
-geom_tile(color = "black") +
-theme_minimal(base_size = 22, base_family = "Fira Sans Book") +
-coord_equal() +
-scale_fill_manual("Prop. score", values = c("grey10", "white")) +
-scale_y_continuous("", breaks = c(0,1), labels = c("Male", "Female")) +
-scale_x_continuous("", breaks = c(0,1), labels = c("Black", "White")) +
-ggtitle("Control") +
-theme(
-  panel.grid.major = element_blank(),
-  panel.grid.minor = element_blank(),
-  legend.position = "none"
-)
-grid.arrange(gg_t, gg_c, ncol = 2)
+# gg_c <- ggplot(data = c_df, aes(x = race, y = gender, fill = p)) +
+# geom_tile(color = "grey80", size = 0.35) +
+# theme_minimal(base_size = 22, base_family = "Fira Sans Book") +
+# coord_equal() +
+# scale_fill_manual("Prop. score", values = c(red_pink, "white")) +
+# scale_y_continuous("", breaks = c(0,1), labels = c("Male", "Female")) +
+# scale_x_continuous("", breaks = c(0,1), labels = c("Black", "White")) +
+# ggtitle("Control") +
+# theme(
+#   plot.title = element_text(color = purple),
+#   panel.grid.major = element_blank(),
+#   panel.grid.minor = element_blank(),
+#   legend.position = "none"
+# )
+# grid.arrange(gg_t, gg_c, ncol = 2)
+gg_t
 ```
-
 ---
 layout: false
 # Table of contents
@@ -1283,6 +1356,7 @@ layout: false
   - [Blocking on $p(\text{X}_{i})$](#blocking)
   - [Weighting with $p(\text{X}_{i})$](#weighting)
   - [Doubly robust methods](#two)
+1. [Overlap plots](#overlap)
 ]
 ]
 ---

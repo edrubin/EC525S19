@@ -1,0 +1,499 @@
+---
+title: "Instrumental Variables"
+subtitle: "EC 425/525, Set 8"
+author: "Edward Rubin"
+date: "`r format(Sys.time(), '%d %B %Y')`"
+output:
+  xaringan::moon_reader:
+    css: ['default', 'metropolis', 'metropolis-fonts', 'my-css.css']
+    # self_contained: true
+    nature:
+      highlightStyle: github
+      highlightLines: true
+      countIncrementalSlides: false
+---
+class: inverse, middle
+
+```{R, setup, include = F}
+# devtools::install_github("dill/emoGG")
+library(pacman)
+p_load(
+  broom, tidyverse,
+  ggplot2, ggthemes, ggforce, ggridges,
+  latex2exp, viridis, extrafont, gridExtra,
+  kableExtra, snakecase, janitor,
+  data.table, dplyr,
+  lubridate, knitr,
+  estimatr, here, magrittr
+)
+# Define pink color
+red_pink <- "#e64173"
+turquoise <- "#20B2AA"
+orange <- "#FFA500"
+red <- "#fb6107"
+blue <- "#3b3b9a"
+green <- "#8bb174"
+grey_light <- "grey70"
+grey_mid <- "grey50"
+grey_dark <- "grey20"
+purple <- "#6A5ACD"
+slate <- "#314f4f"
+# Dark slate grey: #314f4f
+# Knitr options
+opts_chunk$set(
+  comment = "#>",
+  fig.align = "center",
+  fig.height = 7,
+  fig.width = 10.5,
+  warning = F,
+  message = F
+)
+opts_chunk$set(dev = "svg")
+options(device = function(file, width, height) {
+  svg(tempfile(), width = width, height = height)
+})
+options(crayon.enabled = F)
+options(knitr.table.format = "html")
+# A blank theme for ggplot
+theme_empty <- theme_bw() + theme(
+  line = element_blank(),
+  rect = element_blank(),
+  strip.text = element_blank(),
+  axis.text = element_blank(),
+  plot.title = element_blank(),
+  axis.title = element_blank(),
+  plot.margin = structure(c(0, 0, -0.5, -1), unit = "lines", valid.unit = 3L, class = "unit"),
+  legend.position = "none"
+)
+theme_simple <- theme_bw() + theme(
+  line = element_blank(),
+  panel.grid = element_blank(),
+  rect = element_blank(),
+  strip.text = element_blank(),
+  axis.text.x = element_text(size = 18, family = "STIXGeneral"),
+  axis.text.y = element_blank(),
+  axis.ticks = element_blank(),
+  plot.title = element_blank(),
+  axis.title = element_blank(),
+  # plot.margin = structure(c(0, 0, -1, -1), unit = "lines", valid.unit = 3L, class = "unit"),
+  legend.position = "none"
+)
+theme_axes_math <- theme_void() + theme(
+  text = element_text(family = "MathJax_Math"),
+  axis.title = element_text(size = 22),
+  axis.title.x = element_text(hjust = .95, margin = margin(0.15, 0, 0, 0, unit = "lines")),
+  axis.title.y = element_text(vjust = .95, margin = margin(0, 0.15, 0, 0, unit = "lines")),
+  axis.line = element_line(
+    color = "grey70",
+    size = 0.25,
+    arrow = arrow(angle = 30, length = unit(0.15, "inches")
+  )),
+  plot.margin = structure(c(1, 0, 1, 0), unit = "lines", valid.unit = 3L, class = "unit"),
+  legend.position = "none"
+)
+theme_axes_serif <- theme_void() + theme(
+  text = element_text(family = "MathJax_Main"),
+  axis.title = element_text(size = 22),
+  axis.title.x = element_text(hjust = .95, margin = margin(0.15, 0, 0, 0, unit = "lines")),
+  axis.title.y = element_text(vjust = .95, margin = margin(0, 0.15, 0, 0, unit = "lines")),
+  axis.line = element_line(
+    color = "grey70",
+    size = 0.25,
+    arrow = arrow(angle = 30, length = unit(0.15, "inches")
+  )),
+  plot.margin = structure(c(1, 0, 1, 0), unit = "lines", valid.unit = 3L, class = "unit"),
+  legend.position = "none"
+)
+theme_axes <- theme_void() + theme(
+  text = element_text(family = "Fira Sans Book"),
+  axis.title = element_text(size = 18),
+  axis.title.x = element_text(hjust = .95, margin = margin(0.15, 0, 0, 0, unit = "lines")),
+  axis.title.y = element_text(vjust = .95, margin = margin(0, 0.15, 0, 0, unit = "lines")),
+  axis.line = element_line(
+    color = grey_light,
+    size = 0.25,
+    arrow = arrow(angle = 30, length = unit(0.15, "inches")
+  )),
+  plot.margin = structure(c(1, 0, 1, 0), unit = "lines", valid.unit = 3L, class = "unit"),
+  legend.position = "none"
+)
+theme_set(theme_gray(base_size = 20))
+# Column names for regression results
+reg_columns <- c("Term", "Est.", "S.E.", "t stat.", "p-Value")
+# Function for formatting p values
+format_pvi <- function(pv) {
+  return(ifelse(
+    pv < 0.0001,
+    "<0.0001",
+    round(pv, 4) %>% format(scientific = F)
+  ))
+}
+format_pv <- function(pvs) lapply(X = pvs, FUN = format_pvi) %>% unlist()
+# Tidy regression results table
+tidy_table <- function(x, terms, highlight_row = 1, highlight_color = "black", highlight_bold = T, digits = c(NA, 3, 3, 2, 5), title = NULL) {
+  x %>%
+    tidy() %>%
+    select(1:5) %>%
+    mutate(
+      term = terms,
+      p.value = p.value %>% format_pv()
+    ) %>%
+    kable(
+      col.names = reg_columns,
+      escape = F,
+      digits = digits,
+      caption = title
+    ) %>%
+    kable_styling(font_size = 20) %>%
+    row_spec(1:nrow(tidy(x)), background = "white") %>%
+    row_spec(highlight_row, bold = highlight_bold, color = highlight_color)
+}
+```
+
+$$
+\begin{align}
+  \def\ci{\perp\mkern-10mu\perp}
+\end{align}
+$$
+
+
+# Prologue
+
+---
+name: schedule
+
+# Schedule
+
+## Last time
+
+Mathching and propensity-score methods
+- Conditional independence
+- Overlap
+
+## Today
+
+Instrumental variables (and two-stage least squares)
+
+## Upcoming
+
+- Admin: Assignment/project proposal this weekend
+- Admin: Midterm very soon
+---
+layout: true
+# Research designs
+
+---
+class: inverse, middle
+---
+name: designs
+## Selection on observables and/or unobservables
+
+We've been focusing on .hi-slate[*selection-on-observables* designs], _i.e._,
+$$
+\begin{align}
+  \left(\text{Y}_{0i},\, \text{Y}_{1i}\right) \ci \text{D}_{i}|\text{X}_{i}
+\end{align}
+$$
+for .hi-slate[observable] variables $\text{X}_{i}$.
+
+--
+
+.hi-pink[*Selection-on-unobservable* designs] replace this assumption with two new (but related) assumptions
+
+1. $\left(\text{Y}_{0i},\, \text{Y}_{1i}\right) \perp \text{Z}_{i}$
+
+2. $\mathop{\text{Cov}} \left( \text{Z}_{i},\, \text{D}_{i} \right) \neq 0$
+
+---
+## Selection on observables and/or unobservables
+
+Our main goal in causal-inference minded (applied) econometrics boils down to isolating .b["good" variation] in $\text{D}_{i}$ (exogenous/as-good-as-random) from .b["bad" variation] (the part of $\text{D}_{i}$ correlated with $\text{Y}_{0i}$ and $\text{Y}_{1i}$).
+
+--
+
+(We want to avoid selection bias.)
+
+--
+
+- .hi-slate[Selection-on-observables designs] assume that we can control for all *bad variation* (selection) in $\text{D}_{i}$ through a known (observed) $\text{X}_{i}$.
+
+--
+
+- .hi-pink[Selection-on-unobservables designs] assume that we can extract part of the *good variation* in $\text{D}_{i}$ (generally using some $\text{Z}_{i}$) and then use this *good* part of $\text{D}_{i}$ to estimate the effect of $\text{D}_{i}$ on $\text{Y}_{i}$.
+--
+ We throw away the *bad variation* in $\text{D}_{i}$ (it's bad).
+---
+## Which route?
+
+So set of research designs is more palatable?
+
+--
+
+1. There are plenty of bad applications of both sets.<br>.orange[Violated assumptions, bad controls, *etc.*]
+
+--
+
+1. .hi-slate[Selection on observables] assumes we know .it[everything] about selection into treatment—we can identify .it[all] of the good (or bad) variation in $\text{D}_{i}$.
+--
+<br>.orange[Tough in non-experimental settings. Difficult to validate in practice.]
+
+--
+
+1. .hi-pink[Selection on unobservables] assumes we can isolate .it[some] good/clean variation in $\text{D}_{i}$, which we then use to estimate the effect of $\text{D}_{i}$ on $\text{Y}_{i}$.
+--
+<br>.orange[Seems more plausible. Possible to validate. May be underpowered.]
+---
+layout: true
+# Instrumental variables
+
+---
+name: intro
+## Introduction
+
+.attn[Instrumental variables] (IV).super[.pink[†]] is the canonical selection-on-unobservables design—isolating *good variation* in $\text{D}_{i}$ via some magical .pink[instrument] $\color{#e64173}{\text{Z}_{i}}$.
+
+.footnote[.pink[†] For the moment, we're lumping together IV and two-stage least squares (2SLS) together—as many people do—even though they are technically different.]
+
+--
+
+Consider some model (structural equation)
+$$
+\begin{align}
+  \text{Y}_{i} = \beta_0 + \beta_1 \text{D}_{i} + \varepsilon_i \tag{1}
+\end{align}
+$$
+To guarantee consistent OLS estimates for $\beta_1$, want $\mathop{\text{Cov}} \left( \text{D}_{i},\,\varepsilon_i \right)=0$.
+<br> In general, this is a heroic assumption.
+
+--
+
+.note[Alternative:] Estimate $\beta_1$ via instrumental variables.
+
+---
+name: defined
+## Definition
+
+For our model
+$$
+\begin{align}
+  \text{Y}_{i} = \beta_0 + \beta_1 \text{D}_{i} + \varepsilon_i \tag{1}
+\end{align}
+$$
+
+A valid .attn[instrument] is a variable $\color{#e64173}{\text{Z}_{i}}$ such that
+
+1. $\mathop{\text{Cov}} \left( \color{#e64173}{\text{Z}_{i}},\, \text{D}_{i} \right) \neq 0$
+--
+<br>our .pink[instrument] correlates with treatment
+--
+ (so we can keep part of $\text{D}_{i}$)
+
+--
+
+2. $\mathop{\text{Cov}} \left( \color{#e64173}{\text{Z}_{i}},\, \varepsilon_i \right) = 0$
+--
+<br>our .pink[instrument] is uncorrelated with other (non- $\!\!\text{D}_{i}$) determinants of $\text{Y}_{i}$
+--
+, _i.e._, $\color{#e64173}{\text{Z}_{i}}$ is excludable from equation $(1)$.
+--
+ .attn[(exclusion restriction)]
+---
+name: example
+## Example
+
+Back to the returns to a college degree,
+$$
+\begin{align}
+  \text{Income}_i = \beta_0 + \beta_1 \text{Grad}_i + \varepsilon_i
+\end{align}
+$$
+OLS is likely biased.
+
+--
+
+What if that state conducts a (random) .hi-pink[lottery] for scholarships?
+
+--
+
+Let $\color{#e64173}{\text{Lottery}_i}$ denote an indicator for whether $i$ won a lottery scholarship..super[.pink[†]]
+
+.footnote[.pink[†] We'll have to focus on families who were eligible/who applied.]
+
+--
+
+1. $\mathop{\text{Cov}} \left( \color{#e64173}{\text{Lottery}_i},\, \text{Grad}_i \right)\neq 0$ $\left( >0 \right)$ if scholarships increase grad. rates.
+
+--
+
+2. $\mathop{\text{Cov}} \left(\color{#e64173}{\text{Lottery}_i},\, \varepsilon_i\right) = 0$ since the lottery is randomized.
+---
+layout: true
+# Instrument variables
+## The IV estimator
+
+The IV estimator for our model
+$$
+\begin{align}
+  \text{Y}_{i} = \beta_0 + \beta_1 \text{D}_{i} + \varepsilon_i \tag{1}
+\end{align}
+$$
+with (valid) instrument $\color{#e64173}{\text{Z}_{i}}$ is
+$$
+\begin{align}
+   \hat{\beta}_\text{IV} = \left(\text{Z}'\text{D}\right)^{-1} \left( \text{Z}'\text{Y}\right)
+\end{align}
+$$
+
+---
+name: iv-estimator
+
+--
+
+If you have no covariates, then
+$$
+\begin{align}
+  \hat{\beta}_\text{IV} = \dfrac{\mathop{\text{Cov}} \left( \color{#e64173}{\text{Z}_{i}},\, \text{Y}_{i}\right)}{\mathop{\text{Cov}} \left( \color{#e64173}{\text{Z}_{i}},\, \text{D}_{i} \right)}
+\end{align}
+$$
+---
+
+If you have additional (exogenous) covariates $\text{X}_i$, then
+$$
+\begin{align}
+  \text{Z} &= \begin{bmatrix}\color{#e64173}{\text{Z}_{i}} & \text{X}_{i}\end{bmatrix}
+  \\[0.5em]
+  \text{D} &= \begin{bmatrix}\color{#e64173}{\text{D}_{i}} & \text{X}_{i}\end{bmatrix}
+\end{align}
+$$
+---
+layout: true
+# Instrumental variables
+
+---
+## Proof: Consistency
+
+With a valid instrument $\text{Z}_{i}$, $\hat{\beta}_\text{IV}$ is a consistent estiamtor for $\beta_1$ in
+$$
+\begin{align}
+  \text{Y}_{i} = \beta_0 + \beta_1 \text{X}_{i} + \varepsilon_i \tag{1}
+\end{align}
+$$
+
+$\mathop{\text{plim}}\left( \hat{\beta}_{IV} \right)$
+
+--
+.pad-left[
+$= \mathop{\text{plim}}\left( \left(\text{Z}'\text{D}\right)^{-1} \left( \text{Z}'\text{Y}\right) \right)$
+]
+
+--
+.pad-left[
+$= \mathop{\text{plim}}\left( \left(\text{Z}'\text{D}\right)^{-1} \left( \text{Z}'\text{D} \beta + \text{Z}'\varepsilon\right) \right)$
+]
+
+--
+.pad-left[
+$= \mathop{\text{plim}}\left( \left(\text{Z}'\text{D}\right)^{-1} \left( \text{Z}'\text{D}\right) \beta\right) + \mathop{\text{plim}}\left(\dfrac{1}{N} \text{Z}'\text{D}\right)^{-1} \mathop{\text{plim}}\left( \dfrac{1}{N} \text{Z}'\varepsilon\right)$
+]
+
+--
+.pad-left[
+$=\beta$  .pink[✔]
+]
+---
+layout: true
+# Two-stage least squares
+
+---
+class: inverse, middle
+---
+name: setup
+## Setup
+
+You'll commonly see IV implemented as a two-stage process known as<br>.attn[two-stage least squares] (2SLS).
+
+--
+
+.attn[First stage] Estimate the effect of the instrument $\color{#e64173}{\text{Z}_{i}}$ on our endogenous variable $\text{D}_{i}$ and (predetermined) covariates $\text{X}_{i}$. Save $\color{#6A5ACD}{\widehat{\text{D}}_{i}}$.
+
+$$
+\begin{align}
+  \text{D}_{i} = \gamma_1 \color{#e64173}{\text{Z}_{i}} + \gamma_2 \text{X}_{i} + u_i
+\end{align}
+$$
+
+--
+
+.attn[Second stage] Estimate model we wanted—but only using the variation in $\text{D}_{i}$ that correlates with $\color{#e64173}{\text{Z}_{i}}$, _i.e._, $\color{#6A5ACD}{\widehat{\text{D}}_{i}}$.
+
+$$
+\begin{align}
+  \text{Y}_{i} = \beta_1 \color{#6A5ACD}{\widehat{\text{D}}_{i}} + \beta_2 \text{X}_{i} + \varepsilon_i
+\end{align}
+$$
+
+.note[Note] The controls $\text{X}_{i}$ must match in the first and second stages.
+
+---
+## IV estimation
+
+This two-step procedure, with a valid instrument, produces an estimator $\hat{\beta}_1$ that is consistent for $\beta_1$.
+
+$$
+\begin{align}
+  \hat{\beta}_\text{2SLS} &= \left( \text{D}' \text{P}_{\text{Z}} \text{D} \right)^{-1} \left( \text{D}' \text{P}_{\text{Z}} \text{Y} \right)
+  \\[0.3em]
+  \text{P}_{\text{Z}} &= \text{Z} \left( \text{Z}'\text{Z} \right)^{-1} \text{Z}'
+\end{align}
+$$
+
+where $\text{D}$ is a matrix of our treatment and predetermined covariates $\left( \text{X}_{i} \right)$ and $Z$ is a matrix of our instrument and our predetermined covariates.
+
+---
+## IV estimation
+
+Important notes
+
+- The controls $\left( \text{X}_{i} \right)$ must match in the first and second stages.
+
+- If you have exactly .hi-slate[one instrument] and exactly .hi-slate[one endogenous variable], then 2SLS and IV are identical.
+
+- Your second-stage standard errors are not correct.
+
+---
+layout: false
+# Table of contents
+
+.pull-left[
+### Admin
+.smaller[
+
+1. [Schedule](#schedule)
+]
+
+### Instrumental variables
+.smaller[
+1. [Research designs](#designs)
+1. [Introduction](#intro)
+1. [Definition](#defined)
+1. [Example](#example)
+1. [IV estimator](#iv-estimator)
+]
+
+]
+
+.pull-right[
+
+### Two-stage least squares
+.smaller[
+1. [Setup](#setup)
+
+]
+]
+---
+exclude: true
+
+```{R, generate pdfs, include = F, eval = T}
+source("../../ScriptsR/unpause.R")
+unpause("08IV.Rmd", ".", T, T)
+```

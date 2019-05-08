@@ -99,6 +99,15 @@
   color: #000000 !important;
 }
 
+.bw {
+  background-color: rgb(0, 0, 0);
+  color: #ffffff;
+}
+.gw {
+  background-color: #d2d2d2;
+  color: #ffffff;
+}
+
 /* Mono-spaced font */
 .mono {
   font-family: monospace;

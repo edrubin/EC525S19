@@ -4,7 +4,7 @@
     <title>Matching</title>
     <meta charset="utf-8">
     <meta name="author" content="Edward Rubin" />
-    <meta name="date" content="2019-05-06" />
+    <meta name="date" content="2019-05-07" />
     <link href="07Matching_files/remark-css-0.0.1/default.css" rel="stylesheet" />
     <link href="07Matching_files/remark-css-0.0.1/metropolis.css" rel="stylesheet" />
     <link href="07Matching_files/remark-css-0.0.1/metropolis-fonts.css" rel="stylesheet" />
@@ -17,7 +17,7 @@ class: center, middle, inverse, title-slide
 # Matching
 ## EC 425/525, Set 7
 ### Edward Rubin
-### 06 May 2019
+### 07 May 2019
 
 ---
 
@@ -888,17 +888,28 @@ How? Plot the distributions of `\(p(\text{X}_{i})\)` for .hi-pink[T] and .hi-pur
 .footnote[.pink[†] Checking for overlap in `\(\text{X}\)`-space, can be tough as the dimensions of `\(\text{X}\)` expand.
 ]
 ---
+name: overlap
 layout: false
 class: clear, middle
 
-Overlap in `\(\hat{p}(\text{X}_{i})\)`
-&lt;img src="07Matching_files/figure-html/ex-overlap-1.svg" style="display: block; margin: auto;" /&gt;
+Missing overlap in `\(p(\text{X}_{i})\)`
+&lt;img src="07Matching_files/figure-html/ex-no-overlap-1.svg" style="display: block; margin: auto;" /&gt;
 ---
 class: clear, middle
 
-.note[Note] Overlap in 1 dimension does not guarantee in 2D
-&lt;img src="07Matching_files/figure-html/ex-overlap2-1.svg" style="display: block; margin: auto;" /&gt;
+Authentic (enforced) overlap in `\(p(\text{X}_{i})\)`
+&lt;img src="07Matching_files/figure-html/ex-overlap-p-1.svg" style="display: block; margin: auto;" /&gt;
+---
+class: clear, middle
 
+Logit-based `\(\hat{p}(\text{X}_{i})\)` hiding some of the missing overlap in `\(p(\text{X}_{i})\)`
+&lt;img src="07Matching_files/figure-html/ex-no-overlap-logit-1.svg" style="display: block; margin: auto;" /&gt;
+---
+class: clear, middle
+
+Overlap in one dimension does not guarantee in two dimensions.
+&lt;br&gt;.smallest[.note[Note] Shading denotes .hi-slate[share of treatment:] .gw[.grey-light[l]**white**.grey-light[l]]=0% and .hi-pink[pink]=100%.]
+&lt;img src="07Matching_files/figure-html/ex-overlap2-1.svg" style="display: block; margin: auto;" /&gt;
 ---
 layout: false
 # Table of contents
@@ -942,6 +953,7 @@ layout: false
   - [Blocking on `\(p(\text{X}_{i})\)`](#blocking)
   - [Weighting with `\(p(\text{X}_{i})\)`](#weighting)
   - [Doubly robust methods](#two)
+1. [Overlap plots](#overlap)
 ]
 ]
 ---
