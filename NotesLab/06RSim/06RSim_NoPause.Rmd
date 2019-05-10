@@ -1,0 +1,544 @@
+---
+title: "Adventures in Simulation in .mono[R]"
+subtitle: "EC 425/525, Lab 6"
+author: "Edward Rubin"
+date: "`r format(Sys.time(), '%d %B %Y')`"
+output:
+  xaringan::moon_reader:
+    css: ['default', 'metropolis', 'metropolis-fonts', 'my-css.css']
+    # self_contained: true
+    nature:
+      highlightStyle: github
+      highlightLines: true
+      countIncrementalSlides: false
+---
+class: inverse, middle
+
+```{R, setup, include = F}
+# devtools::install_github("dill/emoGG")
+library(pacman)
+p_load(
+  broom, tidyverse,
+  latex2exp, ggplot2, ggthemes, ggforce, viridis, extrafont, gridExtra,
+  kableExtra, snakecase, janitor,
+  data.table, dplyr, estimatr,
+  lubridate, knitr, parallel, furrr,
+  lfe,
+  here, magrittr
+)
+# Define pink color
+red_pink <- "#e64173"
+turquoise <- "#20B2AA"
+orange <- "#FFA500"
+red <- "#fb6107"
+blue <- "#3b3b9a"
+green <- "#8bb174"
+grey_light <- "grey70"
+grey_mid <- "grey50"
+grey_dark <- "grey20"
+purple <- "#6A5ACD"
+slate <- "#314f4f"
+# Dark slate grey: #314f4f
+# Knitr options
+opts_chunk$set(
+  comment = "#>",
+  fig.align = "center",
+  fig.height = 7,
+  fig.width = 10.5,
+  warning = F,
+  message = F
+)
+opts_chunk$set(dev = "svg")
+options(device = function(file, width, height) {
+  svg(tempfile(), width = width, height = height)
+})
+options(knitr.table.format = "html")
+```
+
+# Prologue
+
+---
+name: schedule
+
+# Schedule
+
+## Last time
+
+Plotting
+
+## Today
+
+Simulation
+---
+layout: true
+# Simulation
+
+---
+name: simulation
+class: inverse, middle
+---
+name: motive
+## Motivation
+
+As we've discussed, simulation can be a quick and effective way to better understand how an estimator performs/behaves.
+
+
+You just need to be careful to .hi[ask a clear, answerable question] and then .hi[run a simulation] that corresponds/answers this question.
+
+
+In addition, simulations can be computationally intense—they are often the first time you have to really think about efficiency in coding.
+---
+name: gen-outline
+## Generic outline
+
+The general outline for a simulation is fairly consistent.
+
+
+1\. .hi[Define the population] via a data-generating process (DGP)..super[.pink[†]]
+
+.footnote[.pink[†] Some people prefer to actually construct the population in this step and then repeatedly sample from this fixed population. Others stick with a population defined by the DGP.]
+
+
+2\. Iterate. In each iteration:
+  - .hi[Sample] from your population.
+  - Construct .hi[estimates/inferences] that relate to your original question.
+
+
+3\. .hi[Summarize] results.
+
+---
+## Practical issues
+
+This semi-theoretical framework needs a few practical reminders.
+
+
+1. Always set a seed *at the beginning* of your simulation (`set.seed()`).
+
+
+1. Parallelize where/when possible (_e.g._, the `furrr` package).
+
+
+1. Writing a function for a single iteration can be helpful (see above).
+
+
+1. There is a (big) difference between unbiasedness and consistency.
+
+
+1. You build simulations/DGPs with assumptions.
+
+
+1. Analytical results can inform and/or replace simulations.
+---
+layout: false
+class: inverse, middle
+
+# Example simulation
+---
+layout: true
+
+# Simulation
+
+---
+name: ex-q
+## The question
+
+.qa[Q] We've shown that instrumental variables (IV) is consistent, how does it perform (_i.e._, is it unbiased) in finite (small) samples?
+
+.note[Note] This question is definitely answerable analytically.
+
+
+Nevertheless, let's see how IV performs at several small-ish sample sizes.
+
+While we're at it, let's confirm OLS is indeed biased in this setting.
+
+---
+name: ex-dgp
+## DGP
+
+We want a valid instrument for a setting in which treatment is endogenous.
+$$
+\begin{align}
+  \text{Y}_{i} = \alpha + \tau \text{D}_{i} + \varepsilon_i
+\end{align}
+$$
+So we want
+1. .hi-slate[Endogenous treatment:] $\mathop{\text{Cov}} \left( \text{D}_{i},\, \varepsilon_i \right) \neq 0$
+1. .hi-pink[Predictive:] $\mathop{\text{Cov}} \left( \text{Z}_{i},\, \text{D}_{i} \right) \neq 0$
+1. .hi-pink[Excludability:] $\mathop{\text{Cov}} \left( \text{Z}_{i},\, \varepsilon_i \right) = 0$
+
+
+where (2) and (3) imply $\text{Z}_{i}$ is a valid instrument.
+---
+## DGP
+
+In other words, the variance-covariance matrix of $\text{D}_{i}$, $\varepsilon_i$, and $\text{Z}_{i}$ is
+$$
+\begin{align}
+  \Sigma = \begin{bmatrix}
+    \sigma^2_{\text{D}} & \sigma_{\text{D},\varepsilon} & \sigma_{\text{D},\text{Z}} \\
+    \sigma_{\text{D},\varepsilon} & \sigma^2_{\varepsilon} & 0 \\
+    \sigma_{\text{D},\text{Z}} & 0 & \sigma^2_{\text{Z}}
+  \end{bmatrix}
+\end{align}
+$$
+If we assume unit variances and covariances are 0.6, then
+$$
+\begin{align}
+  \Sigma = \begin{bmatrix}
+    1 & 0.6 & 0.6 \\
+    0.6 & 1 & 0 \\
+    0.6 & 0 & 1
+  \end{bmatrix}
+\end{align}
+$$
+---
+## DGP
+
+To simplify our lives, let's assume that $\text{D}_{i}$, $\varepsilon_i$, and $\text{Z}_{i}$ come from a multivariate normal distribution.
+
+We defined their covariance matrix. We need to define their means.
+
+$\mu_{\text{D}} = 10$, $\mu_{\varepsilon} = 0$, and $\mu_{\text{Z}} = 3$.
+
+
+Finally, we need to define the way in which $\text{D}_{i}$ and $\varepsilon_i$ affect $\text{Y}_{i}$.
+$$
+\begin{align}
+  \text{Y}_{i} = 7 + 1 \times \text{D}_{i} + \varepsilon_i
+\end{align}
+$$
+_i.e._, $\tau = 1$.
+---
+## DGP
+
+Lucky for us, .mono[R]'s `MASS` package has a function `mvrnorm()` that draws `n` random observations from a multivariate normal distribution with means `mu` and variance-covariance matrix `Sigma`.
+
+
+---
+name: ex-sample
+## Sampling from our DPG
+
+We're ready to write a function that performs one iteration.
+
+Our function will accept a single argument `n`, the sample size.
+
+
+```{R, iter-fun, eval = F}
+sim_iter <- function(n) {
+  # Define our variance-covariance matrix (D, ε, Z)
+  Σ <- matrix(data = c(1, 0.6, 0.6, 0.6, 1, 0, 0.6, 0, 1), ncol = 3)
+  # Our vector of means (D, ε, Z)
+  μ = c(10, 0, 3)
+  # Draw n observations; convert to tibble
+  sample_df <- MASS::mvrnorm(n = n, mu = μ, Sigma = Σ) %>% tibble()
+  # Name variables
+  names(sample_df) <- c("D", "ε", "Z")
+  # Calculate Y
+  sample_df %<>% mutate(Y = 7 + 1 * D + ε)
+}
+```
+---
+## Estimation
+
+Now we just need to estimate $\beta_\text{IV}$ and $\beta_\text{OLS}$. We'll use `estimatr`.
+
+
+.note[Previous] OLS estimates of the effect of `x` on `y`
+```{R, ex-lm, eval = F}
+lm_robust(y ~ x)
+```
+
+
+.note[New] IV estimates of the effect of `x` on `y` with instrument `z`
+```{R, ex-iv, eval = F}
+iv_robust(y ~ x | z)
+```
+---
+layout: false
+class: clear, middle
+
+```{R, iter-fun-full, eval = T}
+sim_iter <- function(n) {
+  # Define our variance-covariance matrix (D, ε, Z)
+  Σ <- matrix(data = c(1, 0.6, 0.6, 0.6, 1, 0, 0.6, 0, 1), ncol = 3)
+  # Our vector of means (D, ε, Z)
+  μ = c(10, 0, 3)
+  # Draw n observations; convert to tibble
+  smpl_df <- MASS::mvrnorm(n = n, mu = μ, Sigma = Σ) %>% data.frame()
+  # Name variables
+  names(smpl_df) <- c("D", "ε", "Z")
+  # Calculate Y
+  smpl_df %<>% mutate(Y = 7 + 1 * D + ε)
+  # Estimates
+  est_df <- bind_rows(
+    # The OLS estimates
+    lm_robust(Y ~ D, data = smpl_df) %>% tidy() %>% mutate(est = "OLS"),
+    # The IV estimates
+    iv_robust(Y ~ D | Z, data = smpl_df) %>% tidy() %>% mutate(est = "IV")
+  )
+  return(est_df)
+}
+```
+---
+layout: true
+# Simulation
+
+---
+name: ex-iter
+## Repeat
+
+Now we want run `sim_iter()` *many* times.
+
+
+And we're going to do it in parallel—using the `furrr` package.
+
+
+The output of `sim_iter()` is a data frame, so we can actually use a function from `furrr` that expects outputted data frames, namely, `future_map_dfr`.
+
+The suffix `_dfr` means the function will row-bind the data frames returned by individual iterations.
+
+
+We'll also use the `rep()` function which repeats things, _e.g._, `rep("a", 3)` repeats `"a"` three times.
+---
+
+Assuming we've already entered `sim_iter()` into memory, we can run our simulation 5,000 times, each with sample size 50—in parallel!
+
+```{R, ex50, cache = T}
+# Load furrr
+p_load(furrr)
+# Tell R to parallelize with 4 cores
+plan(multiprocess, workers = 4)
+# Set a seed
+set.seed(12345)
+# Run simulation with sample size 50
+sim50 <- future_map_dfr(
+  # Repeat sample size 50 for 5000 times
+  rep(50, 5000),
+  # Our function
+  sim_iter,
+  # Let furrr know we want to set a seed
+  .options = future_options(seed = T)
+)
+```
+
+---
+layout: false
+class: clear, middle
+
+Sample size 50 (5,000 iterations)
+```{R, plot-sim50, echo = F}
+ggplot(
+  data = sim50 %>% filter(term == "D"),
+  aes(x = estimate, fill = est)
+) +
+geom_density(color = NA, alpha = 0.9) +
+geom_hline(yintercept = 0) +
+geom_vline(xintercept = 1, color = red_pink, size = 1, linetype = "longdash") +
+geom_vline(
+  xintercept = filter(sim50, term == "D" & est == "OLS")$estimate %>% mean(),
+  color = slate
+) +
+geom_vline(
+  xintercept = filter(sim50, term == "D" & est == "IV")$estimate %>% mean(),
+  color = orange
+) +
+scale_fill_manual("Estimator", values = c(orange, slate)) +
+theme_pander(base_size = 22, base_family = "Fira Sans Book")
+```
+---
+layout: true
+class: clear, middle
+
+---
+
+Let's vary the sample size and see what happens.
+
+---
+
+Sample size 10 (5,000 iterations)
+
+```{R, ex10, cache = T, include = F}
+# Load furrr
+p_load(furrr)
+# Tell R to parallelize with 4 cores
+plan(multiprocess, workers = 4)
+# Set a seed
+set.seed(12345)
+# Run simulation with sample size 10
+sim10 <- future_map_dfr(
+  # Repeat sample size 10 for 5000 times
+  rep(10, 5000),
+  # Our function
+  sim_iter,
+  # Let furrr know we want to set a seed
+  .options = future_options(seed = T)
+)
+```
+
+```{R, plot-sim10, echo = F}
+ggplot(
+  data = sim10 %>% filter(term == "D"),
+  aes(x = estimate, fill = est)
+) +
+geom_density(color = NA, alpha = 0.9) +
+geom_hline(yintercept = 0) +
+geom_vline(xintercept = 1, color = red_pink, size = 1, linetype = "longdash") +
+geom_vline(
+  xintercept = filter(sim10, term == "D" & est == "OLS")$estimate %>% mean(),
+  color = slate
+) +
+geom_vline(
+  xintercept = filter(sim10, term == "D" & est == "IV")$estimate %>% mean(),
+  color = orange
+) +
+xlim(-2.7, 2.5) +
+# xlim(-3, 3) +
+scale_fill_manual("Estimator", values = c(orange, slate)) +
+theme_pander(base_size = 22, base_family = "Fira Sans Book")
+```
+---
+
+Sample size 25 (5,000 iterations)
+
+```{R, ex25, cache = T, include = F}
+# Load furrr
+p_load(furrr)
+# Tell R to parallelize with 4 cores
+plan(multiprocess, workers = 4)
+# Set a seed
+set.seed(12345)
+# Run simulation with sample size 25
+sim25 <- future_map_dfr(
+  # Repeat sample size 25 for 5000 times
+  rep(25, 5000),
+  # Our function
+  sim_iter,
+  # Let furrr know we want to set a seed
+  .options = future_options(seed = T)
+)
+```
+
+```{R, plot-sim25, echo = F}
+ggplot(
+  data = sim25 %>% filter(term == "D"),
+  aes(x = estimate, fill = est)
+) +
+geom_density(color = NA, alpha = 0.9) +
+geom_hline(yintercept = 0) +
+geom_vline(xintercept = 1, color = red_pink, size = 1, linetype = "longdash") +
+geom_vline(
+  xintercept = filter(sim25, term == "D" & est == "OLS")$estimate %>% mean(),
+  color = slate
+) +
+geom_vline(
+  xintercept = filter(sim25, term == "D" & est == "IV")$estimate %>% mean(),
+  color = orange
+) +
+xlim(-2.7, 2.5) +
+# xlim(-1.5, 2.5) +
+scale_fill_manual("Estimator", values = c(orange, slate)) +
+theme_pander(base_size = 22, base_family = "Fira Sans Book")
+```
+---
+
+Sample size 50 (5,000 iterations)
+```{R, plot-sim50-2, echo = F}
+ggplot(
+  data = sim50 %>% filter(term == "D"),
+  aes(x = estimate, fill = est)
+) +
+geom_density(color = NA, alpha = 0.9) +
+geom_hline(yintercept = 0) +
+geom_vline(xintercept = 1, color = red_pink, size = 1, linetype = "longdash") +
+geom_vline(
+  xintercept = filter(sim50, term == "D" & est == "OLS")$estimate %>% mean(),
+  color = slate
+) +
+geom_vline(
+  xintercept = filter(sim50, term == "D" & est == "IV")$estimate %>% mean(),
+  color = orange
+) +
+xlim(-2.7, 2.5) +
+# xlim(-0.5, 2.25) +
+scale_fill_manual("Estimator", values = c(orange, slate)) +
+theme_pander(base_size = 22, base_family = "Fira Sans Book")
+```
+---
+
+Sample size 100 (5,000 iterations)
+
+```{R, ex100, cache = T, include = F}
+# Load furrr
+p_load(furrr)
+# Tell R to parallelize with 4 cores
+plan(multiprocess, workers = 4)
+# Set a seed
+set.seed(12345)
+# Run simulation with sample size 100
+sim100 <- future_map_dfr(
+  # Repeat sample size 100 for 5000 times
+  rep(100, 5000),
+  # Our function
+  sim_iter,
+  # Let furrr know we want to set a seed
+  .options = future_options(seed = T)
+)
+```
+
+```{R, plot-sim100, echo = F}
+ggplot(
+  data = sim100 %>% filter(term == "D"),
+  aes(x = estimate, fill = est)
+) +
+geom_density(color = NA, alpha = 0.9) +
+geom_hline(yintercept = 0) +
+geom_vline(xintercept = 1, color = red_pink, size = 1, linetype = "longdash") +
+geom_vline(
+  xintercept = filter(sim100, term == "D" & est == "OLS")$estimate %>% mean(),
+  color = slate
+) +
+geom_vline(
+  xintercept = filter(sim100, term == "D" & est == "IV")$estimate %>% mean(),
+  color = orange
+) +
+xlim(-2.7, 2.5) +
+# xlim(0.25, 2) +
+scale_fill_manual("Estimator", values = c(orange, slate)) +
+theme_pander(base_size = 22, base_family = "Fira Sans Book")
+```
+---
+layout: false
+name: ex-a
+
+# Simulation
+## Assumptions
+
+Keep in mind that we made several assumptions about
+
+- the distribution (joint normality is very restrictive)
+- variance (all equal, independent, and homoskedastic)
+- covariances (again, all equal)
+- strong instrument
+
+---
+# Table of contents
+
+.pull-left[
+### Simulation
+.small[
+1. [Motivation](#motive)
+1. [Generic outline](#gen-outline)
+1. [Example](#ex-q)
+  - [The question](#ex-q)
+  - [DGP](#ex-dgp)
+  - [Sampling from the DGP](#ex-sample)
+  - [Iterating](#ex-iter)
+  - [Assumptions](#ex-a)
+]]
+
+---
+exclude: true
+
+```{R, generate pdfs, include = F, eval = T}
+source("../../ScriptsR/unpause.R")
+```

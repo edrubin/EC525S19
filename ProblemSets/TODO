@@ -8,7 +8,10 @@ Topics
 - Simulation of bias for 1/b (b is estimate from OLS)
   - Theory: Compare consistency and unbiasedness
   - Does median regression help?
-- Simulation: Is a nonlinear first-stage unbiased/consistent?
+- IV
+  - Is a nonlinear first-stage unbiased/consistent? (Simulation)
+  - Is 2SLS unbiased with small samples?
 
+Papers
 
 - Angrist 1998

@@ -1,0 +1,438 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <title>Adventures in Simulation in .mono[R]</title>
+    <meta charset="utf-8">
+    <meta name="author" content="Edward Rubin" />
+    <meta name="date" content="2019-05-10" />
+    <link href="06RSim_files/remark-css-0.0.1/default.css" rel="stylesheet" />
+    <link href="06RSim_files/remark-css-0.0.1/metropolis.css" rel="stylesheet" />
+    <link href="06RSim_files/remark-css-0.0.1/metropolis-fonts.css" rel="stylesheet" />
+    <link rel="stylesheet" href="my-css.css" type="text/css" />
+  </head>
+  <body>
+    <textarea id="source">
+class: center, middle, inverse, title-slide
+
+# Adventures in Simulation in .mono[R]
+## EC 425/525, Lab 6
+### Edward Rubin
+### 10 May 2019
+
+---
+
+class: inverse, middle
+
+
+
+# Prologue
+
+---
+name: schedule
+
+# Schedule
+
+## Last time
+
+Plotting
+
+## Today
+
+Simulation
+---
+layout: true
+# Simulation
+
+---
+name: simulation
+class: inverse, middle
+---
+name: motive
+## Motivation
+
+As we've discussed, simulation can be a quick and effective way to better understand how an estimator performs/behaves.
+
+--
+
+You just need to be careful to .hi[ask a clear, answerable question] and then .hi[run a simulation] that corresponds/answers this question.
+
+--
+
+In addition, simulations can be computationally intense—they are often the first time you have to really think about efficiency in coding.
+---
+name: gen-outline
+## Generic outline
+
+The general outline for a simulation is fairly consistent.
+
+--
+
+1\. .hi[Define the population] via a data-generating process (DGP)..super[.pink[†]]
+
+.footnote[.pink[†] Some people prefer to actually construct the population in this step and then repeatedly sample from this fixed population. Others stick with a population defined by the DGP.]
+
+--
+
+2\. Iterate. In each iteration:
+  - .hi[Sample] from your population.
+  - Construct .hi[estimates/inferences] that relate to your original question.
+
+--
+
+3\. .hi[Summarize] results.
+
+---
+## Practical issues
+
+This semi-theoretical framework needs a few practical reminders.
+
+--
+
+1. Always set a seed *at the beginning* of your simulation (`set.seed()`).
+
+--
+
+1. Parallelize where/when possible (_e.g._, the `furrr` package).
+
+--
+
+1. Writing a function for a single iteration can be helpful (see above).
+
+--
+
+1. There is a (big) difference between unbiasedness and consistency.
+
+--
+
+1. You build simulations/DGPs with assumptions.
+
+--
+
+1. Analytical results can inform and/or replace simulations.
+---
+layout: false
+class: inverse, middle
+
+# Example simulation
+---
+layout: true
+
+# Simulation
+
+---
+name: ex-q
+## The question
+
+.qa[Q] We've shown that instrumental variables (IV) is consistent, how does it perform (_i.e._, is it unbiased) in finite (small) samples?
+
+.note[Note] This question is definitely answerable analytically.
+
+--
+
+Nevertheless, let's see how IV performs at several small-ish sample sizes.
+
+While we're at it, let's confirm OLS is indeed biased in this setting.
+
+---
+name: ex-dgp
+## DGP
+
+We want a valid instrument for a setting in which treatment is endogenous.
+$$
+`\begin{align}
+  \text{Y}_{i} = \alpha + \tau \text{D}_{i} + \varepsilon_i
+\end{align}`
+$$
+So we want
+1. .hi-slate[Endogenous treatment:] `\(\mathop{\text{Cov}} \left( \text{D}_{i},\, \varepsilon_i \right) \neq 0\)`
+1. .hi-pink[Predictive:] `\(\mathop{\text{Cov}} \left( \text{Z}_{i},\, \text{D}_{i} \right) \neq 0\)`
+1. .hi-pink[Excludability:] `\(\mathop{\text{Cov}} \left( \text{Z}_{i},\, \varepsilon_i \right) = 0\)`
+
+--
+
+where (2) and (3) imply `\(\text{Z}_{i}\)` is a valid instrument.
+---
+## DGP
+
+In other words, the variance-covariance matrix of `\(\text{D}_{i}\)`, `\(\varepsilon_i\)`, and `\(\text{Z}_{i}\)` is
+$$
+`\begin{align}
+  \Sigma = \begin{bmatrix}
+    \sigma^2_{\text{D}} &amp; \sigma_{\text{D},\varepsilon} &amp; \sigma_{\text{D},\text{Z}} \\
+    \sigma_{\text{D},\varepsilon} &amp; \sigma^2_{\varepsilon} &amp; 0 \\
+    \sigma_{\text{D},\text{Z}} &amp; 0 &amp; \sigma^2_{\text{Z}}
+  \end{bmatrix}
+\end{align}`
+$$
+--
+If we assume unit variances and covariances are 0.6, then
+$$
+`\begin{align}
+  \Sigma = \begin{bmatrix}
+    1 &amp; 0.6 &amp; 0.6 \\
+    0.6 &amp; 1 &amp; 0 \\
+    0.6 &amp; 0 &amp; 1
+  \end{bmatrix}
+\end{align}`
+$$
+---
+## DGP
+
+To simplify our lives, let's assume that `\(\text{D}_{i}\)`, `\(\varepsilon_i\)`, and `\(\text{Z}_{i}\)` come from a multivariate normal distribution.
+
+We defined their covariance matrix. We need to define their means.
+
+`\(\mu_{\text{D}} = 10\)`, `\(\mu_{\varepsilon} = 0\)`, and `\(\mu_{\text{Z}} = 3\)`.
+
+--
+
+Finally, we need to define the way in which `\(\text{D}_{i}\)` and `\(\varepsilon_i\)` affect `\(\text{Y}_{i}\)`.
+$$
+`\begin{align}
+  \text{Y}_{i} = 7 + 1 \times \text{D}_{i} + \varepsilon_i
+\end{align}`
+$$
+_i.e._, `\(\tau = 1\)`.
+---
+## DGP
+
+Lucky for us, .mono[R]'s `MASS` package has a function `mvrnorm()` that draws `n` random observations from a multivariate normal distribution with means `mu` and variance-covariance matrix `Sigma`.
+
+
+---
+name: ex-sample
+## Sampling from our DPG
+
+We're ready to write a function that performs one iteration.
+
+Our function will accept a single argument `n`, the sample size.
+
+--
+
+
+```r
+sim_iter &lt;- function(n) {
+  # Define our variance-covariance matrix (D, ε, Z)
+  Σ &lt;- matrix(data = c(1, 0.6, 0.6, 0.6, 1, 0, 0.6, 0, 1), ncol = 3)
+  # Our vector of means (D, ε, Z)
+  μ = c(10, 0, 3)
+  # Draw n observations; convert to tibble
+  sample_df &lt;- MASS::mvrnorm(n = n, mu = μ, Sigma = Σ) %&gt;% tibble()
+  # Name variables
+  names(sample_df) &lt;- c("D", "ε", "Z")
+  # Calculate Y
+  sample_df %&lt;&gt;% mutate(Y = 7 + 1 * D + ε)
+}
+```
+---
+## Estimation
+
+Now we just need to estimate `\(\beta_\text{IV}\)` and `\(\beta_\text{OLS}\)`. We'll use `estimatr`.
+
+--
+
+.note[Previous] OLS estimates of the effect of `x` on `y`
+
+```r
+lm_robust(y ~ x)
+```
+
+--
+
+.note[New] IV estimates of the effect of `x` on `y` with instrument `z`
+
+```r
+iv_robust(y ~ x | z)
+```
+---
+layout: false
+class: clear, middle
+
+
+```r
+sim_iter &lt;- function(n) {
+  # Define our variance-covariance matrix (D, ε, Z)
+  Σ &lt;- matrix(data = c(1, 0.6, 0.6, 0.6, 1, 0, 0.6, 0, 1), ncol = 3)
+  # Our vector of means (D, ε, Z)
+  μ = c(10, 0, 3)
+  # Draw n observations; convert to tibble
+  smpl_df &lt;- MASS::mvrnorm(n = n, mu = μ, Sigma = Σ) %&gt;% data.frame()
+  # Name variables
+  names(smpl_df) &lt;- c("D", "ε", "Z")
+  # Calculate Y
+  smpl_df %&lt;&gt;% mutate(Y = 7 + 1 * D + ε)
+  # Estimates
+  est_df &lt;- bind_rows(
+    # The OLS estimates
+    lm_robust(Y ~ D, data = smpl_df) %&gt;% tidy() %&gt;% mutate(est = "OLS"),
+    # The IV estimates
+    iv_robust(Y ~ D | Z, data = smpl_df) %&gt;% tidy() %&gt;% mutate(est = "IV")
+  )
+  return(est_df)
+}
+```
+---
+layout: true
+# Simulation
+
+---
+name: ex-iter
+## Repeat
+
+Now we want run `sim_iter()` *many* times.
+
+--
+
+And we're going to do it in parallel—using the `furrr` package.
+
+--
+
+The output of `sim_iter()` is a data frame, so we can actually use a function from `furrr` that expects outputted data frames, namely, `future_map_dfr`.
+
+The suffix `_dfr` means the function will row-bind the data frames returned by individual iterations.
+
+--
+
+We'll also use the `rep()` function which repeats things, _e.g._, `rep("a", 3)` repeats `"a"` three times.
+---
+
+Assuming we've already entered `sim_iter()` into memory, we can run our simulation 5,000 times, each with sample size 50—in parallel!
+
+
+```r
+# Load furrr
+p_load(furrr)
+# Tell R to parallelize with 4 cores
+plan(multiprocess, workers = 4)
+# Set a seed
+set.seed(12345)
+# Run simulation with sample size 50
+sim50 &lt;- future_map_dfr(
+  # Repeat sample size 50 for 5000 times
+  rep(50, 5000),
+  # Our function
+  sim_iter,
+  # Let furrr know we want to set a seed
+  .options = future_options(seed = T)
+)
+```
+
+---
+layout: false
+class: clear, middle
+
+Sample size 50 (5,000 iterations)
+&lt;img src="06RSim_files/figure-html/plot-sim50-1.svg" style="display: block; margin: auto;" /&gt;
+---
+layout: true
+class: clear, middle
+
+---
+
+Let's vary the sample size and see what happens.
+
+---
+
+Sample size 10 (5,000 iterations)
+
+
+
+&lt;img src="06RSim_files/figure-html/plot-sim10-1.svg" style="display: block; margin: auto;" /&gt;
+---
+
+Sample size 25 (5,000 iterations)
+
+
+
+&lt;img src="06RSim_files/figure-html/plot-sim25-1.svg" style="display: block; margin: auto;" /&gt;
+---
+
+Sample size 50 (5,000 iterations)
+&lt;img src="06RSim_files/figure-html/plot-sim50-2-1.svg" style="display: block; margin: auto;" /&gt;
+---
+
+Sample size 100 (5,000 iterations)
+
+
+
+&lt;img src="06RSim_files/figure-html/plot-sim100-1.svg" style="display: block; margin: auto;" /&gt;
+---
+layout: false
+name: ex-a
+
+# Simulation
+## Assumptions
+
+Keep in mind that we made several assumptions about
+
+- the distribution (joint normality is very restrictive)
+- variance (all equal, independent, and homoskedastic)
+- covariances (again, all equal)
+- strong instrument
+
+---
+# Table of contents
+
+.pull-left[
+### Simulation
+.small[
+1. [Motivation](#motive)
+1. [Generic outline](#gen-outline)
+1. [Example](#ex-q)
+  - [The question](#ex-q)
+  - [DGP](#ex-dgp)
+  - [Sampling from the DGP](#ex-sample)
+  - [Iterating](#ex-iter)
+  - [Assumptions](#ex-a)
+]]
+
+---
+exclude: true
+    </textarea>
+<script src="https://remarkjs.com/downloads/remark-latest.min.js"></script>
+<script>var slideshow = remark.create({
+"highlightStyle": "github",
+"highlightLines": true,
+"countIncrementalSlides": false
+});
+if (window.HTMLWidgets) slideshow.on('afterShowSlide', function (slide) {
+  window.dispatchEvent(new Event('resize'));
+});
+(function() {
+  var d = document, s = d.createElement("style"), r = d.querySelector(".remark-slide-scaler");
+  if (!r) return;
+  s.type = "text/css"; s.innerHTML = "@page {size: " + r.style.width + " " + r.style.height +"; }";
+  d.head.appendChild(s);
+})();</script>
+
+<script>
+(function() {
+  var i, text, code, codes = document.getElementsByTagName('code');
+  for (i = 0; i < codes.length;) {
+    code = codes[i];
+    if (code.parentNode.tagName !== 'PRE' && code.childElementCount === 0) {
+      text = code.textContent;
+      if (/^\\\((.|\s)+\\\)$/.test(text) || /^\\\[(.|\s)+\\\]$/.test(text) ||
+          /^\$\$(.|\s)+\$\$$/.test(text) ||
+          /^\\begin\{([^}]+)\}(.|\s)+\\end\{[^}]+\}$/.test(text)) {
+        code.outerHTML = code.innerHTML;  // remove <code></code>
+        continue;
+      }
+    }
+    i++;
+  }
+})();
+</script>
+<!-- dynamically load mathjax for compatibility with self-contained -->
+<script>
+(function () {
+  var script = document.createElement('script');
+  script.type = 'text/javascript';
+  script.src  = 'https://mathjax.rstudio.com/latest/MathJax.js?config=TeX-MML-AM_CHTML';
+  if (location.protocol !== 'file:' && /^https?:/.test(script.src))
+    script.src  = script.src.replace(/^https?:/, '');
+  document.getElementsByTagName('head')[0].appendChild(script);
+})();
+</script>
+  </body>
+</html>

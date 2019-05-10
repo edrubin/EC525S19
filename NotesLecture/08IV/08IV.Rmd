@@ -166,7 +166,7 @@ name: schedule
 
 ## Last time
 
-Mathching and propensity-score methods
+Matching and propensity-score methods
 - Conditional independence
 - Overlap
 
