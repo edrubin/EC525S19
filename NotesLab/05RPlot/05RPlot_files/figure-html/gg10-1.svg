@@ -171,12 +171,12 @@
 <clipPath id="clip21">
   <path d="M 686.824219 131.109375 L 704.105469 131.109375 L 704.105469 217.507812 L 686.824219 217.507812 Z M 686.824219 131.109375 "/>
 </clipPath>
-<image id="image5455" width="1" height="20" xlink:href="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAAUCAIAAADDbMD2AAAABmJLR0QA/wD/AP+gvaeTAAAAM0lEQVQImW3GsQ0AIAwDMJQj+ZPjaJqqkRhgZLLHXERnoLXhjPerdW/xI2ERLqKVcBGuPN0+Oajx0h1cAAAAAElFTkSuQmCC"/>
+<image id="image3023" width="1" height="20" xlink:href="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAAUCAIAAADDbMD2AAAABmJLR0QA/wD/AP+gvaeTAAAAM0lEQVQImW3GsQ0AIAwDMJQj+ZPjaJqqkRhgZLLHXERnoLXhjPerdW/xI2ERLqKVcBGuPN0+Oajx0h1cAAAAAElFTkSuQmCC"/>
 <pattern id="pattern0" patternUnits="userSpaceOnUse" width="1" height="20"  patternTransform="matrix(17.28,0,0,4.32,686.825665,131.107558)">
-  <use xlink:href="#image5455"/>
+  <use xlink:href="#image3023"/>
 </pattern>
 </defs>
-<g id="surface5451">
+<g id="surface3019">
 <rect x="0" y="0" width="756" height="360" style="fill:rgb(100%,100%,100%);fill-opacity:1;stroke:none;"/>
 <rect x="0" y="0" width="756" height="360" style="fill:rgb(100%,100%,100%);fill-opacity:1;stroke:none;"/>
 <g clip-path="url(#clip1)" clip-rule="nonzero">

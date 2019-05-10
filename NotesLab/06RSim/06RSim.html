@@ -398,12 +398,15 @@ You'll often hear that you should never use `for()` loops in .mono[R].
 
 This opinion is a bit extreme, but there are a few reasons to avoid them.
 
-1. `for()` is not parallelized.
+1. `for()` is not parallelized (though `foreach` can be).
 
-1. `for()` doesn't clean up after itself—leaving objects in memory between iterations and after the loop finishes.
+1. `for()` doesn't clean up after itself—leaving objects in memory between iterations and after the loop finishes..super[.pink[†]]
+
+1. `for()` loops generally ["grow" data](https://privefl.github.io/blog/why-loops-are-slow-in-r/) which can be slow/inefficient.
 
 See [Grant McDermott's lectures](https://github.com/uo-ec607) for further justification.
 
+.footnote[.pink[†] This feature *can* be desirable—*e.g.*, linking iterations.]
 ---
 layout: false
 # Table of contents

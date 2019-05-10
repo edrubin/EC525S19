@@ -560,7 +560,56 @@ theme(
   axis.ticks = element_blank()
 )
 ```
+---
+layout: true
+# ggplot2
 
+---
+name: ggsave
+## Saving plots
+
+You can save your `ggplot2`-based figures using `ggsave()`.
+
+---
+## `ggsave()` Option 1
+
+By default, `ggsave()` saves the last plot printed to the screen.
+
+```{R, ex-ggsave-1, eval = F}
+# Create a simple scatter plot
+ggplot(data = fun_df, aes(x = x, y = y)) +
+geom_point()
+# Save our simple scatter plot
+ggsave(filename = "simple_scatter.pdf")
+```
+
+--
+
+.note[Notes]
+
+- This example creates a PDF. Change to `".png"` for PNG, *etc.*
+- There several helpful, optional arguments: `path`, `width`, `height`, `dpi`.
+
+---
+## `ggsave()` Option 2
+
+You can assign your `ggplot()` objects to memory
+```{R, ex-gg-assign, eval = F}
+# Create a simple scatter plot named 'gg_points'
+gg_points <- ggplot(data = fun_df, aes(x = x, y = y)) +
+geom_point()
+```
+
+--
+
+We can then save this figure with the name `gg_points` using `ggsave()`
+```{R, ex-ggsave-2, eval = F}
+# Save our simple scatter plot name 'ggsave'
+ggsave(
+  filename = "simple_scatter.pdf",
+  plot = gg_points
+)
+```
 ---
 layout: false
 
@@ -578,13 +627,18 @@ layout: false
 # Table of contents
 
 .pull-left[
-### Plotting
+### Default options
 .smaller[
 1. [`plot()`](#plot)
   - [Description](#plot)
   - [Examples](#ex-plot)
   - [Layering plots](#add)
 1. [`hist()`](#hist)
+]]
+
+.pull-right[
+### ggplot2
+.smaller[
 1. [`ggplot2`](#ggplot2)
   - [Intro](#gg-intro)
   - [`ggplot()`](#ggplot)
@@ -593,6 +647,7 @@ layout: false
   - [Histogram](#gg-hist)
   - [Density](#gg-density)
   - [More](#gg-more)
+  - [Saving](#ggsave)
 1. [More resources](#resources)
 ]]
 
