@@ -528,10 +528,12 @@ scale_fill_manual("Estimator", values = c(orange, slate)) +
 theme_pander(base_size = 22, base_family = "Fira Sans Book")
 ```
 ---
-layout: false
+layout: true
+# Simulation
+
+---
 name: ex-a
 
-# Simulation
 ## Assumptions
 
 Keep in mind that we made several assumptions about
@@ -540,8 +542,41 @@ Keep in mind that we made several assumptions about
 - variance (all equal, independent, and homoskedastic)
 - covariances (again, all equal)
 - strong instrument
+---
+name: loops
+
+## Looping
+
+There are .b[many] ways to iterate/loop in .mono[R]:
+- `for()`, `while()`, *etc.*
+- `lapply()`, `mapply()`, *etc.*
+- `parallel`: `mclapply()`, `mcmapply()`, *etc.*
+- `foreach`
+- `future`, `furrr`, and `future.apply`: `future_lapply()`, `future_map()`, *etc.*
+
+--
+
+They are not all equal/identical.
+- Few can access values from previous iterations (`for()` and `foreach`).
+- A subset is parallelizable (`parallel`, `foreach`, the `future` family).
+- Behavior can be OS specific (especially `parallel`).
 
 ---
+
+## `for()`
+
+You'll often hear that you should never use `for()` loops in .mono[R].
+
+This opinion is a bit extreme, but there are a few reasons to avoid them.
+
+1. `for()` is not parallelized.
+
+1. `for()` doesn't clean up after itself—leaving objects in memory between iterations and after the loop finishes.
+
+See [Grant McDermott's lectures](https://github.com/uo-ec607) for further justification.
+
+---
+layout: false
 # Table of contents
 
 .pull-left[
@@ -555,6 +590,7 @@ Keep in mind that we made several assumptions about
   - [Sampling from the DGP](#ex-sample)
   - [Iterating](#ex-iter)
   - [Assumptions](#ex-a)
+1. [Loops](#loops)
 ]]
 
 ---
