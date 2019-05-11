@@ -154,6 +154,9 @@ We will use two books.
 
 2–4 problem sets combining econometric theory and R.
 
+**[Problem set 1](https://raw.githack.com/edrubin/EC525S19/master/ProblemSets/PS01/ps01.pdf)**
+<br>*Due Sunday, 19 May 2019 by midnight*
+
 ## Project
 
 Building a research project/proposal.
