@@ -141,6 +141,13 @@
   clear:left;
 }
 
+.clear .remark-slide-number {
+  display: none;
+}
+.inverse .remark-slide-number {
+  display: none;
+}
+
 .remark-code-line-highlighted {
   background-color: rgba(249, 39, 114, 0.5);
 }

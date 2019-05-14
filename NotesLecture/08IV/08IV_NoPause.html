@@ -4,7 +4,7 @@
     <title>Instrumental Variables</title>
     <meta charset="utf-8">
     <meta name="author" content="Edward Rubin" />
-    <meta name="date" content="2019-05-08" />
+    <meta name="date" content="2019-05-13" />
     <link href="08IV_NoPause_files/remark-css-0.0.1/default.css" rel="stylesheet" />
     <link href="08IV_NoPause_files/remark-css-0.0.1/metropolis.css" rel="stylesheet" />
     <link href="08IV_NoPause_files/remark-css-0.0.1/metropolis-fonts.css" rel="stylesheet" />
@@ -17,7 +17,7 @@ class: center, middle, inverse, title-slide
 # Instrumental Variables
 ## EC 425/525, Set 8
 ### Edward Rubin
-### 08 May 2019
+### 13 May 2019
 
 ---
 
@@ -41,7 +41,7 @@ name: schedule
 
 ## Last time
 
-Mathching and propensity-score methods
+Matching and propensity-score methods
 - Conditional independence
 - Overlap
 
@@ -51,8 +51,9 @@ Instrumental variables (and two-stage least squares)
 
 ## Upcoming
 
-- Admin: Assignment/project proposal this weekend
-- Admin: Midterm very soon
+- Assignment due Sunday
+- Proposal due Wednesday 5/22
+- Midterm?
 ---
 layout: true
 # Research designs
@@ -98,15 +99,15 @@ Our main goal in causal-inference minded (applied) econometrics boils down to is
 So set of research designs is more palatable?
 
 
-1. There are plenty of bad applications of both sets.&lt;br&gt;.orange[Violated assumptions, bad controls, *etc.*]
+1. There are plenty of bad applications of both sets.&lt;br&gt;.purple[Violated assumptions, bad controls, *etc.*]
 
 
 1. .hi-slate[Selection on observables] assumes we know .it[everything] about selection into treatment—we can identify .it[all] of the good (or bad) variation in `\(\text{D}_{i}\)`.
-&lt;br&gt;.orange[Tough in non-experimental settings. Difficult to validate in practice.]
+&lt;br&gt;.purple[Tough in non-experimental settings. Difficult to validate in practice.]
 
 
 1. .hi-pink[Selection on unobservables] assumes we can isolate .it[some] good/clean variation in `\(\text{D}_{i}\)`, which we then use to estimate the effect of `\(\text{D}_{i}\)` on `\(\text{Y}_{i}\)`.
-&lt;br&gt;.orange[Seems more plausible. Possible to validate. May be underpowered.]
+&lt;br&gt;.purple[Seems more plausible. Possible to validate. May be underpowered.]
 ---
 layout: true
 # Instrumental variables
@@ -307,6 +308,250 @@ Important notes
 - Your second-stage standard errors are not correct.
 
 ---
+name: reduced-form
+## The reduced form
+
+In addition to the regressions within the two stages of 2SLS
+1. `\(\text{D}_{i} = \gamma_1 \color{#e64173}{\text{Z}_{i}} + \gamma_2 \text{X}_{i} + u_i\)`
+2. `\(\text{Y}_{i} = \beta_1 \color{#6A5ACD}{\widehat{\text{D}}_{i}} + \beta_2 \text{X}_{i} + \varepsilon_i\)`
+
+there is a third important and related regression: the reduced form.
+
+
+The .attn[reduced form] regresses the outcome `\(\text{Y}_{i}\)` (LHS of the second stage) on our instrument `\(\color{#e64173}{\text{Z}_{i}}\)` and covariates `\(\text{X}_{i}\)` (RHS of the first stage).
+$$
+`\begin{align}
+   \text{Y}_{i} = \pi_1 \color{#e64173}{\text{Z}_{i}} + \pi_2 \text{X}_{i} + u_i
+\end{align}`
+$$
+Thus, the reduced form provides a consistent estimate of the causal effect of our instrument on the outcome.
+---
+## The reduced form, continued
+
+While the reduced form estimates the causal effect of the instrument on our outcome, we're often actually interested in the effect of *treatment* `\(\left( \text{D}_{i} \right)\)`.
+
+
+That said, the reduced form is still incredibly helpful/important:
+
+- Clarifies your source of identifying variation.
+
+- Does not suffer from *weak instruments* problems.
+
+- Only requires `\(\mathop{\text{Cov}} \left( \text{Z}_{i},\, \varepsilon_i \right) = 0\)`.
+
+- Offers insights into your estimates
+
+$$
+`\begin{align}
+  \widehat{\beta}_{1}^\text{2SLS} = \dfrac{\widehat{\pi}_{1}}{\widehat{\gamma}_{1}}
+\end{align}`
+$$
+when you have exactly one instrument.
+
+---
+name: reduced-intuition
+## The reduced form, intuition
+
+This expression for the 2SLS (and IV) estimator can be very helpful.
+$$
+`\begin{align}
+  \widehat{\beta}_{1}^\text{2SLS} = \dfrac{\color{#6A5ACD}{\widehat{\pi}_{1}}}{\color{#20B2AA}{\widehat{\gamma}_{1}}} = \dfrac{\color{#6A5ACD}{\text{Reduced-form estimate}}}{\color{#20B2AA}{\text{First-stage estimate}}}
+\end{align}`
+$$
+
+
+What's the interpretation/intuition?
+
+
+Back to our example: `\(\widehat{\beta}_1 =\)` est. effect of college graduation on income.
+
+
+`\(\color{#6A5ACD}{\widehat{\pi}_1}\)` gives the estimated causal effect of the scholarship lottery on income
+, but what share of lottery winners graduate? We need to rescale if `\(&lt;\)` 100%.
+
+
+`\(\color{#20B2AA}{\widehat{\gamma}_1}\)` estimates the effect of winning the scholarship lottery on graduation
+—the share of winners who graduated due to winning.
+ We can scale with `\(\color{#20B2AA}{\widehat{\gamma}_1}\)`!
+---
+name: reduced-example
+## The reduced form, example
+
+To see why this scaling makes sense, imagine that 50% of lottery winners graduate from college due to the lottery, _i.e._, `\(\color{#20B2AA}{\widehat{\gamma}_1 =}\)` .turquoise[0.50]..super[.pink[†]]
+
+.footnote[.pink[†] Imagine none of the applicants would have graduated otherwise]
+
+
+Our reduced-form estimate of `\(\color{#6A5ACD}{\widehat{\pi}_1=}\)` .purple[$5,000] says that lottery winners make $5,000 more than the control group, on average.
+
+
+However, half of the winners did not graduate, so `\(\color{#6A5ACD}{\widehat{\pi}_1}\)` "underestimates" the effect of college graduation by combining graduates by nongraduates.
+
+
+Thus, we want to double `\(\color{#6A5ACD}{\widehat{\pi}_1}\)`, _i.e._, divide by `\(\color{#20B2AA}{\widehat{\gamma}_1}\)`:
+`\(\color{#6A5ACD}{\widehat{\pi}_1}/\color{#20B2AA}{\widehat{\gamma}_1}\)` = .turquoise[$5,000]/.purple[0.5] = $10,000.
+---
+name: reduced-derivation
+
+.qa[Q] How do we get this magical expression? `\(\left( \widehat{\beta}_1^\text{IV} = \dfrac{\widehat{\pi}_1}{\widehat{\gamma}_1} \right)\)`
+
+
+## Derivation
+
+
+`\(\widehat{\beta}_1^\text{IV} = \left( \text{Z}'\text{D} \right)^{-1} \left( \text{Z}'\text{Y} \right)\)`
+
+
+`\(\color{#ffffff}{\widehat{\beta}_1^\text{IV}} = \left( \widetilde{\text{Z}}'\widetilde{\text{D}} \right)^{-1} \left( \widetilde{\text{Z}}'\text{Y} \right)\)`   applying FWL to reduce `\(\text{D}\)` and `\(\text{Z}\)` to vectors.
+
+
+`\(\color{#ffffff}{\widehat{\beta}_1^\text{IV}} = \dfrac{\mathop{\text{Cov}} \left( \widetilde{\text{Z}}_{i},\, \text{Y}_{i} \right)}{\mathop{\text{Cov}} \left( \widetilde{\text{Z}}_i,\, \widetilde{\text{D}}_{i} \right)}\)`
+ `\(= \dfrac{\mathop{\text{Cov}} \left( \widetilde{\text{Z}}_{i},\, \text{Y}_{i} \right)/\mathop{\text{Var}} \left( \widetilde{\text{Z}}_i \right)}{\mathop{\text{Cov}} \left( \widetilde{\text{Z}}_i,\, \widetilde{\text{D}}_{i} \right)/\mathop{\text{Var}} \left( \widetilde{\text{Z}}_i \right)}\)`
+
+
+`\(\color{#ffffff}{\widehat{\beta}_1^\text{IV}} = \dfrac{\widehat{\pi}_1}{\widehat{\gamma}_1}\)`  .pink[✔]
+---
+layout: false
+class: clear, middle
+
+Let's push a bit deeper into IV's mechanics and intuition.
+---
+layout: true
+# IV: Mechanics and intuition
+
+---
+name: iv-intuition
+
+## Setup
+
+In this section, we'll use medical trials as a working example..super[.pink[†]]
+
+.footnote[.pink[†] Credit/thanks go to [Michael Anderson](https://are.berkeley.edu/~mlanderson/ARE_Website/Home.html) for this example—and much of these notes.]
+
+
+We are interested in the regression model for the effect of some treatment (_e.g._, blood-pressure medication) on medical outcome `\(\text{Y}_{i}\)`
+$$
+`\begin{align}
+  \text{Y}_{i} = \beta_0 + \beta_1 \text{D}_{i} + \varepsilon_i
+\end{align}`
+$$
+`\(\text{D}_{i}\)` indicates whether `\(i\)` *takes* the treatment (medication). `\(\varepsilon_i\)` captures all other factors that affect `\(\text{Y}_{i}\)`.
+ Or in potential-outcomes framework:
+
+$$
+`\begin{align}
+  \text{Y}_{i} &amp;= \text{Y}_{1i} \text{D}_{i} + \text{Y}_{0i} (1-\text{D}_{i}) \\
+  \text{Y}_{0i} &amp;= \beta_0 + \varepsilon_i \\
+  \text{Y}_{1i} &amp;= \text{Y}_{0i} + \beta_1
+\end{align}`
+$$
+---
+## Research design
+
+.note[Goal] .hi-slate[Estimate the effect of blood-pressure medication] on blood pressure.
+
+
+.note[Challenge] .hi-slate[Selection bias:] Even if treatment reduces blood pressure, selection bias will fights against the estimated effect.
+
+
+.note[Solution] .hi-slate[Randomized medical trial:] Ask randomly chosen individuals in treatment group to take the pill. Control individual get placebo (or nothing).
+
+
+.note[Analysis 1] .attn[Intention to treat] (.attn[ITT]): `\(\widehat{\beta}_1^\text{ITT} = \overline{\text{Y}}_\text{Trt} - \overline{\text{Y}}_\text{Ctrl}\)`
+
+
+.note[ITT problem] .attn[Bias from noncompliance:] People don't always follow rules.
+&lt;br&gt;*E.g.*, treated folks who don't take pills; control folks who take pills.
+
+
+.note[Analysis 2] .hi-slate[IV!]
+ Instrument medication `\(\text{D}_{i}\)` with intention to treat `\(\text{Z}_{i}\)`.
+---
+## The IV solution
+
+First question: Is `\(\text{Z}_{i}\)` a valid instrument for `\(\text{D}_{i}\)`?
+
+
+1. `\(\mathop{\text{Cov}} \left( \text{Z}_{i},\, \varepsilon_i \right) = 0\)` as `\(\text{Z}_{i}\)` was randomly assigned (exclusion restriction).
+
+
+1. `\(\mathop{\text{Cov}} \left( \text{Z}_{i},\, \text{D}_{i} \right)\neq 0\)` if assignment to treatment changes the likelihood you take the pills (first stage).
+
+
+∴ `\(\text{Z}_{i}\)` is a valid instrument for `\(\text{D}_{i}\)` and IV consistently estimates `\(\beta_1\)`.
+---
+name: iv-noncompliance
+## Noncompliance
+
+.attn[Noncompliant] individuals do not abide by their treatment assignment.
+
+
+Let's see how IV "solves" this problems.
+
+
+First, assume noncompliance only affects treated individuals—*i.e.*, treated folks sometimes don't take their pills; control folks never take pills.
+
+---
+## Noncompliance, continued
+
+The .hi-slate[first stage] recovers the share of treatment individuals who take the pill
+$$
+`\begin{align}
+  \text{D}_{i} = \gamma_1 \text{Z}_{i} + u_i
+\end{align}`
+$$
+*i.e.*, if 50% of treated individuals take the medication, `\(\widehat{\gamma} =\)` 0.50.
+
+
+The .hi-slate[reduced form] estimates the *ITT*
+$$
+`\begin{align}
+  \text{Y}_{i} = \pi_1 \text{Z}_{i} + v_i
+\end{align}`
+$$
+which we know IV rescales using the first stage
+$$
+`\begin{align}
+  \widehat{\beta}_{1}^\text{IV} = \dfrac{\widehat{\pi}_1}{\widehat{\gamma}_1} = \dfrac{\widehat{\pi}_1}{0.50} =
+  2 \times \widehat{\pi}_1
+\end{align}`
+$$
+---
+name: iv-rescale
+## Noncompliance, continued
+
+IV solves the noncompliance issue by rescaling by the rate of compliance.
+
+
+If everyone perfectly complies, then `\(\widehat{\gamma}_1 = 1\)` and `\(\widehat{\beta}_{1}^\text{IV} = \widehat{\pi}_1/1 = \widehat{\beta}_{1}^\text{ITT}\)`.
+
+
+.ex[Further example] `\(N_\text{Trt}\)` = 10; trt. compliance = 50%; ctrl. compliance = 100%.
+
+`\(\overline{\text{Y}}_\text{Trt} = \dfrac{5 (\beta_0 + \beta_1) + 5 (\beta_0)}{10} = \beta_0 + \dfrac{\beta_1}{2}\)`
+ and `\(\overline{\text{Y}}_\text{Ctrl} = \beta_0\)`.
+
+
+So our reduced-form estimate (the ITT) is `\(\widehat{\gamma}_1 = \dfrac{\beta_1}{2}\)` (half the true effect).
+
+
+IV consistently estimates `\(\beta_1\)` via rescaling the ITT by the rate of compliance
+$$
+`\begin{align}
+  \widehat{\beta}_1^\text{IV} = \dfrac{\pi}{\gamma} = \dfrac{\beta_1/2}{1/2} = \beta_1
+\end{align}`
+$$
+---
+## Takeaways
+
+Main points
+
+1. IV .b[rescales] .pink[the causal effect of] `\(\color{#e64173}{\text{Z}_{i}}\)` .pink[on] `\(\color{#e64173}{\text{Y}_{i}}\)` by .purple[the causal effect of] `\(\color{#6A5ACD}{\text{Z}_{i}}\)` .purple[on] `\(\color{#6A5ACD}{\text{D}_{i}}\)`.
+
+
+1. IV .b[does not] compare treated compliers to untreated compliers.
+&lt;br&gt;Such a comparison/estimator would re-introduce selection bias.
+---
 layout: false
 # Table of contents
 
@@ -333,6 +578,18 @@ layout: false
 ### Two-stage least squares
 .smaller[
 1. [Setup](#setup)
+1. [The reduced form](#reduced-form)
+  - [Defined](#reduced-form)
+  - [Intuition](#reduced-intuition)
+  - [Example](#reduced-example)
+  - [Derivation](#reduced-derivation)
+]
+
+### IV: Intuition and mechanics
+.smaller[
+1. [Setup](#iv-intuition)
+1. [Noncompliance](#iv-noncompliance)
+1. [Rescaling](#iv-rescale)
 
 ]
 ]
