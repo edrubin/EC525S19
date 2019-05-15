@@ -753,18 +753,521 @@ Main points
 --
 <br>Such a comparison/estimator would re-introduce selection bias.
 ---
+layout: true
+class: clear, middle
+
+---
+name: het
+
+Thus far, we assumed homogeneous treatment effects.
+
+.qa[Q] What happens .b[when treatment effects are heterogeneous]?
+---
+
+.qa[A] Let's recall what our instruments are doing (with Venn diagrams!).
+
+---
+name: venn
+
+```{R, venn_iv, echo = F, fig.height = 7.5}
+# Colors (order: x1, x2, x3, y, z)
+venn_colors <- c(purple, red, "grey60", orange, red_pink)
+# Line types (order: x1, x2, x3, y, z)
+venn_lines <- c("solid", "dotted", "dotted", "solid", "solid")
+# Locations of circles
+venn_df <- tibble(
+  x  = c( 0.0,   -0.5,    1.5,   -1.0, -1.4),
+  y  = c( 0.0,   -2.5,   -1.8,    2.0, -2.6),
+  r  = c( 1.9,    1.5,    1.5,    1.3,  1.3),
+  l  = c( "Y", "X[1]", "X[2]", "X[3]",  "Z"),
+  xl = c( 0.0,    0.7,    1.6,   -1.0, -2.9),
+  yl = c( 0.0,   -3.8,   -1.9,    2.2, -2.6)
+)
+# Venn
+ggplot(data = venn_df, aes(x0 = x, y0 = y, r = r, fill = l, color = l)) +
+geom_circle(aes(linetype = l), alpha = 0.3, size = 0.75) +
+theme_void() +
+theme(legend.position = "none") +
+scale_fill_manual(values = venn_colors) +
+scale_color_manual(values = venn_colors) +
+scale_linetype_manual(values = venn_lines) +
+geom_text(aes(x = xl, y = yl, label = l), size = 9, family = "Fira Sans Book", parse = T) +
+annotate(
+  x = -5.5, y = 3.3,
+  geom = "text", label = "Figure 1", size = 10, family = "Fira Sans Book", hjust = 0
+) +
+xlim(-5.5, 4.5) +
+ylim(-4.2, 3.4) +
+coord_equal()
+```
+---
+```{R, venn-endog, echo = F, fig.height = 7.5}
+# Change locations of circles
+venn_df %>%
+mutate(
+  x = x +   c(0, 0, 0, 0, 0),
+  xl = xl + c(0, 0, 0, 0, 0),
+  y = y +   c(0, 0, 0, 0, 1),
+  yl = yl + c(0, 0, 0, 0, 1)
+) %>%
+# Venn
+ggplot(data = ., aes(x0 = x, y0 = y, r = r, fill = l, color = l)) +
+geom_circle(aes(linetype = l), alpha = 0.3, size = 0.75) +
+theme_void() +
+theme(legend.position = "none") +
+scale_fill_manual(values = venn_colors) +
+scale_color_manual(values = venn_colors) +
+scale_linetype_manual(values = venn_lines) +
+geom_text(aes(x = xl, y = yl, label = l), size = 9, family = "Fira Sans Book", parse = T) +
+annotate(
+  x = -5.5, y = 3.3,
+  geom = "text", label = "Figure 2", size = 10, family = "Fira Sans Book", hjust = 0
+) +
+xlim(-5.5, 4.5) +
+ylim(-4.2, 3.4) +
+coord_equal()
+```
+---
+```{R, venn-irrelevant, echo = F, fig.height = 7.5}
+# Change locations of circles
+venn_df %>%
+mutate(
+  x = x +   c(0, 0, 0, 0,-1),
+  xl = xl + c(0, 0, 0, 0,-1),
+  y = y +   c(0, 0, 0, 0, 2.3),
+  yl = yl + c(0, 0, 0, 0, 2.3)
+) %>%
+# Venn
+ggplot(data = ., aes(x0 = x, y0 = y, r = r, fill = l, color = l)) +
+geom_circle(aes(linetype = l), alpha = 0.3, size = 0.75) +
+theme_void() +
+theme(legend.position = "none") +
+scale_fill_manual(values = venn_colors) +
+scale_color_manual(values = venn_colors) +
+scale_linetype_manual(values = venn_lines) +
+geom_text(aes(x = xl, y = yl, label = l), size = 9, family = "Fira Sans Book", parse = T) +
+annotate(
+  x = -5.5, y = 3.3,
+  geom = "text", label = "Figure 3", size = 10, family = "Fira Sans Book", hjust = 0
+) +
+xlim(-5.5, 4.5) +
+ylim(-4.2, 3.4) +
+coord_equal()
+```
+---
+```{R, venn-iv-endog2, echo = F, fig.height = 7.5}
+# Change locations of circles
+venn_df %>%
+mutate(
+  x = x +   c(0,    0,   0, 0,    2),
+  xl = xl + c(0, -2.4, 0.8, 0,  4.6),
+  y = y +   c(0,    0,   0, 0,    0),
+  yl = yl + c(0,    0,   0, 0, -1.1)
+) %>%
+# Venn
+ggplot(data = ., aes(x0 = x, y0 = y, r = r, fill = l, color = l)) +
+geom_circle(aes(linetype = l), alpha = 0.3, size = 0.75) +
+theme_void() +
+theme(legend.position = "none") +
+scale_fill_manual(values = venn_colors) +
+scale_color_manual(values = venn_colors) +
+scale_linetype_manual(values = venn_lines) +
+geom_text(aes(x = xl, y = yl, label = l), size = 9, family = "Fira Sans Book", parse = T) +
+annotate(
+  x = -5.5, y = 3.3,
+  geom = "text", label = "Figure 4", size = 10, family = "Fira Sans Book", hjust = 0
+) +
+xlim(-5.5, 4.5) +
+ylim(-4.2, 3.4) +
+coord_equal()
+```
+---
+```{R, venn-iv-endog1, echo = F, fig.height = 7.5}
+# Venn
+ggplot(data = venn_df, aes(x0 = x, y0 = y, r = r, fill = l, color = l)) +
+geom_circle(aes(linetype = l), alpha = 0.3, size = 0.75) +
+theme_void() +
+theme(legend.position = "none") +
+scale_fill_manual(values = venn_colors) +
+scale_color_manual(values = venn_colors) +
+scale_linetype_manual(values = venn_lines) +
+geom_text(aes(x = xl, y = yl, label = l), size = 9, family = "Fira Sans Book", parse = T) +
+annotate(
+  x = -5.5, y = 3.3,
+  geom = "text", label = "Figure 1", size = 10, family = "Fira Sans Book", hjust = 0
+) +
+xlim(-5.5, 4.5) +
+ylim(-4.2, 3.4) +
+coord_equal()
+```
+
+---
+layout: true
+# IV + heterogeneity
+
+---
+## Recap
+
+Throughout the course, we've discussed two concepts of treatment effects.
+
+--
+
+1. .attn[Average treatment effect] (.attn[ATE]) The average treatment effect for an individual randomly drawn from our sample.
+
+--
+
+1. .attn[Treatment on the treated] (.attn[TOT]) The average treatment effect for a .it.hi-slate[treated] individual
+randomly drawn from our sample.
+
+--
+
+When we assume homogeneous/constant treatment effects, ATE = TOT.
+
+--
+
+.qa[Q] If treatment effects vary, then what do IV and 2SLS estimate?
+
+--
+
+.qa[A] Not ATE.
+--
+ And not TOT.
+--
+ They estimate the LATE..super[.pink[†]]
+
+ .footnote[
+ .pink[†] See [Angrist, Imbens, and Rubin (1996)](https://www.jstor.org/stable/2291629).
+ ]
+---
+## The LATE
+
+IV generally estimates the .attn[LATE]—the .attn[Local Average Treatment Effect].
+
+--
+
+.note[Recall] IV "works" by isolating variation in $\text{D}_{i}$ induced by our instrument $\text{Z}_{i}$.
+
+--
+
+In other words: IV focuses on the individuals whose $\text{D}_{i}$ changes due to $\text{Z}_{i}$.
+
+Angrist, Imbens, and Rubin (1996) call these folks .attn[compliers].
+
+--
+
+However, *compliers* are only one of four possible groups.
+
+.col-left[
+1. .attn[Compliers] $\text{D}_{i} = 1$ iff $\text{Z}_{i}=1$.
+1. .attn[Always-takers] $\text{D}_{i} = 1$ $\forall \text{Z}_{i}$.
+1. .attn[Never-takers] $\text{D}_{i} = 0$ $\forall \text{Z}_{i}$.
+1. .attn[Defiers] $\text{D}_{i} = 1$ iff $\text{Z}_{i}=0$.
+]
+--
+.col-right[
+Only take pills .hi-slate[when treated].
+<br>.hi-slate[Always] take pills.
+<br>.hi-slate[Never] take pills.
+<br>Only take pills .hi-slate[when untreated].
+]
+---
+## The LATE
+
+Because IV only uses variation in $\text{D}_{i}$ that correlates with $\text{Z}_{i}$, IV mechanically drops *always-takers* and *never-takers*.
+
+--
+
+Most IV derivations/applications assume away the existence of *defiers*.
+
+--
+
+Thus, IV estimates a treatment effect .hi-slate[using only *compliers*].
+
+--
+
+Hence the "local" in *local average treatment effect*.
+---
+name: late-ex
+## The LATE: Medical-trial example
+
+Imagine treatment works for some $\left( \beta_{1,i} < 0 \right)$ and not for others $\left( \beta_{1,j} = 0 \right)$.
+
+Suppose individuals know their response to blood-pressure medication.
+
+--
+- $\beta_{1,i}<0$ individuals always take the pill.
+
+--
+- $\beta_{1,j}=0$ individuals only take the pill when treated.
+
+--
+
+Then our compliers will be individuals for whom $\beta_{1,j}=0$.
+
+--
+
+Thus, IV's LATE will indicate no treatment effect $\left( \widehat{\beta}_1^\text{IV} = 0 \right)$.
+
+---
+## The LATE
+
+.qa[Q] So is IV actually inconsistent?
+
+--
+
+.qa[A] It depends what you are trying to estimate (and how you interpret it).
+
+IV doesn't estimate the ATE or TOT, so it would be inconsistent for them..super[.pink[†]]
+
+.footnote[
+.pink[†] Just as the TOT is not consistent for the ATE.
+]
+
+--
+
+IV estimates the *local* average treatment effect.
+
+--
+
+.note[Takeaway] Because IV identifies off of compliers, it estimates an average treatment effect for these individuals (who *comply* with the instrument).
+
+--
+
+.note[Takeaway.sub[2]] Different instruments have different LATEs.
+---
+name: monotonicity
+## Monotonicity
+
+We've already written down the two classical IV/2SLS assumptions
+
+- .note[First stage:] $\mathop{\text{Cov}} \left( \text{Z}_{i},\, \text{D}_{i} \right) > 0$
+- .note[Exclusion restriction:] $\mathop{\text{Cov}} \left( \text{Z}_{i},\, \varepsilon_{i} \right) = 0$
+
+but we need a third assumption to get ensure IV's complier-based LATE interpretation.
+
+--
+
+- .attn[Monotonicity] (.attn[Uniformity]).attn[:] $\text{D}_{i}(z)\geq \text{D}_{i}(z')$ or $\text{D}_{i}(z)\leq \text{D}_{i}(z') \enspace \forall i$
+<br> [Heckman](chrome-extension://oemmndcbldboiebfnladdacbdfmadadm/http://jenni.uchicago.edu/papers/koop2006/koop2-IV_ho_2006-09-25a_mms.pdf): *Uniformity* of responses *across persons.*
+<br> [Imbens and Angrist (1994)](https://www.jstor.org/stable/2951620): Instrument has monotone effect on $\text{D}_{i}$.
+---
+## Monotonicity
+
+If "defiers" exist, then monotonicity/uniformity is violated.
+
+--
+
+In this case, the IV estimand is
+
+$$
+\begin{align}
+  \dfrac{\tau_{c} \mathop{\text{Pr}}\left(\text{complier}\right) - \tau_{d} \mathop{\text{Pr}}\left(\text{defier}\right)}{ \mathop{\text{Pr}}\left(\text{complier}\right) -  \mathop{\text{Pr}}\left(\text{defier}\right)}
+\end{align}
+$$
+
+which is not bound between $\tau_{c}$ and $\tau_{d}$.
+
+--
+
+.ex[Example] $\tau_c=$ 1 and $\tau_d=$ 2. $\mathop{\text{Pr}}\left(\text{complier}\right)=$ 2/3 and $\mathop{\text{Pr}}\left(\text{defier}\right)=$ 1/3.
+
+--
+
+Then the "LATE" is 0..super[.pink[†]]
+
+.footnote[
+.pink[†] Some people would instead say that there is no LATE when you violate monotonicity.
+]
+
+---
+layout: false
+class: clear, middle
+
+Until now, we've focused on using a single instrument.
+
+The 2SLS estimator accomodates multiple instruments..super[.pink[†]]
+
+.footnote[
+.pink[†] Whether you can find multiple valid instruments is another question.
+]
+---
+layout: true
+# Multiple instruments
+
+---
+class: inverse, middle
+name: multi-inst
+---
+## Motivation
+
+.qa[Q] Why include multiple instruments?
+
+--
+
+.qa[A] Multiple instruments can capture more variation in $\text{D}_{i}$ (efficiency).
+
+--
+
+Using terminology from the *system-of-equations* literature,
+
+- one instrument for one endogenous variable: .attn[just identified]
+- multiple instruments for one endogenous variable: .attn[over identified]
+
+---
+## In practice
+
+With (valid) instruments $\text{Z}_{1i}$ and $\text{Z}_{2i}$, or first stage becomes
+$$
+\begin{align}
+  \text{D}_{i} = \gamma_0 + \gamma_1 \text{Z}_{1i} + \gamma_2 \text{Z}_{2i} + \gamma_3 \text{X}_{i} + u_i
+\end{align}
+$$
+
+--
+
+while our second stage is still
+$$
+\begin{align}
+  \text{Y}_{i} = \beta_0 + \beta_1 \widehat{\text{D}}_{i} + \beta_2 \text{X}_{i} + v_i
+\end{align}
+$$
+---
+layout: true
+# Multiple instruments
+## Example: Quarter of birth
+
+---
+name: multi-ex
+
+Back to our quest to estimate the returns to education.
+
+--
+
+[Angrist and Krueger (1991)](https://www.jstor.org/stable/2937954) proposed *quarter of birth* as a set of instruments for years of schooling.
+
+--
+
+Accordingly, their first stage looks something like.super[.pink[†]]
+
+.footnote[
+.pink[†] We need to drop one of the quarter-of-birth indicators to avoid perfect collinearity.
+]
+
+$$
+\begin{align}
+  \text{Schooling}_i = \gamma_0 &+ \gamma_1 \mathbb{I}(\text{Born Q1})_{i} + \gamma_2 \mathbb{I}(\text{Born Q2})_{i}
+  \\&+ \gamma_3 \mathbb{I}(\text{Born Q3})_{i} + \gamma_4 \mathbb{I}(\text{Born Q4})_{i}
+  \\&+ \gamma_5 \text{X}_{i} + u_{i}
+\end{align}
+$$
+
+
+---
+.qa[Q] Is quarter of birth a valid instrument?
+
+--
+
+.qa[Q1] Why would quarter of birth affect schooling? (.note[First stage])
+
+--
+
+.qa[A1] Students cannot drop out of school until a certain age, and quarter of birth affects your age at the time you begin school.
+
+--
+
+.ex[Example] Some states require students to stay in school until they are 16.
+- Students who start school at age .hi-slate[6] drop out after .hi-slate[10] years of schooling.
+- Students who start school at age .hi-slate[5] drop out after .hi-slate[11] years of schooling.
+
+---
+If students must begin school in calendar year in which they turn 6
+- December birthdates: begin school at 5.75; drop out with 10.25 yrs.
+- January birthdates: begin school at 6.75; drop out with 9.25 yrs.
+
+--
+
+For some group, quarter of birth may affect the number of years in school.
+---
+
+It turns out that the first stage is also pretty weak in this setting.
+
+.attn[Weak instruments] can cause several problems for 2SLS/IV:
+
+--
+
+1. Our estimator is a ratio of the reduced form and the first stage, so a weak first stage can blow up reduced-form estimates (amplifying reduced-form noise/bias).
+
+--
+
+2. Many weak instruments lead to a finite-sample issue in which 2SLS is biased toward OLS—our first stage is essentially overfitting.
+
+--
+
+What about our other requirements for a valid instrument?
+
+---
+.qa[Q2] Is quarter of birth uncorrelated with $\varepsilon_i$ (.note[excludable])?
+
+--
+
+.qa[A2] While quarter of birth may be fairly arbitrary for some families, other families might time births.
+
+If these birth timers differ from other couples along other dimensions (_e.g._, income or education), then quarter of birth may correlate with $\varepsilon_i$.
+---
+.qa[Q3] Is the effect monotone?
+
+--
+
+.qa[A3] Some.super[.pink[†]] argue that monotonicity may be violated in this setting.
+
+.footnote[
+.pink[†] _E.g._, [Aliprantis (2012)](https://journals.sagepub.com/doi/abs/10.3102/1076998610396885)
+]
+
+--
+
+Consider December births.
+
+--
+
+- Original idea: December birthdates will start school at age 5.7, inducing more years of education before 16.
+
+--
+
+- *Redshirting* idea: Parents hold back December kids so they can be older (_i.e._, 6.7), inducing fewer years of education before 16.
+
+---
+layout: true
+# IV and 2SLS
+## Conclusions
+
+---
+name: conclusions
+
+1. IV/2SLS focus on .hi-slate[isolating some "good" variation] in $\text{D}_{i}$ via $\text{Z}_{i}$.
+
+1. Important .hi-slate[requirements]: strong first stage, excludability, monotonicity.
+
+1. IV and 2SLS .hi-slate[rescale the reduced form] with the first stage.
+
+1. Estimates are .hi-slate[LATE from compliers].
+
+1. Different instruments can produce .hi-slate[different LATEs].
+
+1. A .hi-slate[weak first stage] can lead to problems.
+---
 layout: false
 # Table of contents
 
 .pull-left[
 ### Admin
-.smaller[
+.smallest[
 
 1. [Schedule](#schedule)
 ]
 
 ### Instrumental variables
-.smaller[
+.smallest[
 1. [Research designs](#designs)
 1. [Introduction](#intro)
 1. [Definition](#defined)
@@ -777,22 +1280,26 @@ layout: false
 .pull-right[
 
 ### Two-stage least squares
-.smaller[
+.smallest[
 1. [Setup](#setup)
 1. [The reduced form](#reduced-form)
   - [Defined](#reduced-form)
   - [Intuition](#reduced-intuition)
   - [Example](#reduced-example)
   - [Derivation](#reduced-derivation)
+1. [Intuition and mechanics](#iv-intuition)
+  - [Noncompliance](#iv-noncompliance)
+  - [Rescaling](#iv-rescale)
+1. [Heterogeneous treatment effects](#het)
+  - [Venn diagram](#venn)
+  - [LATE](#late)
+  - [Example](#late-ex)
+  - [Monotonicity](#monotonicity)
+1. [Multiple instruments](#multi-inst)
+  - [Example](#multi-ex)
+1. [Conclusions](#conclusions)
 ]
 
-### IV: Intuition and mechanics
-.smaller[
-1. [Setup](#iv-intuition)
-1. [Noncompliance](#iv-noncompliance)
-1. [Rescaling](#iv-rescale)
-
-]
 ]
 ---
 exclude: true

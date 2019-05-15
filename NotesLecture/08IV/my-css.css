@@ -375,3 +375,14 @@ table th {
   /* color: #bebebe !important; */
   color: #cccccc !important;
 }
+
+.col-left {
+  float: left;
+  width: 47%;
+  margin-top: -1em;
+}
+.col-right {
+  float: right;
+  width: 47%;
+  margin-top: -1em;
+}
