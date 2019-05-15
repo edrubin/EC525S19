@@ -98,7 +98,7 @@ We will use two books.
 1. Heterogeneous treatment effects and the LATE
 
 **Note formats:** [.html](https://raw.githack.com/edrubin/EC525S19/master/NotesLecture/08IV/08IV.html) | [.html (no pause)](https://raw.githack.com/edrubin/EC525S19/master/NotesLecture/08IV/08IV_NoPause.html) | [.pdf](https://raw.githack.com/edrubin/EC525S19/master/NotesLecture/08IV/08IV.pdf) | [.pdf (no pause)](https://raw.githack.com/edrubin/EC525S19/master/NotesLecture/08IV/08IV_NoPause.pdf) | [.Rmd](https://raw.githack.com/edrubin/EC525S19/master/NotesLecture/08IV/08IV.Rmd)
-<br>**Readings:** MHE chapter 3 + Cameron and Trivedi section 25.4
+<br>**Readings:** MHE chapter 4 + Cameron and Trivedi sections 4.8–4.9
 
 *Another note on the notes:* I create the slides with [`xaringan`](https://github.com/yihui/xaringan/wiki) in [R](cran.r-project.org). Thanks to [Grant McDermott](grantmcdermott.com/) for encouraging me to make this switch.
 
@@ -166,6 +166,10 @@ Building a research project/proposal.
 Step 1: **Research question (causal relationship of interest) and motivation.**
 <br>Should be between 2 sentences and 2 paragraphs.
 <br>*Due 15 April 2019.*
+
+## Practice problems
+
+1. [Instrumental variables](https://raw.githack.com/edrubin/EC525S19/master/NotesLecture/08IV/08IV_Practice.pdf)
 
 ## Resources
 
