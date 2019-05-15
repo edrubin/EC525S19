@@ -92,8 +92,10 @@ We will use two books.
 
 **[Lecture 08: Instrument Variables](https://raw.githack.com/edrubin/EC525S19/master/NotesLecture/08IV/08IV.html)**
 
-1. Matching estimators: Nearest neighbor and kernel
-1. Propensity-score methods: Regression control, treatment-effect heterogeneity, blocking, weighting, *doubly robust*
+1. General research designs
+1. Instrumental variables
+1. Two-stage least squares
+1. Heterogeneous treatment effects and the LATE
 
 **Note formats:** [.html](https://raw.githack.com/edrubin/EC525S19/master/NotesLecture/08IV/08IV.html) | [.html (no pause)](https://raw.githack.com/edrubin/EC525S19/master/NotesLecture/08IV/08IV_NoPause.html) | [.pdf](https://raw.githack.com/edrubin/EC525S19/master/NotesLecture/08IV/08IV.pdf) | [.pdf (no pause)](https://raw.githack.com/edrubin/EC525S19/master/NotesLecture/08IV/08IV_NoPause.pdf) | [.Rmd](https://raw.githack.com/edrubin/EC525S19/master/NotesLecture/08IV/08IV.Rmd)
 <br>**Readings:** MHE chapter 3 + Cameron and Trivedi section 25.4
