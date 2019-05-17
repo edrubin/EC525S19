@@ -176,6 +176,9 @@ Step 1: **Research question (causal relationship of interest) and motivation.**
 <br>Should be between 2 sentences and 2 paragraphs.
 <br>*Due 15 April 2019.*
 
+Step 2: [**Short proposal**](https://raw.githack.com/edrubin/EC525S19/master/Project/Step2/Step2.pdf)
+<br>*Due 30 May 2019*
+
 ## Practice problems
 
 1. [Instrumental variables](https://raw.githack.com/edrubin/EC525S19/master/NotesLecture/08IV/08IV_Practice.pdf)

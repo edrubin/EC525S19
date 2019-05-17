@@ -1,0 +1,112 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <title>Project Proposal</title>
+    <meta charset="utf-8">
+    <meta name="author" content="EC 425/525: Econometrics" />
+    <link href="Step2_files/remark-css-0.0.1/default.css" rel="stylesheet" />
+    <link href="Step2_files/remark-css-0.0.1/metropolis.css" rel="stylesheet" />
+    <link href="Step2_files/remark-css-0.0.1/metropolis-fonts.css" rel="stylesheet" />
+    <link rel="stylesheet" href="my-css.css" type="text/css" />
+  </head>
+  <body>
+    <textarea id="source">
+class: center, middle, inverse, title-slide
+
+# Project Proposal
+## Step 2
+### <strong>EC 425/525:</strong> Econometrics
+### <br>Due <em>before</em> midnight (11:59pm) on .bold[Thursday, 30 May 2019]
+
+---
+
+class: clear
+
+
+
+.mono.b[DUE] Your .b[typed] proposal is due *before* 11:59pm on Thursday, 30 May 2019 on [Canvas](https://canvas.uoregon.edu/).
+
+Your grade will depend upon your ability to clearly respond to the assignment—concepts *and* constraints.
+
+.mono.b[Assignment] Submit a project proposal that
+
+1\. Motivates and outlines your .hi[*causal* question] of interest.
+&lt;br&gt;
+2\. Explains .hi[potential sources of selection] that could lead to bias.
+&lt;br&gt;
+3\. Describes the .hi[ideal experiment] which one could use to answer this question
+&lt;br&gt;
+4\. Discusses a .hi[practical research design] through which one could answer the original question—clarifying *how* this research design avoids selection bias.
+
+.hi[Note] Your question must be caual in nature. If it is not, come up with a new question.
+
+.mono.b[Sections] Your proposal requires the following sections/components. Separate them.
+
+.mono.b[Title] (1 ≤ words ≤ 15)
+&lt;br&gt;A title that clearly describes your question—and potentially how you would answer it.
+
+.mono.b[Abstract] (50 ≤ words ≤ 150)
+&lt;br&gt;A brief description of your project. Clearly describe the main question, how you will answer it, and why/for whom the results matter. Be concise and clear. You hook the reader here and elaborate later.
+
+.mono.b[Question and motivation] (100 ≤ words ≤ 300)
+&lt;br&gt; Explain why this area of research is interesting/important in general (not just to you). Why should your reader care/keep reading? After you .b[briefly] motivate the general topic, clearly describe your specific .b[causal question]. If necessary, motivate the specific question too.
+
+.mono.b[Selection] (100 ≤ words ≤ 300)
+&lt;br&gt; Why is this question challenging to answer empirically? In other words, what sources of selection bias concern you? If we simply run a regression of `\(y\)` on `\(X\)`, why might `\(\hat{\beta}\)` be biased?
+
+.mono.b[Ideal experiment] (100 ≤ words ≤ 300)
+&lt;br&gt; Describe the ideal experiment that would answer your question. This *ideal* experiment does not need to be practical—*i.e.*, you do not need to be able to run it in real life.
+
+.mono.b[Practical research design] (100 ≤ words ≤ 400)
+&lt;br&gt; How might you causally answer the your question in *real life*? Which data would you need? What sort of research design would you apply—selection on observables (regression with many controls, matching, propensity-score methods, *etc.*) or selection on observables (IV, RD, *etc.*)? How does this proposed research design avoid selection bias?
+
+.mono.b[Update] Now that you've worked through these components, rewrite your abstract and title.
+    </textarea>
+<script src="https://remarkjs.com/downloads/remark-latest.min.js"></script>
+<script>var slideshow = remark.create({
+"ratio": "8.5:11",
+"highlightStyle": "github",
+"highlightLines": true,
+"countIncrementalSlides": false
+});
+if (window.HTMLWidgets) slideshow.on('afterShowSlide', function (slide) {
+  window.dispatchEvent(new Event('resize'));
+});
+(function() {
+  var d = document, s = d.createElement("style"), r = d.querySelector(".remark-slide-scaler");
+  if (!r) return;
+  s.type = "text/css"; s.innerHTML = "@page {size: " + r.style.width + " " + r.style.height +"; }";
+  d.head.appendChild(s);
+})();</script>
+
+<script>
+(function() {
+  var i, text, code, codes = document.getElementsByTagName('code');
+  for (i = 0; i < codes.length;) {
+    code = codes[i];
+    if (code.parentNode.tagName !== 'PRE' && code.childElementCount === 0) {
+      text = code.textContent;
+      if (/^\\\((.|\s)+\\\)$/.test(text) || /^\\\[(.|\s)+\\\]$/.test(text) ||
+          /^\$\$(.|\s)+\$\$$/.test(text) ||
+          /^\\begin\{([^}]+)\}(.|\s)+\\end\{[^}]+\}$/.test(text)) {
+        code.outerHTML = code.innerHTML;  // remove <code></code>
+        continue;
+      }
+    }
+    i++;
+  }
+})();
+</script>
+<!-- dynamically load mathjax for compatibility with self-contained -->
+<script>
+(function () {
+  var script = document.createElement('script');
+  script.type = 'text/javascript';
+  script.src  = 'https://mathjax.rstudio.com/latest/MathJax.js?config=TeX-MML-AM_CHTML';
+  if (location.protocol !== 'file:' && /^https?:/.test(script.src))
+    script.src  = script.src.replace(/^https?:/, '');
+  document.getElementsByTagName('head')[0].appendChild(script);
+})();
+</script>
+  </body>
+</html>
