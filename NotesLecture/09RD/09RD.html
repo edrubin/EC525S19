@@ -1,0 +1,234 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <title>Regression Discontinuity</title>
+    <meta charset="utf-8">
+    <meta name="author" content="Edward Rubin" />
+    <meta name="date" content="2019-05-15" />
+    <link href="09RD_files/remark-css-0.0.1/default.css" rel="stylesheet" />
+    <link href="09RD_files/remark-css-0.0.1/metropolis.css" rel="stylesheet" />
+    <link href="09RD_files/remark-css-0.0.1/metropolis-fonts.css" rel="stylesheet" />
+    <link rel="stylesheet" href="my-css.css" type="text/css" />
+  </head>
+  <body>
+    <textarea id="source">
+class: center, middle, inverse, title-slide
+
+# Regression Discontinuity
+## EC 425/525, Set 9
+### Edward Rubin
+### 15 May 2019
+
+---
+
+class: inverse, middle
+
+
+
+$$
+`\begin{align}
+  \def\ci{\perp\mkern-10mu\perp}
+\end{align}`
+$$
+
+
+# Prologue
+
+---
+name: schedule
+
+# Schedule
+
+## Last time
+
+- Introduction to selection-on-unobservables designs
+- Instrumental variables
+- Two-stage least squares
+
+## Today
+
+Regression discontinuity .super[.pink[†]]
+
+.footnote[
+.pink[†] These notes largely follow notes from [Michael Anderson](https://are.berkeley.edu/~mlanderson/ARE_Website/Home.html) and [Imbens and Lemieux (2008)](https://www.sciencedirect.com/science/article/pii/S0304407607001091).
+]
+
+## Upcoming
+
+Midterm
+---
+layout: true
+# Regression discontinuity
+
+---
+class: inverse, middle
+---
+name: rd-setup
+## Setup
+
+We're still in the game of estimating the effect of a potentially endogenous treatment `\(\text{D}_{i}\)` on an outcome `\(\text{Y}_{i}\)`.
+
+--
+
+.attn[Regression discontinuity] (.attn[RD]) offers a particularly clear/clean research design based upon an arbitrary threshold (the *discontinuity*).
+
+--
+
+That said, most RDs boil down to an implementation of IV.
+
+--
+
+In addition, while RD is all the rage in modern applied econometrics, [Thistlewaite and Campbell](https://obsstudies.org/wp-content/uploads/2017/01/regression_discontinuity_all_comments-1.pdf) wrote about it back in 1960.
+
+---
+name: rd-framework
+## Our framework
+
+Back to our potential-outcome framework.
+
+--
+
+We want to know the effect of `\(\text{D}_{i}\)` on `\(\text{Y}_{i}\)`.
+$$
+`\begin{align}
+  \text{Y}_{i} = \text{D}_{i} \text{Y}_{1i} + (1-\text{D}_{i}) \text{Y}_{0i}
+\end{align}`
+$$
+
+--
+
+.hi[New:] Suppose `\(\text{D}_{i}\)` is determined.super[.pink[†]] by whether some variable `\(\text{X}_{i}\)` crosses a threshold `\(c\)` (the discontinuity).
+
+.footnote[
+.pink[†] At least in part.
+]
+
+--
+
+The variable `\(\text{X}_{i}\)` need not be randomly assigned—we will assume it is not (_i.e._, `\(\text{X}_{i}\)` correlates with `\(\text{Y}_{0i}\)` and `\(\text{Y}_{1i}\)`).
+
+--
+
+We will assume that `\(\text{Y}_{0i}\)` and `\(\text{Y}_{1i}\)` vary smoothly in `\(\text{X}_{i}\)`.
+
+---
+name: rd-examples
+## Examples
+
+We often apply regression-discontinuity designs in setting with some arbitrary threshold embeded within some bureaucratic decision.
+
+--
+
+- An elector candidate wins if her vote share exceeds her competitors.
+- Election runoffs are triggered if "winner" is below 50%.
+- Antidiscrimination laws only apply to firms with &gt;15 employees.
+- Prisoners are eligible for early parole if some score exceeds a threshold.
+- An individual is eligible for Medicare if her age is at least 65.
+- You get a ticket if your speed exceeds the speed limit.
+- Fifteen-percent discount at Sizzler if your age exceeds 60.
+- Counties with PM.sub[2.5] &gt; 35 μg/m.super[3] are *out of attainment*.
+
+--
+
+In some cases, "treatment" is definite once we exceed the threshold.
+---
+## Sharp *vs.* fuzzy
+
+We distinguish RDs by how strong/definitive of the threshold is.
+
+--
+
+.attn[Sharp RDs] mean everyone moves from control to treatment when their `\(\text{X}_{i}\)` passes our threshold `\(c\)`
+--
+, _i.e._, `\(\text{D}_{i}\)` switches from 0 to 1 when `\(\text{X}_{i}\)` moves across `\(c\)`.
+
+
+--
+
+_E.g._, a politician wins an election when the difference between her vote share and her competitor's vote share exceeds zero.
+
+--
+
+.attn[Fuzzy RDs] mean the probability of treatment `\(\left( \text{D}_{i}=1 \right)\)` jumps discontinuous at the threshold `\(c\)`, but it does not move from 0 to 1.
+
+--
+
+_E.g._, Crossing some GRE threshold discontinuously increases your chances of getting into some grad schools, but it doesn't guarantee admittance.
+
+
+
+
+
+---
+layout: false
+# Table of contents
+
+.col-left[
+### Admin
+.smaller[
+
+1. [Schedule](#schedule)
+]
+
+]
+
+.col-right[
+
+### RD
+.smaller[
+1. [Setup](#rd-setup)
+1. [Framework](#rd-framework)
+1. [Examples](#rd-examples)
+]
+
+]
+---
+exclude: true
+    </textarea>
+<script src="https://remarkjs.com/downloads/remark-latest.min.js"></script>
+<script>var slideshow = remark.create({
+"highlightStyle": "github",
+"highlightLines": true,
+"countIncrementalSlides": false
+});
+if (window.HTMLWidgets) slideshow.on('afterShowSlide', function (slide) {
+  window.dispatchEvent(new Event('resize'));
+});
+(function() {
+  var d = document, s = d.createElement("style"), r = d.querySelector(".remark-slide-scaler");
+  if (!r) return;
+  s.type = "text/css"; s.innerHTML = "@page {size: " + r.style.width + " " + r.style.height +"; }";
+  d.head.appendChild(s);
+})();</script>
+
+<script>
+(function() {
+  var i, text, code, codes = document.getElementsByTagName('code');
+  for (i = 0; i < codes.length;) {
+    code = codes[i];
+    if (code.parentNode.tagName !== 'PRE' && code.childElementCount === 0) {
+      text = code.textContent;
+      if (/^\\\((.|\s)+\\\)$/.test(text) || /^\\\[(.|\s)+\\\]$/.test(text) ||
+          /^\$\$(.|\s)+\$\$$/.test(text) ||
+          /^\\begin\{([^}]+)\}(.|\s)+\\end\{[^}]+\}$/.test(text)) {
+        code.outerHTML = code.innerHTML;  // remove <code></code>
+        continue;
+      }
+    }
+    i++;
+  }
+})();
+</script>
+<!-- dynamically load mathjax for compatibility with self-contained -->
+<script>
+(function () {
+  var script = document.createElement('script');
+  script.type = 'text/javascript';
+  script.src  = 'https://mathjax.rstudio.com/latest/MathJax.js?config=TeX-MML-AM_CHTML';
+  if (location.protocol !== 'file:' && /^https?:/.test(script.src))
+    script.src  = script.src.replace(/^https?:/, '');
+  document.getElementsByTagName('head')[0].appendChild(script);
+})();
+</script>
+  </body>
+</html>

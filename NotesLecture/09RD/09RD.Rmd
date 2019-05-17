@@ -1,0 +1,316 @@
+---
+title: "Regression Discontinuity"
+subtitle: "EC 425/525, Set 9"
+author: "Edward Rubin"
+date: "`r format(Sys.time(), '%d %B %Y')`"
+output:
+  xaringan::moon_reader:
+    css: ['default', 'metropolis', 'metropolis-fonts', 'my-css.css']
+    # self_contained: true
+    nature:
+      highlightStyle: github
+      highlightLines: true
+      countIncrementalSlides: false
+---
+class: inverse, middle
+
+```{R, setup, include = F}
+# devtools::install_github("dill/emoGG")
+library(pacman)
+p_load(
+  broom, tidyverse,
+  ggplot2, ggthemes, ggforce, ggridges,
+  latex2exp, viridis, extrafont, gridExtra,
+  kableExtra, snakecase, janitor,
+  data.table, dplyr,
+  lubridate, knitr,
+  estimatr, here, magrittr
+)
+# Define pink color
+red_pink <- "#e64173"
+turquoise <- "#20B2AA"
+orange <- "#FFA500"
+red <- "#fb6107"
+blue <- "#3b3b9a"
+green <- "#8bb174"
+grey_light <- "grey70"
+grey_mid <- "grey50"
+grey_dark <- "grey20"
+purple <- "#6A5ACD"
+slate <- "#314f4f"
+# Dark slate grey: #314f4f
+# Knitr options
+opts_chunk$set(
+  comment = "#>",
+  fig.align = "center",
+  fig.height = 7,
+  fig.width = 10.5,
+  warning = F,
+  message = F
+)
+opts_chunk$set(dev = "svg")
+options(device = function(file, width, height) {
+  svg(tempfile(), width = width, height = height)
+})
+options(crayon.enabled = F)
+options(knitr.table.format = "html")
+# A blank theme for ggplot
+theme_empty <- theme_bw() + theme(
+  line = element_blank(),
+  rect = element_blank(),
+  strip.text = element_blank(),
+  axis.text = element_blank(),
+  plot.title = element_blank(),
+  axis.title = element_blank(),
+  plot.margin = structure(c(0, 0, -0.5, -1), unit = "lines", valid.unit = 3L, class = "unit"),
+  legend.position = "none"
+)
+theme_simple <- theme_bw() + theme(
+  line = element_blank(),
+  panel.grid = element_blank(),
+  rect = element_blank(),
+  strip.text = element_blank(),
+  axis.text.x = element_text(size = 18, family = "STIXGeneral"),
+  axis.text.y = element_blank(),
+  axis.ticks = element_blank(),
+  plot.title = element_blank(),
+  axis.title = element_blank(),
+  # plot.margin = structure(c(0, 0, -1, -1), unit = "lines", valid.unit = 3L, class = "unit"),
+  legend.position = "none"
+)
+theme_axes_math <- theme_void() + theme(
+  text = element_text(family = "MathJax_Math"),
+  axis.title = element_text(size = 22),
+  axis.title.x = element_text(hjust = .95, margin = margin(0.15, 0, 0, 0, unit = "lines")),
+  axis.title.y = element_text(vjust = .95, margin = margin(0, 0.15, 0, 0, unit = "lines")),
+  axis.line = element_line(
+    color = "grey70",
+    size = 0.25,
+    arrow = arrow(angle = 30, length = unit(0.15, "inches")
+  )),
+  plot.margin = structure(c(1, 0, 1, 0), unit = "lines", valid.unit = 3L, class = "unit"),
+  legend.position = "none"
+)
+theme_axes_serif <- theme_void() + theme(
+  text = element_text(family = "MathJax_Main"),
+  axis.title = element_text(size = 22),
+  axis.title.x = element_text(hjust = .95, margin = margin(0.15, 0, 0, 0, unit = "lines")),
+  axis.title.y = element_text(vjust = .95, margin = margin(0, 0.15, 0, 0, unit = "lines")),
+  axis.line = element_line(
+    color = "grey70",
+    size = 0.25,
+    arrow = arrow(angle = 30, length = unit(0.15, "inches")
+  )),
+  plot.margin = structure(c(1, 0, 1, 0), unit = "lines", valid.unit = 3L, class = "unit"),
+  legend.position = "none"
+)
+theme_axes <- theme_void() + theme(
+  text = element_text(family = "Fira Sans Book"),
+  axis.title = element_text(size = 18),
+  axis.title.x = element_text(hjust = .95, margin = margin(0.15, 0, 0, 0, unit = "lines")),
+  axis.title.y = element_text(vjust = .95, margin = margin(0, 0.15, 0, 0, unit = "lines")),
+  axis.line = element_line(
+    color = grey_light,
+    size = 0.25,
+    arrow = arrow(angle = 30, length = unit(0.15, "inches")
+  )),
+  plot.margin = structure(c(1, 0, 1, 0), unit = "lines", valid.unit = 3L, class = "unit"),
+  legend.position = "none"
+)
+theme_set(theme_gray(base_size = 20))
+# Column names for regression results
+reg_columns <- c("Term", "Est.", "S.E.", "t stat.", "p-Value")
+# Function for formatting p values
+format_pvi <- function(pv) {
+  return(ifelse(
+    pv < 0.0001,
+    "<0.0001",
+    round(pv, 4) %>% format(scientific = F)
+  ))
+}
+format_pv <- function(pvs) lapply(X = pvs, FUN = format_pvi) %>% unlist()
+# Tidy regression results table
+tidy_table <- function(x, terms, highlight_row = 1, highlight_color = "black", highlight_bold = T, digits = c(NA, 3, 3, 2, 5), title = NULL) {
+  x %>%
+    tidy() %>%
+    select(1:5) %>%
+    mutate(
+      term = terms,
+      p.value = p.value %>% format_pv()
+    ) %>%
+    kable(
+      col.names = reg_columns,
+      escape = F,
+      digits = digits,
+      caption = title
+    ) %>%
+    kable_styling(font_size = 20) %>%
+    row_spec(1:nrow(tidy(x)), background = "white") %>%
+    row_spec(highlight_row, bold = highlight_bold, color = highlight_color)
+}
+```
+
+$$
+\begin{align}
+  \def\ci{\perp\mkern-10mu\perp}
+\end{align}
+$$
+
+
+# Prologue
+
+---
+name: schedule
+
+# Schedule
+
+## Last time
+
+- Introduction to selection-on-unobservables designs
+- Instrumental variables
+- Two-stage least squares
+
+## Today
+
+Regression discontinuity .super[.pink[†]]
+
+.footnote[
+.pink[†] These notes largely follow notes from [Michael Anderson](https://are.berkeley.edu/~mlanderson/ARE_Website/Home.html) and [Imbens and Lemieux (2008)](https://www.sciencedirect.com/science/article/pii/S0304407607001091).
+]
+
+## Upcoming
+
+Midterm
+---
+layout: true
+# Regression discontinuity
+
+---
+class: inverse, middle
+---
+name: rd-setup
+## Setup
+
+We're still in the game of estimating the effect of a potentially endogenous treatment $\text{D}_{i}$ on an outcome $\text{Y}_{i}$.
+
+--
+
+.attn[Regression discontinuity] (.attn[RD]) offers a particularly clear/clean research design based upon an arbitrary threshold (the *discontinuity*).
+
+--
+
+That said, most RDs boil down to an implementation of IV.
+
+--
+
+In addition, while RD is all the rage in modern applied econometrics, [Thistlewaite and Campbell](https://obsstudies.org/wp-content/uploads/2017/01/regression_discontinuity_all_comments-1.pdf) wrote about it back in 1960.
+
+---
+name: rd-framework
+## Our framework
+
+Back to our potential-outcome framework.
+
+--
+
+We want to know the effect of $\text{D}_{i}$ on $\text{Y}_{i}$.
+$$
+\begin{align}
+  \text{Y}_{i} = \text{D}_{i} \text{Y}_{1i} + (1-\text{D}_{i}) \text{Y}_{0i}
+\end{align}
+$$
+
+--
+
+.hi[New:] Suppose $\text{D}_{i}$ is determined.super[.pink[†]] by whether some variable $\text{X}_{i}$ crosses a threshold $c$ (the discontinuity).
+
+.footnote[
+.pink[†] At least in part.
+]
+
+--
+
+The variable $\text{X}_{i}$ need not be randomly assigned—we will assume it is not (_i.e._, $\text{X}_{i}$ correlates with $\text{Y}_{0i}$ and $\text{Y}_{1i}$).
+
+--
+
+We will assume that $\text{Y}_{0i}$ and $\text{Y}_{1i}$ vary smoothly in $\text{X}_{i}$.
+
+---
+name: rd-examples
+## Examples
+
+We often apply regression-discontinuity designs in setting with some arbitrary threshold embeded within some bureaucratic decision.
+
+--
+
+- An elector candidate wins if her vote share exceeds her competitors.
+- Election runoffs are triggered if "winner" is below 50%.
+- Antidiscrimination laws only apply to firms with >15 employees.
+- Prisoners are eligible for early parole if some score exceeds a threshold.
+- An individual is eligible for Medicare if her age is at least 65.
+- You get a ticket if your speed exceeds the speed limit.
+- Fifteen-percent discount at Sizzler if your age exceeds 60.
+- Counties with PM.sub[2.5] > 35 μg/m.super[3] are *out of attainment*.
+
+--
+
+In some cases, "treatment" is definite once we exceed the threshold.
+---
+## Sharp *vs.* fuzzy
+
+We distinguish RDs by how strong/definitive of the threshold is.
+
+--
+
+.attn[Sharp RDs] mean everyone moves from control to treatment when their $\text{X}_{i}$ passes our threshold $c$
+--
+, _i.e._, $\text{D}_{i}$ switches from 0 to 1 when $\text{X}_{i}$ moves across $c$.
+
+
+--
+
+_E.g._, a politician wins an election when the difference between her vote share and her competitor's vote share exceeds zero.
+
+--
+
+.attn[Fuzzy RDs] mean the probability of treatment $\left( \text{D}_{i}=1 \right)$ jumps discontinuous at the threshold $c$, but it does not move from 0 to 1.
+
+--
+
+_E.g._, Crossing some GRE threshold discontinuously increases your chances of getting into some grad schools, but it doesn't guarantee admittance.
+
+
+
+
+
+---
+layout: false
+# Table of contents
+
+.col-left[
+### Admin
+.smaller[
+
+1. [Schedule](#schedule)
+]
+
+]
+
+.col-right[
+
+### RD
+.smaller[
+1. [Setup](#rd-setup)
+1. [Framework](#rd-framework)
+1. [Examples](#rd-examples)
+]
+
+]
+---
+exclude: true
+
+```{R, generate pdfs, include = F, eval = F}
+source("../../ScriptsR/unpause.R")
+unpause("09RD.Rmd", ".", T, T)
+```
