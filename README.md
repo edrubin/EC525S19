@@ -102,6 +102,13 @@ We will use two books.
 
 *Another note on the notes:* I create the slides with [`xaringan`](https://github.com/yihui/xaringan/wiki) in [R](cran.r-project.org). Thanks to [Grant McDermott](grantmcdermott.com/) for encouraging me to make this switch.
 
+**[Lecture 09: Regression Discontinuity](https://raw.githack.com/edrubin/EC525S19/master/NotesLecture/09RD/09RD.html)**
+
+**Note formats:** [.html](https://raw.githack.com/edrubin/EC525S19/master/NotesLecture/09RD/09RD.html) | [.html (no pause)](https://raw.githack.com/edrubin/EC525S19/master/NotesLecture/09RD/08IV_NoPause.html) | [.pdf](https://raw.githack.com/edrubin/EC525S19/master/NotesLecture/09RD/09RD.pdf) | [.pdf (no pause)](https://raw.githack.com/edrubin/EC525S19/master/NotesLecture/09RD/08IV_NoPause.pdf) | [.Rmd](https://raw.githack.com/edrubin/EC525S19/master/NotesLecture/09RD/09RD.Rmd)
+<br>**Readings:** MHE chapter 4 + Cameron and Trivedi sections 4.8–4.9
+
+*Another note on the notes:* I create the slides with [`xaringan`](https://github.com/yihui/xaringan/wiki) in [R](cran.r-project.org). Thanks to [Grant McDermott](grantmcdermott.com/) for encouraging me to make this switch.
+
 ## Lab slides
 
 **[Lab 01: R Intro/Review](https://raw.githack.com/edrubin/EC525S19/master/NotesLab/01RBasics/01RBasics.html)**

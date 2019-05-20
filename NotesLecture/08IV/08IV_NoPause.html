@@ -4,10 +4,11 @@
     <title>Instrumental Variables</title>
     <meta charset="utf-8">
     <meta name="author" content="Edward Rubin" />
-    <meta name="date" content="2019-05-15" />
+    <meta name="date" content="2019-05-20" />
     <link href="08IV_NoPause_files/remark-css-0.0.1/default.css" rel="stylesheet" />
     <link href="08IV_NoPause_files/remark-css-0.0.1/metropolis.css" rel="stylesheet" />
     <link href="08IV_NoPause_files/remark-css-0.0.1/metropolis-fonts.css" rel="stylesheet" />
+    <script src="08IV_NoPause_files/kePrint-0.0.1/kePrint.js"></script>
     <link rel="stylesheet" href="my-css.css" type="text/css" />
   </head>
   <body>
@@ -17,7 +18,7 @@ class: center, middle, inverse, title-slide
 # Instrumental Variables
 ## EC 425/525, Set 8
 ### Edward Rubin
-### 15 May 2019
+### 20 May 2019
 
 ---
 
@@ -874,6 +875,151 @@ Consider December births.
 
 ---
 layout: true
+# 2SLS and .mono[R]
+
+---
+name: 2sls-r
+
+## `estimatr`
+
+You can implement 2SLS/IV in many ways in .mono[R].
+
+Today: `esitmatr` and `iv_robust()`.
+
+
+Specifically, we give `iv_robust()` the relationship that we want separted from the instrument by `|`
+
+, *e.g.*,
+
+
+
+
+```r
+# Estimate 2SLS
+iv_robust(Y ~ D | Z, data = sample_df, se_type = "classical") %&gt;%
+  tidy() %&gt;% select(1:5)
+```
+
+```
+#&gt;          term estimate std.error statistic      p.value
+#&gt; 1 (Intercept) 5.786204 2.9744230  1.945320 0.0546020456
+#&gt; 2           D 1.107801 0.3043264  3.640173 0.0004372703
+```
+---
+
+## Now in two stages!
+
+Of course, we can estimate 2SLS in two stages.
+
+
+```r
+# First stage
+stage1 &lt;- lm_robust(D ~ Z, data = sample_df, se_type = "classical")
+# First-stage results
+stage1 %&gt;% tidy() %&gt;% select(1:5)
+```
+
+```
+#&gt;          term  estimate std.error statistic      p.value
+#&gt; 1 (Intercept) 8.8226148 0.3169568 27.835389 2.486413e-48
+#&gt; 2           Z 0.3257347 0.1031506  3.157857 2.112927e-03
+```
+---
+
+## Second stage
+
+We just need to add `\(\widehat{\text{D}}_{i}\)` to our dataset.
+
+
+```r
+# Add fitted (first-stage) values to data
+sample_df %&lt;&gt;% mutate(D_hat = stage1$fitted.values)
+# Second stage
+stage2 &lt;- lm_robust(Y ~ D_hat, data = sample_df, se_type = "classical")
+# Second-stage results
+stage2 %&gt;% tidy() %&gt;% select(1:5)
+```
+
+```
+#&gt;          term estimate std.error statistic    p.value
+#&gt; 1 (Intercept) 5.786204 5.4132099  1.068904 0.28773854
+#&gt; 2       D_hat 1.107801 0.5538496  2.000184 0.04824759
+```
+---
+## Standard errors
+
+However, recall that our second-stage standard errors are not correct.
+
+
+.center.hi-purple[Second-stage results]
+&lt;span style="display:block; margin-bottom:-1em;"&gt; &lt;/span&gt;
+
+&lt;table class="table" style="font-size: 20px; margin-left: auto; margin-right: auto;"&gt;
+ &lt;thead&gt;
+  &lt;tr&gt;
+   &lt;th style="text-align:left;"&gt; Term &lt;/th&gt;
+   &lt;th style="text-align:right;"&gt; Est. &lt;/th&gt;
+   &lt;th style="text-align:right;"&gt; S.E. &lt;/th&gt;
+   &lt;th style="text-align:right;"&gt; t stat. &lt;/th&gt;
+   &lt;th style="text-align:left;"&gt; p-Value &lt;/th&gt;
+  &lt;/tr&gt;
+ &lt;/thead&gt;
+&lt;tbody&gt;
+  &lt;tr&gt;
+   &lt;td style="text-align:left;background-color: white;color: black;"&gt; Int &lt;/td&gt;
+   &lt;td style="text-align:right;background-color: white;color: black;"&gt; 5.786 &lt;/td&gt;
+   &lt;td style="text-align:right;background-color: white;color: black;"&gt; 5.413 &lt;/td&gt;
+   &lt;td style="text-align:right;background-color: white;color: black;"&gt; 1.07 &lt;/td&gt;
+   &lt;td style="text-align:left;background-color: white;color: black;"&gt; 0.2877 &lt;/td&gt;
+  &lt;/tr&gt;
+  &lt;tr&gt;
+   &lt;td style="text-align:left;background-color: white;"&gt; D hat &lt;/td&gt;
+   &lt;td style="text-align:right;background-color: white;"&gt; 1.108 &lt;/td&gt;
+   &lt;td style="text-align:right;background-color: white;"&gt; 0.554 &lt;/td&gt;
+   &lt;td style="text-align:right;background-color: white;"&gt; 2.00 &lt;/td&gt;
+   &lt;td style="text-align:left;background-color: white;"&gt; 0.0482 &lt;/td&gt;
+  &lt;/tr&gt;
+&lt;/tbody&gt;
+&lt;/table&gt;
+
+
+.center.hi-pink[2SLS results]
+&lt;span style="display:block; margin-bottom:-1em;"&gt; &lt;/span&gt;
+&lt;table class="table" style="font-size: 20px; margin-left: auto; margin-right: auto;"&gt;
+ &lt;thead&gt;
+  &lt;tr&gt;
+   &lt;th style="text-align:left;"&gt; Term &lt;/th&gt;
+   &lt;th style="text-align:right;"&gt; Est. &lt;/th&gt;
+   &lt;th style="text-align:right;"&gt; S.E. &lt;/th&gt;
+   &lt;th style="text-align:right;"&gt; t stat. &lt;/th&gt;
+   &lt;th style="text-align:left;"&gt; p-Value &lt;/th&gt;
+  &lt;/tr&gt;
+ &lt;/thead&gt;
+&lt;tbody&gt;
+  &lt;tr&gt;
+   &lt;td style="text-align:left;background-color: white;color: black;"&gt; Int &lt;/td&gt;
+   &lt;td style="text-align:right;background-color: white;color: black;"&gt; 5.786 &lt;/td&gt;
+   &lt;td style="text-align:right;background-color: white;color: black;"&gt; 2.974 &lt;/td&gt;
+   &lt;td style="text-align:right;background-color: white;color: black;"&gt; 1.95 &lt;/td&gt;
+   &lt;td style="text-align:left;background-color: white;color: black;"&gt; 0.0546 &lt;/td&gt;
+  &lt;/tr&gt;
+  &lt;tr&gt;
+   &lt;td style="text-align:left;background-color: white;"&gt; D &lt;/td&gt;
+   &lt;td style="text-align:right;background-color: white;"&gt; 1.108 &lt;/td&gt;
+   &lt;td style="text-align:right;background-color: white;"&gt; 0.304 &lt;/td&gt;
+   &lt;td style="text-align:right;background-color: white;"&gt; 3.64 &lt;/td&gt;
+   &lt;td style="text-align:left;background-color: white;"&gt; 0.0004 &lt;/td&gt;
+  &lt;/tr&gt;
+&lt;/tbody&gt;
+&lt;/table&gt;
+
+
+
+
+
+
+---
+layout: true
 # IV and 2SLS
 ## Conclusions
 
@@ -933,6 +1079,7 @@ layout: false
   - [Monotonicity](#monotonicity)
 1. [Multiple instruments](#multi-inst)
   - [Example](#multi-ex)
+1. [2SLS and .mono[R]](#2sls-r)
 1. [Conclusions](#conclusions)
 ]
 

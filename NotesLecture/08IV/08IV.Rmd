@@ -1240,6 +1240,109 @@ Consider December births.
 
 ---
 layout: true
+# 2SLS and .mono[R]
+
+---
+name: 2sls-r
+
+## `estimatr`
+
+You can implement 2SLS/IV in many ways in .mono[R].
+
+Today: `esitmatr` and `iv_robust()`.
+
+--
+
+Specifically, we give `iv_robust()` the relationship that we want separted from the instrument by `|`
+
+--
+, *e.g.*,
+
+```{R, iv-data, include = F}
+# Set seed
+set.seed(12345)
+# Sample size
+n <- 1e2
+# Define our variance-covariance matrix (D, ε, Z)
+Σ <- matrix(data = c(1, 0.3, 0.3, 0.3, 1, 0, 0.3, 0, 1), ncol = 3)
+# Our vector of means (D, ε, Z)
+μ = c(10, 0, 3)
+# Draw n observations; convert to tibble
+sample_df <- MASS::mvrnorm(n = n, mu = μ, Sigma = Σ) %>% as_tibble()
+# Name variables
+names(sample_df) <- c("D", "ε", "Z")
+# Calculate Y
+sample_df %<>% mutate(Y = 7 + 1 * D + ε)
+```
+
+```{R, r-iv1}
+# Estimate 2SLS
+iv_robust(Y ~ D | Z, data = sample_df, se_type = "classical") %>%
+  tidy() %>% select(1:5)
+```
+---
+
+## Now in two stages!
+
+Of course, we can estimate 2SLS in two stages.
+
+```{R, r-iv-s1}
+# First stage
+stage1 <- lm_robust(D ~ Z, data = sample_df, se_type = "classical")
+# First-stage results
+stage1 %>% tidy() %>% select(1:5)
+```
+---
+
+## Second stage
+
+We just need to add $\widehat{\text{D}}_{i}$ to our dataset.
+
+```{R, r-iv-s2}
+# Add fitted (first-stage) values to data
+sample_df %<>% mutate(D_hat = stage1$fitted.values)
+# Second stage
+stage2 <- lm_robust(Y ~ D_hat, data = sample_df, se_type = "classical")
+# Second-stage results
+stage2 %>% tidy() %>% select(1:5)
+```
+---
+## Standard errors
+
+However, recall that our second-stage standard errors are not correct.
+
+--
+
+.center.hi-purple[Second-stage results]
+<span style="display:block; margin-bottom:-1em;"> </span>
+
+```{R, r-iv-2sls1, echo = F}
+stage2 %>%
+  tidy_table(
+    terms = c("Int", "D hat"),
+    highlight_bold = F
+  )
+```
+
+--
+
+.center.hi-pink[2SLS results]
+<span style="display:block; margin-bottom:-1em;"> </span>
+```{R, r-iv-2sls2, echo = F}
+iv_robust(Y ~ D | Z, data = sample_df, se_type = "classical") %>%
+  tidy_table(
+    terms = c("Int", "D"),
+    highlight_bold = F
+  )
+```
+
+
+
+
+
+
+---
+layout: true
 # IV and 2SLS
 ## Conclusions
 
@@ -1299,6 +1402,7 @@ layout: false
   - [Monotonicity](#monotonicity)
 1. [Multiple instruments](#multi-inst)
   - [Example](#multi-ex)
+1. [2SLS and .mono[R]](#2sls-r)
 1. [Conclusions](#conclusions)
 ]
 

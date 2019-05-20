@@ -1,1 +1,24 @@
 
+- Add depiction of the violation of continuous Y0
+- Talk about choosing bandwidth
+
+```{R, srd-data, include = F, cache = T}
+# Load data
+load("RDReplication.rdata")
+# Change the name
+vote_df <- x %>% select(
+  state = StPOAbrv,
+  district = CngrsNum,
+  year = YearElec,
+  dem_margin = DPctPrv,
+  dem_margin_lag = DifDPPrv,
+  dem_margin_lead = DifDPNxt,
+  dem_vote = DemPct,
+  dem_vote_lag = DPctPrv,
+  dem_vote_lead = DemPct,
+  dem_win = DemWin,
+  dem_win_lag = DWinPrv,
+  dem_win_lead = DWinNxt
+)
+rm(x)
+```

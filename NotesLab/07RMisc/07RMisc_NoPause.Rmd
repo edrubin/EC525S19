@@ -224,12 +224,12 @@ However, if you're really committed to running for loops, the syntax is
 # Create an empty vector
 our_vector <- c()
 # Run the for loop for some numbers
-for (i in c(1, 1, 2, 3, 5, 8) {
+for (i in c(1, 1, 2, 3, 5, 8)) {
   # Print 'i'
   print(i)
   # Append 'i' to the end of our_vector
   our_vector <- c(our_vector, i)
-})
+}
 ```
 ---
 name: lists

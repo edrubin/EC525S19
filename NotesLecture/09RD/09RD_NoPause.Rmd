@@ -1,0 +1,1095 @@
+---
+title: "Regression Discontinuity"
+subtitle: "EC 425/525, Set 9"
+author: "Edward Rubin"
+date: "`r format(Sys.time(), '%d %B %Y')`"
+output:
+  xaringan::moon_reader:
+    css: ['default', 'metropolis', 'metropolis-fonts', 'my-css.css']
+    # self_contained: true
+    nature:
+      highlightStyle: github
+      highlightLines: true
+      countIncrementalSlides: false
+---
+class: inverse, middle
+
+```{R, setup, include = F}
+# devtools::install_github("dill/emoGG")
+library(pacman)
+p_load(
+  broom, tidyverse,
+  ggplot2, ggthemes, ggforce, ggridges,
+  latex2exp, viridis, extrafont, gridExtra,
+  kableExtra, snakecase, janitor,
+  data.table, dplyr,
+  lubridate, knitr,
+  estimatr, here, magrittr
+)
+# Define pink color
+red_pink <- "#e64173"
+turquoise <- "#20B2AA"
+orange <- "#FFA500"
+red <- "#fb6107"
+blue <- "#3b3b9a"
+green <- "#8bb174"
+grey_light <- "grey70"
+grey_mid <- "grey50"
+grey_dark <- "grey20"
+purple <- "#6A5ACD"
+slate <- "#314f4f"
+# Dark slate grey: #314f4f
+# Knitr options
+opts_chunk$set(
+  comment = "#>",
+  fig.align = "center",
+  fig.height = 7,
+  fig.width = 10.5,
+  warning = F,
+  message = F
+)
+opts_chunk$set(dev = "svg")
+options(device = function(file, width, height) {
+  svg(tempfile(), width = width, height = height)
+})
+options(crayon.enabled = F)
+options(knitr.table.format = "html")
+# A blank theme for ggplot
+theme_empty <- theme_bw() + theme(
+  line = element_blank(),
+  rect = element_blank(),
+  strip.text = element_blank(),
+  axis.text = element_blank(),
+  plot.title = element_blank(),
+  axis.title = element_blank(),
+  plot.margin = structure(c(0, 0, -0.5, -1), unit = "lines", valid.unit = 3L, class = "unit"),
+  legend.position = "none"
+)
+theme_simple <- theme_bw() + theme(
+  line = element_blank(),
+  panel.grid = element_blank(),
+  rect = element_blank(),
+  strip.text = element_blank(),
+  axis.text.x = element_text(size = 18, family = "STIXGeneral"),
+  axis.text.y = element_blank(),
+  axis.ticks = element_blank(),
+  plot.title = element_blank(),
+  axis.title = element_blank(),
+  # plot.margin = structure(c(0, 0, -1, -1), unit = "lines", valid.unit = 3L, class = "unit"),
+  legend.position = "none"
+)
+theme_axes_math <- theme_void() + theme(
+  text = element_text(family = "MathJax_Math"),
+  axis.title = element_text(size = 22),
+  axis.title.x = element_text(hjust = .95, margin = margin(0.15, 0, 0, 0, unit = "lines")),
+  axis.title.y = element_text(vjust = .95, margin = margin(0, 0.15, 0, 0, unit = "lines")),
+  axis.line = element_line(
+    color = "grey70",
+    size = 0.25,
+    arrow = arrow(angle = 30, length = unit(0.15, "inches")
+  )),
+  plot.margin = structure(c(1, 0, 1, 0), unit = "lines", valid.unit = 3L, class = "unit"),
+  legend.position = "none"
+)
+theme_axes_serif <- theme_void() + theme(
+  text = element_text(family = "MathJax_Main"),
+  axis.title = element_text(size = 22),
+  axis.title.x = element_text(hjust = .95, margin = margin(0.15, 0, 0, 0, unit = "lines")),
+  axis.title.y = element_text(vjust = .95, margin = margin(0, 0.15, 0, 0, unit = "lines")),
+  axis.line = element_line(
+    color = "grey70",
+    size = 0.25,
+    arrow = arrow(angle = 30, length = unit(0.15, "inches")
+  )),
+  plot.margin = structure(c(1, 0, 1, 0), unit = "lines", valid.unit = 3L, class = "unit"),
+  legend.position = "none"
+)
+theme_axes <- theme_void() + theme(
+  text = element_text(family = "Fira Sans Book"),
+  axis.title = element_text(size = 18),
+  axis.title.x = element_text(hjust = .95, margin = margin(0.15, 0, 0, 0, unit = "lines")),
+  axis.title.y = element_text(vjust = .95, margin = margin(0, 0.15, 0, 0, unit = "lines")),
+  axis.line = element_line(
+    color = grey_light,
+    size = 0.25,
+    arrow = arrow(angle = 30, length = unit(0.15, "inches")
+  )),
+  plot.margin = structure(c(1, 0, 1, 0), unit = "lines", valid.unit = 3L, class = "unit"),
+  legend.position = "none"
+)
+theme_set(theme_gray(base_size = 20))
+# Column names for regression results
+reg_columns <- c("Term", "Est.", "S.E.", "t stat.", "p-Value")
+# Function for formatting p values
+format_pvi <- function(pv) {
+  return(ifelse(
+    pv < 0.0001,
+    "<0.0001",
+    round(pv, 4) %>% format(scientific = F)
+  ))
+}
+format_pv <- function(pvs) lapply(X = pvs, FUN = format_pvi) %>% unlist()
+# Tidy regression results table
+tidy_table <- function(x, terms, highlight_row = 1, highlight_color = "black", highlight_bold = T, digits = c(NA, 3, 3, 2, 5), title = NULL) {
+  x %>%
+    tidy() %>%
+    select(1:5) %>%
+    mutate(
+      term = terms,
+      p.value = p.value %>% format_pv()
+    ) %>%
+    kable(
+      col.names = reg_columns,
+      escape = F,
+      digits = digits,
+      caption = title
+    ) %>%
+    kable_styling(font_size = 20) %>%
+    row_spec(1:nrow(tidy(x)), background = "white") %>%
+    row_spec(highlight_row, bold = highlight_bold, color = highlight_color)
+}
+```
+
+$$
+\begin{align}
+  \def\ci{\perp\mkern-10mu\perp}
+\end{align}
+$$
+
+
+# Prologue
+
+---
+name: schedule
+
+# Schedule
+
+## Last time
+
+- Introduction to selection-on-unobservables designs
+- Instrumental variables
+- Two-stage least squares
+
+## Today
+
+Regression discontinuity .super[.pink[†]]
+
+.footnote[
+.pink[†] These notes largely follow notes from [Michael Anderson](https://are.berkeley.edu/~mlanderson/ARE_Website/Home.html) and [Imbens and Lemieux (2008)](https://www.sciencedirect.com/science/article/pii/S0304407607001091).
+]
+
+## Upcoming
+
+Midterm
+---
+layout: true
+# Regression discontinuity
+
+---
+class: inverse, middle
+---
+name: rd-setup
+## Setup
+
+We're still in the game of estimating the effect of a potentially endogenous treatment $\text{D}_{i}$ on an outcome $\text{Y}_{i}$.
+
+
+.attn[Regression discontinuity] (.attn[RD]) offers a particularly clear/clean research design based upon an arbitrary threshold (the *discontinuity*).
+
+
+That said, most RDs boil down to an implementation of IV.
+
+
+In addition, while RD is all the rage in modern applied econometrics, [Thistlewaite and Campbell](https://obsstudies.org/wp-content/uploads/2017/01/regression_discontinuity_all_comments-1.pdf) wrote about it back in 1960.
+
+---
+name: rd-framework
+## Our framework
+
+Back to our potential-outcome framework.
+
+
+We want to know the effect of $\text{D}_{i}$ on $\text{Y}_{i}$.
+$$
+\begin{align}
+  \text{Y}_{i} = \text{D}_{i} \text{Y}_{1i} + (1-\text{D}_{i}) \text{Y}_{0i}
+\end{align}
+$$
+
+
+.hi[New:] Suppose $\text{D}_{i}$ is determined.super[.pink[†]] by whether some variable $\text{X}_{i}$ crosses a threshold $c$ (the discontinuity).
+
+.footnote[
+.pink[†] At least in part.
+]
+
+
+The variable $\text{X}_{i}$ need not be randomly assigned—we will assume it is not (_i.e._, $\text{X}_{i}$ correlates with $\text{Y}_{0i}$ and $\text{Y}_{1i}$).
+
+
+We will assume that $\text{Y}_{0i}$ and $\text{Y}_{1i}$ vary smoothly in $\text{X}_{i}$.
+
+---
+name: rd-examples
+## Examples
+
+We often apply regression-discontinuity designs in setting with some arbitrary threshold embeded within some bureaucratic decision.
+
+
+- An elector candidate wins if her vote share exceeds her competitors.
+- Election runoffs are triggered if "winner" is below 50%.
+- Antidiscrimination laws only apply to firms with >15 employees.
+- Prisoners are eligible for early parole if some score exceeds a threshold.
+- An individual is eligible for Medicare if her age is at least 65.
+- You get a ticket if your speed exceeds the speed limit.
+- Fifteen-percent discount at Sizzler if your age exceeds 60.
+- Counties with PM.sub[2.5] > 35 μg/m.super[3] are *out of attainment*.
+
+
+In some cases, "treatment" is definite once we exceed the threshold.
+---
+name: sharp-fuzzy
+## Sharp *vs.* fuzzy
+
+We distinguish RDs by how strong/definitive of the threshold is.
+
+
+In .attn[sharp RDs], individuals move from control to treatment when their $\text{X}_{i}$ passes our threshold $c$
+, _i.e._, $\text{D}_{i}$ switches from 0 to 1 when $\text{X}_{i}$ moves across $c$.
+
+
+
+.ex[_E.g._,] a politician wins an election when the difference between her vote share and her competitor's vote share exceeds zero.
+
+
+In .attn[fuzzy RDs], the *probability of treatment* $\mathop{\text{Pr}}\left( \text{D}_{i}=1 \right)$ discontinuously jumps at the threshold $c$, but it does not move from 0 to 1.
+
+
+.ex[_E.g._,] crossing some GRE threshold discontinuously increases your chances of getting into some grad schools (but doesn't guarantee admittance).
+---
+layout: true
+# Sharp RDs
+
+---
+name: sharp
+class: inverse, middle
+---
+name: sharp-setup
+## Setup
+
+With .attn[sharp regression discontinuity], the probability of treatment changes from 0 to 1 as $\text{X}_{i}$ moves across threshold $c$.
+
+
+Thus, treatment status totally depends upon whether $\text{X}_{i}\geq c$, _i.e._,
+$$
+\begin{align}
+  \text{D}_{i} = \mathbb{I}\!\left\{ \text{X}_{i}\geq c \right\}
+\end{align}
+$$
+
+
+To estimate the causal effect of $\text{D}_{i}$ on $\text{Y}_{i}$, we .pink[compare the mean] of $\text{Y}_{i}$ .pink[just *above* the threshold to the mean] of $\text{Y}_{i}$ .pink[just *below* the threshold].
+---
+name: sharp-formal
+## More formally
+
+We can write the comparison of means at the threshold as
+
+$\lim_{x\downarrow c} \mathop{E}\left[ \text{Y}_{i}\mid \text{X}_{i} = x \right] - \lim_{x\uparrow c} \mathop{E}\left[ \text{Y}_{i}\mid \text{X}_{i} = x \right]$
+
+.pad-left[
+$=\lim_{x\downarrow c} \mathop{E}\left[ \color{#e64173}{\text{Y}_{1i}}\mid \text{X}_{i} = x \right] - \lim_{x\uparrow c} \mathop{E}\left[ \color{#6A5ACD}{\text{Y}_{0i}}\mid \text{X}_{i} = x \right]$
+]
+
+.pad-left[
+$=\tau_\text{SRD}$
+]
+
+
+.note[Assumption] $\mathop{E}\left[ \color{#e64173}{\text{Y}_{1i}} \mid \text{X}_{i} = x\right]$ and $\mathop{E}\left[ \color{#6A5ACD}{\text{Y}_{0i}} \mid \text{X}_{i} = x \right]$ are continuous in $x$.
+
+
+.pad-left[
+$\implies \tau_\text{SRD} = \mathop{E}\left[ \color{#e64173}{\text{Y}_{1i}} - \color{#6A5ACD}{\text{Y}_{0i}} \mid \text{X}_{i} = c \right]$
+]
+
+
+_I.e._, Because we don't observe $\color{#6A5ACD}{\text{Y}_{0i}}$ for treated individuals, we extrapolate $\mathop{E}\left[ \color{#6A5ACD}{\text{Y}_{0i}} \mid \text{X}_{i} = c - \varepsilon \right]$ to $\mathop{E}\left[ \color{#6A5ACD}{\text{Y}_{0i}} \mid \text{X}_{i} = x + \varepsilon \right]$ for small $\varepsilon$.
+---
+name: sharp-est
+## Estimation
+
+Thus, we estimate
+$$
+\begin{align}
+  \tau_\text{SRD} = \lim_{x\downarrow c} \mathop{E}\left[ \text{Y}_{i} - \text{X}_{i} = x \right] - \lim_{x\uparrow c} \mathop{E}\left[ \text{Y}_{i} \mid \text{X}_{i} = x \right]
+\end{align}
+$$
+as the diffrence between two regression functions estimated "near" $c$.
+
+
+We must stay "near" to $c$ to minimize the bias from extrapolating $\mathop{E}\left[ \color{#6A5ACD}{\text{Y}_{0i}} \mid \text{X}_{i} = c - \varepsilon \right]$ to $\mathop{E}\left[ \color{#6A5ACD}{\text{Y}_{0i}} \mid \text{X}_{i} = c + \varepsilon \right]$ (and assuming continuity).
+---
+name: sharp-ex
+layout: false
+class: clear, middle
+
+.ex[Example] Is there effect of a political party winning an election on that party's likelihood of winning the following election?
+
+Is there a benefit of incumbency (at the party level)?.super[.pink[†]]
+
+.footnote[
+.pink[†] [Lee (2008)](https://www.sciencedirect.com/science/article/pii/S0304407607001121) addresses this question via RD. [Caughey and Sekhon (2011)](https://doi.org/10.1093/pan/mpr032) discuss RD in this setting.
+]
+
+---
+layout: true
+class: clear
+
+---
+Let's start with $\color{#6A5ACD}{\mathop{E}\left[ \text{Y}_{0i} \mid \text{X}_{i} \right]}$
+
+```{R, s0, include = F}
+# Define functions
+y0 <- function(x) 0.7 / (1 + exp(-3 * x))
+y1 <- function(x) 0.85 / (1 + exp(-4 * x)) + 0.1
+gg_df <- data.frame(x = c(-1, 1))
+```
+
+```{R, s1, echo = F}
+ggplot(data = gg_df, aes(x)) +
+stat_function(fun = y0, color = purple, size = 1) +
+scale_x_continuous(
+  "Own-party margin of victory",
+  lim = c(-1,1),
+  labels = scales::percent_format(accuracy = 1)
+) +
+scale_y_continuous(
+  "Probability of winning next election",
+  lim = c(0,1),
+  labels = scales::percent_format(accuracy = 1)
+) +
+theme_pander(base_size = 20, base_family = "Fira Sans Book")
+```
+---
+count: false
+Let's start with $\color{#6A5ACD}{\mathop{E}\left[ \text{Y}_{0i} \mid \text{X}_{i} \right]}$ and $\color{#e64173}{\mathop{E}\left[ \text{Y}_{1i} \mid \text{X}_{i} \right]}$.
+
+```{R, s2, echo = F}
+ggplot(data = gg_df, aes(x)) +
+stat_function(fun = y0, color = purple, size = 1) +
+stat_function(fun = y1, color = red_pink, size = 1) +
+scale_x_continuous(
+  "Own-party margin of victory",
+  lim = c(-1,1),
+  labels = scales::percent_format(accuracy = 1)
+) +
+scale_y_continuous(
+  "Probability of winning next election",
+  lim = c(0,1),
+  labels = scales::percent_format(accuracy = 1)
+) +
+theme_pander(base_size = 20, base_family = "Fira Sans Book")
+```
+---
+You only win an election if your .hi-slate[margin of victory exceeds zero].
+
+```{R, s3, echo = F}
+ggplot() +
+geom_vline(xintercept = 0, color = slate, size = 1, alpha = 0.75) +
+stat_function(
+  data = data.frame(x = c(-1,0)), aes(x),
+  fun = y0, color = purple, size = 1,
+  linetype = "solid",
+  xlim = c(-1,0)
+) +
+stat_function(
+  data = data.frame(x = c(0,1)), aes(x),
+  fun = y0, color = purple, size = 1,
+  linetype = "dotted",
+  xlim = c(0,1)
+) +
+stat_function(
+  data = data.frame(x = c(-1,0)), aes(x),
+  fun = y1, color = red_pink, size = 1,
+  linetype = "dotted",
+  xlim = c(-1,0)
+) +
+stat_function(
+  data = data.frame(x = c(0,1)), aes(x),
+  fun = y1, color = red_pink, size = 1,
+  linetype = "solid",
+  xlim = c(0,1)
+) +
+scale_x_continuous(
+  "Own-party margin of victory",
+  # lim = c(-1,1),
+  labels = scales::percent_format(accuracy = 1)
+) +
+scale_y_continuous(
+  "Probability of winning next election",
+  lim = c(0,1),
+  labels = scales::percent_format(accuracy = 1)
+) +
+theme_pander(base_size = 20, base_family = "Fira Sans Book")
+```
+---
+$\color{#e64173}{\mathop{E}\left[ \text{Y}_{1i} \mid \text{X}_{i} \right]} - \color{#6A5ACD}{\mathop{E}\left[ \text{Y}_{0i} \mid \text{X}_{i} \right]}$ .hi-slate[at the discontinuity] gives $\color{#FFA500}{\tau_\text{SRD}}$.
+
+```{R, s4, echo = F}
+ggplot() +
+geom_vline(xintercept = 0, color = slate, size = 1, alpha = 0.3) +
+stat_function(
+  data = data.frame(x = c(-1,0)), aes(x),
+  fun = y0, color = purple, size = 1,
+  linetype = "solid",
+  xlim = c(-1,0)
+) +
+stat_function(
+  data = data.frame(x = c(0,1)), aes(x),
+  fun = y0, color = purple, size = 1,
+  linetype = "dotted",
+  xlim = c(0,1)
+) +
+stat_function(
+  data = data.frame(x = c(-1,0)), aes(x),
+  fun = y1, color = red_pink, size = 1,
+  linetype = "dotted",
+  xlim = c(-1,0)
+) +
+stat_function(
+  data = data.frame(x = c(0,1)), aes(x),
+  fun = y1, color = red_pink, size = 1,
+  linetype = "solid",
+  xlim = c(0,1)
+) +
+geom_errorbar(
+  data = data.frame(x = 0),
+  aes(x = x, ymin = y0(x), ymax = y1(x)),
+  color = orange, size = 1.5, width = 0.07
+) +
+scale_x_continuous(
+  "Own-party margin of victory",
+  # lim = c(-1,1),
+  labels = scales::percent_format(accuracy = 1)
+) +
+scale_y_continuous(
+  "Probability of winning next election",
+  lim = c(0,1),
+  labels = scales::percent_format(accuracy = 1)
+) +
+theme_pander(base_size = 20, base_family = "Fira Sans Book")
+```
+---
+
+Real data are a bit trickier. We must estimate $\color{#e64173}{\mathop{E}\left[ \text{Y}_{1i} \mid \text{X}_{i} \right]}$ and $\color{#6A5ACD}{\mathop{E}\left[ \text{Y}_{0i} \mid \text{X}_{i} \right]}$.
+
+```{R, srd-gen-data, include = F}
+set.seed(12345)
+srd_df <- tibble(
+  x = seq(-1, 1, 0.02),
+  y = (x < 0) * y0(x) + (x >= 0) * y1(x) + rnorm(length(x), sd = 0.07)
+) %>% mutate(
+  y = between(y, 0, 1) * y + (y < 0) * 0 + (y > 1) * 1
+) %>% filter(
+  x != 0
+)
+```
+
+```{R, save-gg-srd, echo = F}
+gg_srd <- ggplot() +
+geom_vline(xintercept = 0, color = slate, size = 1, alpha = 0.1) +
+stat_function(
+  data = data.frame(x = c(-1,0)), aes(x),
+  fun = y0, color = purple, size = 1, alpha = 0.15,
+  linetype = "solid",
+  xlim = c(-1,0)
+) +
+stat_function(
+  data = data.frame(x = c(0,1)), aes(x),
+  fun = y0, color = purple, size = 1, alpha = 0.15,
+  linetype = "dotted",
+  xlim = c(0,1)
+) +
+stat_function(
+  data = data.frame(x = c(-1,0)), aes(x),
+  fun = y1, color = red_pink, size = 1, alpha = 0.15,
+  linetype = "dotted",
+  xlim = c(-1,0)
+) +
+stat_function(
+  data = data.frame(x = c(0,1)), aes(x),
+  fun = y1, color = red_pink, size = 1, alpha = 0.15,
+  linetype = "solid",
+  xlim = c(0,1)
+) +
+scale_x_continuous(
+  "Own-party margin of victory",
+  # lim = c(-1,1),
+  labels = scales::percent_format(accuracy = 1)
+) +
+scale_y_continuous(
+  "Probability of winning next election",
+  lim = c(0,1),
+  labels = scales::percent_format(accuracy = 1)
+) +
+geom_point(
+  data = srd_df, aes(x = x, y = y, color = x >= 0),
+  size = 2, alpha = 0.8
+) +
+scale_color_manual(values = c(purple, red_pink)) +
+theme_pander(base_size = 20, base_family = "Fira Sans Book") +
+theme(legend.position = "none")
+```
+
+```{R, s5, echo = F}
+gg_srd
+```
+---
+class: clear, middle
+
+.note[Questions]
+
+1. How should we estimate $\color{#e64173}{\mathop{E}\left[ \text{Y}_{1i} \mid \text{X}_{i} \right]}$ and $\color{#6A5ACD}{\mathop{E}\left[ \text{Y}_{0i} \mid \text{X}_{i} \right]}$?
+
+2. How much data should we use—_i.e._, what is the right .attn[bandwidth] size?
+
+---
+.note[Option 1a] Linear regression with constant slopes (and all data)
+
+```{R, s6, echo = F}
+lm_tmp <- lm(y ~ x + I(x>0), data = srd_df)
+lm_fun <- function(x) predict(lm_tmp, data.frame(x = x))
+s6 <- gg_srd +
+stat_function(
+  data = data.frame(x = c(-1, 1)),
+  aes(x = x),
+  fun = lm_fun,
+  xlim = c(-1,-0.02),
+  color = purple,
+  size = 1.5
+) +
+stat_function(
+  data = data.frame(x = c(-1, 1)),
+  aes(x = x),
+  fun = lm_fun,
+  xlim = c(0.02,1),
+  color = red_pink,
+  size = 1.5
+)
+s6
+```
+---
+.note[Option 1a] Linear regression with constant slopes (and all data)
+
+```{R, s7, echo = F}
+s6 +
+geom_errorbar(
+  data = tibble(x = 0, y0 = lm_fun(-1e-3), y1 = lm_fun(1e-3)),
+  aes(x = x, ymin = y0, ymax = y1),
+  color = orange, size = 1.5, width = 0.07
+)
+```
+---
+.note[Option 1b] Linear regression with constant slopes; limited to +/- 50%.
+
+```{R, s8, echo = F}
+lm_tmp <- lm(y ~ x + I(x>0), data = srd_df %>% filter(abs(x) < 0.5))
+lm_fun <- function(x) predict(lm_tmp, data.frame(x = x))
+gg_srd +
+stat_function(
+  data = data.frame(x = c(-1, 1)),
+  aes(x = x),
+  fun = lm_fun,
+  xlim = c(-0.5,-0.02),
+  color = purple,
+  size = 1.5
+) +
+stat_function(
+  data = data.frame(x = c(-1, 1)),
+  aes(x = x),
+  fun = lm_fun,
+  xlim = c(0.02,0.5),
+  color = red_pink,
+  size = 1.5
+) +
+geom_errorbar(
+  data = tibble(x = 0, y0 = lm_fun(-1e-3), y1 = lm_fun(1e-3)),
+  aes(x = x, ymin = y0, ymax = y1),
+  color = orange, size = 1.5, width = 0.07
+)
+```
+---
+.note[Option 2a] Linear regression with differing slopes (and all data)
+
+```{R, s9, echo = F}
+lm_tmp <- lm(y ~ x * I(x>0), data = srd_df)
+lm_fun <- function(x) predict(lm_tmp, data.frame(x = x))
+gg_srd +
+stat_function(
+  data = data.frame(x = c(-1, 1)),
+  aes(x = x),
+  fun = lm_fun,
+  xlim = c(-1,-0.02),
+  color = purple,
+  size = 1.5
+) +
+stat_function(
+  data = data.frame(x = c(-1, 1)),
+  aes(x = x),
+  fun = lm_fun,
+  xlim = c(0.02,1),
+  color = red_pink,
+  size = 1.5
+) +
+geom_errorbar(
+  data = tibble(x = 0, y0 = lm_fun(-1e-3), y1 = lm_fun(1e-3)),
+  aes(x = x, ymin = y0, ymax = y1),
+  color = orange, size = 1.5, width = 0.07
+)
+```
+---
+.note[Option 2b] Linear regression with differing slopes; limited to +/- 50%.
+
+```{R, s10, echo = F}
+lm_tmp <- lm(y ~ x * I(x>0), data = srd_df %>% filter(abs(x) < 0.5))
+lm_fun <- function(x) predict(lm_tmp, data.frame(x = x))
+gg_srd +
+stat_function(
+  data = data.frame(x = c(-1, 1)),
+  aes(x = x),
+  fun = lm_fun,
+  xlim = c(-0.5,-0.02),
+  color = purple,
+  size = 1.5
+) +
+stat_function(
+  data = data.frame(x = c(-1, 1)),
+  aes(x = x),
+  fun = lm_fun,
+  xlim = c(0.02,0.5),
+  color = red_pink,
+  size = 1.5
+) +
+geom_errorbar(
+  data = tibble(x = 0, y0 = lm_fun(-1e-3), y1 = lm_fun(1e-3)),
+  aes(x = x, ymin = y0, ymax = y1),
+  color = orange, size = 1.5, width = 0.07
+)
+```
+---
+.note[Option 2c] Linear regression with differing slopes; limited to +/- 25%.
+
+```{R, s11, echo = F}
+lm_tmp <- lm(y ~ x * I(x>0), data = srd_df %>% filter(abs(x) < 0.25))
+lm_fun <- function(x) predict(lm_tmp, data.frame(x = x))
+gg_srd +
+stat_function(
+  data = data.frame(x = c(-1, 1)),
+  aes(x = x),
+  fun = lm_fun,
+  xlim = c(-0.25,-0.02),
+  color = purple,
+  size = 1.5
+) +
+stat_function(
+  data = data.frame(x = c(-1, 1)),
+  aes(x = x),
+  fun = lm_fun,
+  xlim = c(0.02,0.25),
+  color = red_pink,
+  size = 1.5
+) +
+geom_errorbar(
+  data = tibble(x = 0, y0 = lm_fun(-1e-3), y1 = lm_fun(1e-3)),
+  aes(x = x, ymin = y0, ymax = y1),
+  color = orange, size = 1.5, width = 0.07
+)
+```
+---
+.note[Option 3] Differing quadratic regressions (limited to +/- 50%).
+
+```{R, s12, echo = F}
+lm_tmp <- lm(y ~ poly(x,2) * I(x>0), data = srd_df %>% filter(abs(x) < 0.5))
+lm_fun <- function(x) predict(lm_tmp, data.frame(x = x))
+gg_srd +
+stat_function(
+  data = data.frame(x = c(-1, 1)),
+  aes(x = x),
+  fun = lm_fun,
+  xlim = c(-0.5,-0.02),
+  color = purple,
+  size = 1.5
+) +
+stat_function(
+  data = data.frame(x = c(-1, 1)),
+  aes(x = x),
+  fun = lm_fun,
+  xlim = c(0.02,0.5),
+  color = red_pink,
+  size = 1.5
+) +
+geom_errorbar(
+  data = tibble(x = 0, y0 = lm_fun(-1e-3), y1 = lm_fun(1e-3)),
+  aes(x = x, ymin = y0, ymax = y1),
+  color = orange, size = 1.5, width = 0.07
+)
+```
+---
+.note[Option 4a] Differing local (LOESS) regressions (limited to +/- 50%).
+
+```{R, s13, echo = F}
+lm_tmp <- loess(y ~ x * I(x>0), data = srd_df %>% filter(abs(x) < 0.5))
+lm_fun <- function(x) predict(lm_tmp, data.frame(x = x))
+gg_srd +
+stat_function(
+  data = data.frame(x = c(-1, 1)),
+  aes(x = x),
+  fun = lm_fun,
+  xlim = c(-0.5,-0.02),
+  color = purple,
+  size = 1.5
+) +
+stat_function(
+  data = data.frame(x = c(-1, 1)),
+  aes(x = x),
+  fun = lm_fun,
+  xlim = c(0.02,0.5),
+  color = red_pink,
+  size = 1.5
+) +
+geom_errorbar(
+  data = tibble(x = 0, y0 = lm_fun(-1e-3), y1 = lm_fun(1e-3)),
+  aes(x = x, ymin = y0, ymax = y1),
+  color = orange, size = 1.5, width = 0.07
+)
+```
+---
+.note[Option 4b] Differing local (LOESS) regressions (all data).
+
+```{R, s14, echo = F}
+lm_tmp <- loess(y ~ x * I(x>0), data = srd_df)
+lm_fun <- function(x) predict(lm_tmp, data.frame(x = x))
+gg_srd +
+stat_function(
+  data = data.frame(x = c(-1, 1)),
+  aes(x = x),
+  fun = lm_fun,
+  xlim = c(-1,-0.02),
+  color = purple,
+  size = 1.5
+) +
+stat_function(
+  data = data.frame(x = c(-1, 1)),
+  aes(x = x),
+  fun = lm_fun,
+  xlim = c(0.02,1),
+  color = red_pink,
+  size = 1.5
+) +
+geom_errorbar(
+  data = tibble(x = 0, y0 = lm_fun(-1e-3), y1 = lm_fun(1e-3)),
+  aes(x = x, ymin = y0, ymax = y1),
+  color = orange, size = 1.5, width = 0.07
+)
+```
+---
+.note[Note] Functional form can be very important.
+
+```{R, s15a, echo = F}
+# No effect
+set.seed(12345)
+null <- function(x) 0.95 / (1 + exp(-5 * x))
+null_srd <- tibble(
+  x = seq(-1, 1, 0.02),
+  y = null(x) + rnorm(length(x), sd = 0.07)
+) %>% filter(x != 0)
+# Estimate models
+lm_tmp <- lm(y ~ x + I(x>0), data = null_srd)
+lm_fun <- function(x) predict(lm_tmp, data.frame(x = x))
+loess_tmp <- loess(y ~ x * I(x>0), data = null_srd)
+loess_fun <- function(x) predict(loess_tmp, data.frame(x = x))
+# Figure
+ggplot() +
+geom_vline(xintercept = 0, color = slate, size = 1, alpha = 0.1) +
+stat_function(
+  data = data.frame(x = c(-1,1)), aes(x),
+  fun = null, color = orange, size = 1, alpha = 0.4,
+  linetype = "solid",
+  xlim = c(-1,1)
+) +
+scale_x_continuous(
+  "Own-party margin of victory",
+  labels = scales::percent_format(accuracy = 1)
+) +
+scale_y_continuous(
+  "Probability of winning next election",
+  lim = c(0,1),
+  labels = scales::percent_format(accuracy = 1)
+) +
+scale_color_manual(values = c(purple, red_pink)) +
+theme_pander(base_size = 20, base_family = "Fira Sans Book") +
+theme(legend.position = "none")
+```
+---
+count: false
+.note[Note] Functional form can be very important.
+
+```{R, s15b, echo = F}
+ggplot() +
+geom_vline(xintercept = 0, color = slate, size = 1, alpha = 0.1) +
+stat_function(
+  data = data.frame(x = c(-1,1)), aes(x),
+  fun = null, color = orange, size = 1, alpha = 0.4,
+  linetype = "solid",
+  xlim = c(-1,1)
+) +
+scale_x_continuous(
+  "Own-party margin of victory",
+  labels = scales::percent_format(accuracy = 1)
+) +
+scale_y_continuous(
+  "Probability of winning next election",
+  lim = c(0,1),
+  labels = scales::percent_format(accuracy = 1)
+) +
+geom_point(
+  data = null_srd, aes(x = x, y = y, color = x >= 0),
+  size = 2, alpha = 0.8
+) +
+scale_color_manual(values = c(purple, red_pink)) +
+theme_pander(base_size = 20, base_family = "Fira Sans Book") +
+theme(legend.position = "none")
+```
+---
+count: false
+.note[Note] Functional form can be very important.
+
+```{R, s15c, echo = F}
+ggplot() +
+geom_vline(xintercept = 0, color = slate, size = 1, alpha = 0.1) +
+stat_function(
+  data = data.frame(x = c(-1,1)), aes(x),
+  fun = null, color = orange, size = 1, alpha = 0.4,
+  linetype = "solid",
+  xlim = c(-1,1)
+) +
+scale_x_continuous(
+  "Own-party margin of victory",
+  labels = scales::percent_format(accuracy = 1)
+) +
+scale_y_continuous(
+  "Probability of winning next election",
+  lim = c(0,1),
+  labels = scales::percent_format(accuracy = 1)
+) +
+geom_point(
+  data = null_srd, aes(x = x, y = y, color = x >= 0),
+  size = 2, alpha = 0.8
+) +
+scale_color_manual(values = c(purple, red_pink)) +
+theme_pander(base_size = 20, base_family = "Fira Sans Book") +
+theme(legend.position = "none") +
+stat_function(
+  data = data.frame(x = c(-1, 1)),
+  aes(x = x),
+  fun = lm_fun,
+  xlim = c(-1,-0.02),
+  color = purple,
+  size = 1.5
+) +
+stat_function(
+  data = data.frame(x = c(-1, 1)),
+  aes(x = x),
+  fun = lm_fun,
+  xlim = c(0.02,1),
+  color = red_pink,
+  size = 1.5
+)
+```
+---
+count: false
+.note[Note] Functional form can be very important.
+
+```{R, s15d, echo = F}
+ggplot() +
+geom_vline(xintercept = 0, color = slate, size = 1, alpha = 0.1) +
+stat_function(
+  data = data.frame(x = c(-1,1)), aes(x),
+  fun = null, color = orange, size = 1, alpha = 0.4,
+  linetype = "solid",
+  xlim = c(-1,1)
+) +
+scale_x_continuous(
+  "Own-party margin of victory",
+  labels = scales::percent_format(accuracy = 1)
+) +
+scale_y_continuous(
+  "Probability of winning next election",
+  lim = c(0,1),
+  labels = scales::percent_format(accuracy = 1)
+) +
+geom_point(
+  data = null_srd, aes(x = x, y = y, color = x >= 0),
+  size = 2, alpha = 0.8
+) +
+scale_color_manual(values = c(purple, red_pink)) +
+theme_pander(base_size = 20, base_family = "Fira Sans Book") +
+theme(legend.position = "none") +
+stat_function(
+  data = data.frame(x = c(-1, 1)),
+  aes(x = x),
+  fun = lm_fun,
+  xlim = c(-1,-0.02),
+  color = purple,
+  size = 1.5
+) +
+stat_function(
+  data = data.frame(x = c(-1, 1)),
+  aes(x = x),
+  fun = lm_fun,
+  xlim = c(0.02,1),
+  color = red_pink,
+  size = 1.5
+) +
+geom_errorbar(
+  data = tibble(x = 0, y0 = lm_fun(-1e-3), y1 = lm_fun(1e-3)),
+  aes(x = x, ymin = y0, ymax = y1),
+  color = orange, size = 1.5, width = 0.07
+)
+```
+---
+count: false
+.note[Note] Functional form can be very important.
+
+```{R, s15e, echo = F}
+ggplot() +
+geom_vline(xintercept = 0, color = slate, size = 1, alpha = 0.1) +
+stat_function(
+  data = data.frame(x = c(-1,1)), aes(x),
+  fun = null, color = orange, size = 1, alpha = 0.4,
+  linetype = "solid",
+  xlim = c(-1,1)
+) +
+scale_x_continuous(
+  "Own-party margin of victory",
+  labels = scales::percent_format(accuracy = 1)
+) +
+scale_y_continuous(
+  "Probability of winning next election",
+  lim = c(0,1),
+  labels = scales::percent_format(accuracy = 1)
+) +
+geom_point(
+  data = null_srd, aes(x = x, y = y, color = x >= 0),
+  size = 2, alpha = 0.8
+) +
+scale_color_manual(values = c(purple, red_pink)) +
+theme_pander(base_size = 20, base_family = "Fira Sans Book") +
+theme(legend.position = "none") +
+stat_function(
+  data = data.frame(x = c(-1, 1)),
+  aes(x = x),
+  fun = loess_fun,
+  xlim = c(-1,-0.02),
+  color = purple,
+  size = 1.5
+) +
+stat_function(
+  data = data.frame(x = c(-1, 1)),
+  aes(x = x),
+  fun = loess_fun,
+  xlim = c(0.02,1),
+  color = red_pink,
+  size = 1.5
+) +
+geom_errorbar(
+  data = tibble(x = 0, y0 = loess_fun(-1e-3), y1 = loess_fun(1e-3)),
+  aes(x = x, ymin = y0, ymax = y1),
+  color = orange, size = 1.5, width = 0.07
+)
+```
+---
+The continuity of $\color{#6A5ACD}{\mathop{E}\left[ \text{Y}_{0i}\mid \text{X}_{i} = x\right]}$ (in $x$) is also very important. No sorting.
+
+```{R, s16, echo = F}
+ggplot(data = gg_df, aes(x)) +
+geom_vline(xintercept = 0, color = slate, size = 1, alpha = 0.1) +
+stat_function(fun = y0, color = purple, size = 1, xlim = c(-1,0)) +
+stat_function(
+  fun = function(x) {y0(x) + 0.15},
+  color = purple, size = 1, xlim = c(0,1)
+) +
+stat_function(fun = y1, color = red_pink, size = 1) +
+scale_x_continuous(
+  "Own-party margin of victory",
+  lim = c(-1,1),
+  labels = scales::percent_format(accuracy = 1)
+) +
+scale_y_continuous(
+  "Probability of winning next election",
+  lim = c(0,1),
+  labels = scales::percent_format(accuracy = 1)
+) +
+theme_pander(base_size = 20, base_family = "Fira Sans Book")
+```
+---
+layout: true
+# Sharp RDs
+
+---
+## In practice
+
+[Gelman and Imbens (2018)](https://amstat.tandfonline.com/doi/abs/10.1080/07350015.2017.1366909) on functional form:
+
+> We argue that controlling for global high-orderpolynomials in regression discontinuity analysis is a flawed approach with three major problems: it leads to noisy estimates, sensitivity to the degree of the polynomial, and poor coverage of confidence intervals. We recommend researchers instead use estimators based on local linear or quadratic polynomials or othersmooth functions.
+
+
+See [Imbens and Kalyanaraman (2012)](https://academic.oup.com/restud/article-abstract/79/3/933/1533189) for optimal bandwidth selection.
+---
+layout: true
+# Fuzzy RDs
+
+---
+name: fuzzy
+class: inverse, middle
+---
+name: fuzzy-setup
+## Setup
+
+---
+layout: false
+# Table of contents
+
+.col-left[
+### Admin
+.smaller[
+
+1. [Schedule](#schedule)
+]
+
+]
+
+.col-right[
+
+### RD
+.smaller[
+1. [Setup](#rd-setup)
+1. [Framework](#rd-framework)
+1. [Examples](#rd-examples)
+1. [Sharp *vs.* fuzzy](#sharp-fuzzy)
+1. [Sharp RDs](#sharp)
+  - [Setup](#sharp-setup)
+  - [(Semi) Formally](#sharp-formal)
+  - [Estimation](#sharp-est)
+  - [Examples](#sharp-ex)
+  - [In practice](#sharp-practice)
+1. [Fuzzy RDs](#fuzzy)
+]
+]
+---
+exclude: true
+
+```{R, generate pdfs, include = F, eval = T}
+source("../../ScriptsR/unpause.R")
+```
