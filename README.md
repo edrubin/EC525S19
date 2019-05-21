@@ -15,12 +15,21 @@ Welcome to **Economics 425/525: Econometrics III** (Spring 2019) at the Universi
 
 ## Books
 
-We will use two books.
+We will mainly use two books.
 
 **[Mostly Harmless Econometrics: An Empiricist's Companion](http://www.mostlyharmlesseconometrics.com/)** *(MHE)*
+<br>*by Angrist and Pischke*
 <br>Your new best friend. Read it.
 
+
+**[Microeconometrics](https://www.cambridge.org/us/academic/subjects/economics/econometrics-statistics-and-mathematical-economics/microeconometrics-methods-and-applications?format=HB&isbn=9780521848053)** *(C&T)*
+<br>*by Cameron and Trivedi*
+<br>Also very readable and accessible.
+
+Runner up (the standard):
+
 **[Econometric Analysis](https://www.pearson.com/us/higher-education/program/Greene-Econometric-Analysis-8th-Edition/PGM334862.html)** *(Greene)*
+<br>*by Greene*
 <br>Encyclopedic resource for all (most?) of the questions MHE does not answer.
 
 ## Lecture slides
@@ -88,7 +97,7 @@ We will use two books.
 1. Propensity-score methods: Regression control, treatment-effect heterogeneity, blocking, weighting, *doubly robust*
 
 **Note formats:** [.html](https://raw.githack.com/edrubin/EC525S19/master/NotesLecture/07Matching/07Matching.html) | [.html (no pause)](https://raw.githack.com/edrubin/EC525S19/master/NotesLecture/07Matching/07Matching_NoPause.html) | [.pdf](https://raw.githack.com/edrubin/EC525S19/master/NotesLecture/07Matching/07Matching.pdf) | [.pdf (no pause)](https://raw.githack.com/edrubin/EC525S19/master/NotesLecture/07Matching/07Matching_NoPause.pdf) | [.Rmd](https://raw.githack.com/edrubin/EC525S19/master/NotesLecture/07Matching/07Matching.Rmd)
-<br>**Readings:** MHE chapter 3 + Cameron and Trivedi section 25.4
+<br>**Readings:** MHE chapter 3 + C&T section 25.4
 
 **[Lecture 08: Instrument Variables](https://raw.githack.com/edrubin/EC525S19/master/NotesLecture/08IV/08IV.html)**
 
@@ -98,14 +107,15 @@ We will use two books.
 1. Heterogeneous treatment effects and the LATE
 
 **Note formats:** [.html](https://raw.githack.com/edrubin/EC525S19/master/NotesLecture/08IV/08IV.html) | [.html (no pause)](https://raw.githack.com/edrubin/EC525S19/master/NotesLecture/08IV/08IV_NoPause.html) | [.pdf](https://raw.githack.com/edrubin/EC525S19/master/NotesLecture/08IV/08IV.pdf) | [.pdf (no pause)](https://raw.githack.com/edrubin/EC525S19/master/NotesLecture/08IV/08IV_NoPause.pdf) | [.Rmd](https://raw.githack.com/edrubin/EC525S19/master/NotesLecture/08IV/08IV.Rmd)
-<br>**Readings:** MHE chapter 4 + Cameron and Trivedi sections 4.8–4.9
-
-*Another note on the notes:* I create the slides with [`xaringan`](https://github.com/yihui/xaringan/wiki) in [R](cran.r-project.org). Thanks to [Grant McDermott](grantmcdermott.com/) for encouraging me to make this switch.
+<br>**Readings:** MHE chapter 4 + C&T sections 4.8–4.9
 
 **[Lecture 09: Regression Discontinuity](https://raw.githack.com/edrubin/EC525S19/master/NotesLecture/09RD/09RD.html)**
 
+1. Sharp regression discontinuities
+1. Fuzzy regression discontinuities
+
 **Note formats:** [.html](https://raw.githack.com/edrubin/EC525S19/master/NotesLecture/09RD/09RD.html) | [.html (no pause)](https://raw.githack.com/edrubin/EC525S19/master/NotesLecture/09RD/08IV_NoPause.html) | [.pdf](https://raw.githack.com/edrubin/EC525S19/master/NotesLecture/09RD/09RD.pdf) | [.pdf (no pause)](https://raw.githack.com/edrubin/EC525S19/master/NotesLecture/09RD/08IV_NoPause.pdf) | [.Rmd](https://raw.githack.com/edrubin/EC525S19/master/NotesLecture/09RD/09RD.Rmd)
-<br>**Readings:** MHE chapter 4 + Cameron and Trivedi sections 4.8–4.9
+<br>**Readings:** MHE chapter 6 + C&T sections 25.6
 
 *Another note on the notes:* I create the slides with [`xaringan`](https://github.com/yihui/xaringan/wiki) in [R](cran.r-project.org). Thanks to [Grant McDermott](grantmcdermott.com/) for encouraging me to make this switch.
 
@@ -194,7 +204,6 @@ Step 2: [**Short proposal**](https://raw.githack.com/edrubin/EC525S19/master/Pro
 
 **Metrics books**
 
-- [**Cameron and Trivedi**](https://www.cambridge.org/us/academic/subjects/economics/econometrics-statistics-and-mathematical-economics/microeconometrics-methods-and-applications?format=HB&isbn=9780521848053) [My recommendation]
 - [Hayashi's *Econometrics*](https://press.princeton.edu/titles/6946.html)
 - [Kennedy](https://www.wiley.com/en-us/A+Guide+to+Econometrics)
 - [*Mastering 'Metrics*](http://masteringmetrics.com/) (undergrad version of *Mostly Harmless*)
