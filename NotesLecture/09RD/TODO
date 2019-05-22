@@ -1,6 +1,9 @@
 
-- Add depiction of the violation of continuous Y0
 - Talk about choosing bandwidth
+- Placebos
+
+Glen's paper on heaping:
+https://pages.uoregon.edu/waddell/papers/2016_EI_Barreca-Lindo-Waddell.pdf
 
 ```{R, srd-data, include = F, cache = T}
 # Load data

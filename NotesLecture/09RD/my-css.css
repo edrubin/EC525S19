@@ -370,10 +370,8 @@ table th {
 /* Example */
 .ex {
   font-weight: 300;
-  /* color: #314f4f !important; */
-  /* color: #8AA19E !important; */
-  /* color: #bebebe !important; */
   color: #cccccc !important;
+  font-style: italic;
 }
 
 .col-left {

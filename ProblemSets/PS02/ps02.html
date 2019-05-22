@@ -1,0 +1,132 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <title>Problem Set 2</title>
+    <meta charset="utf-8">
+    <meta name="author" content="EC 425/525: Econometrics" />
+    <link href="ps02_files/remark-css-0.0.1/default.css" rel="stylesheet" />
+    <link href="ps02_files/remark-css-0.0.1/metropolis.css" rel="stylesheet" />
+    <link href="ps02_files/remark-css-0.0.1/metropolis-fonts.css" rel="stylesheet" />
+    <link rel="stylesheet" href="my-css.css" type="text/css" />
+  </head>
+  <body>
+    <textarea id="source">
+class: center, middle, inverse, title-slide
+
+# Problem Set 2
+## Operation IV
+### <strong>EC 425/525:</strong> Econometrics
+### <br>Due <em>before</em> midnight (11:59pm) on .bold[Wednesday, 29 May 2019]
+
+---
+
+class: clear
+
+
+
+.mono.b[DUE] Your solutions to this problem set are due *before* 11:59pm on Wednesday, 29 May 2019 on [Canvas](https://canvas.uoregon.edu/).
+&lt;br&gt;Your problem set .hi[must be typed] with .mono[R] code beneath your responses. _E.g._,  [`knitr`](https://yihui.name/knitr/) and [`R Markdown`](https://rmarkdown.rstudio.com).
+
+.mono.b[OBJECTIVE] We're going to walk through three classic applications of instrumental variables/two-stage least squares: measurement error, simultaneity, and randomized encouragement designs (REDs).
+
+#### Measurement error
+
+Let's get this problem set started with a good, old-fashioned simulation.
+
+.b.mono[01] Set up a data-generating process such that
+$$
+`\begin{align}
+  y_i = 3 + 7 x_i + u_i
+\end{align}`
+$$
+where `\(x_i\overset{\text{iid}}{\sim}N(5,5)\)` and `\(u_i\overset{\text{iid}}{\sim}N(0,3)\)`.
+
+In this simulation, we want to imagine what would happen if we could not observe `\(x_i\)` (or if `\(x_i\)` is measured with error/noise).
+
+Thus, we want to create two additional variables: `\(w_{1i}\)` and `\(w_{2i}\)`, such that
+$$
+`\begin{align}
+  w_{1i} &amp;= x_i + \varepsilon_i \\
+  w_{2i} &amp;= x_i + \nu_i
+\end{align}`
+$$
+where `\(\varepsilon_i\)` is i.i.d. standard Normal and `\(\nu_i\)` is i.i.d. `\(N(0,7)\)`. For this problem, the sample size will be 50.
+
+This setting is *classical* measurement error—the error (or noise) in measurement (_i.e._, `\(\varepsilon_i\)` and `\(\nu_i\)`) is uncorrelated with the true variable `\(\left( x_i \right)\)`.
+
+.it[Note] No results for this part of the problem. Just make sure you've set up the DGP.
+
+.mono.b[02] Imagine you cannot observe `\(x_i\)` and are stock with our noisily measured versions `\(w_{1i}\)` and `\(w_{2i}\)`. Regress `\(y_i\)` on `\(w_{1i}\)`. What do you get? What if you regress `\(y_i\)` on both `\(w_{1i}\)` *and* `\(w_{2i}\)`?
+
+.mono.b[03] Now what happens if you *instrument* `\(w_{1i}\)` with `\(w_{2i}\)`?
+
+.mono.b[04] Confirm your results form .mono.b[02] and .mono.b[03] were not anomalies. In other words, run a simulation (at least 1,000 iterations) in which you
+
+- regress `\(y_i\)` on `\(w_{1i}\)`
+- regress `\(y_i\)` on `\(w_{2i}\)`
+- instrument `\(w_{1i}\)` *and* `\(w_{2i}\)`
+- instrument `\(w_{2i}\)` *and* `\(w_{1i}\)`
+
+Report the results of your simulation. Do you see anything interesting? Does IV outperform OLS in the presence of measurement error (in terms of bias in `\(\hat{\beta}_1\)`)? What happens in your inference (look at the share of estimates in which you reject the null)?
+
+.mono.b[05] Now let `\(x_i\)` .b[positively] correlate with `\(\varepsilon_i\)` and .b[negatively] correlate with `\(\nu_i\)`, _i.e._, `\(\mathop{\text{Cov}} \left( x_i,\, \varepsilon_i \right) = 1\)` and `\(\mathop{\text{Cov}} \left( x_i,\, \nu_i \right) = -2\)`. What happens to your results from .mono.b[04]?
+
+*Hint* You can use `mvrnorm()` from `MASS` to draw correlated variables from a multivariate Normal distribution (which you can assume here). See our simulation lab for details.
+
+---
+class: clear
+
+.b[Simultaneity]
+
+.b[Randomized encouragement designs]
+
+Time for some
+    </textarea>
+<script src="https://remarkjs.com/downloads/remark-latest.min.js"></script>
+<script>var slideshow = remark.create({
+"ratio": "8.5:11",
+"highlightStyle": "github",
+"highlightLines": true,
+"countIncrementalSlides": false
+});
+if (window.HTMLWidgets) slideshow.on('afterShowSlide', function (slide) {
+  window.dispatchEvent(new Event('resize'));
+});
+(function() {
+  var d = document, s = d.createElement("style"), r = d.querySelector(".remark-slide-scaler");
+  if (!r) return;
+  s.type = "text/css"; s.innerHTML = "@page {size: " + r.style.width + " " + r.style.height +"; }";
+  d.head.appendChild(s);
+})();</script>
+
+<script>
+(function() {
+  var i, text, code, codes = document.getElementsByTagName('code');
+  for (i = 0; i < codes.length;) {
+    code = codes[i];
+    if (code.parentNode.tagName !== 'PRE' && code.childElementCount === 0) {
+      text = code.textContent;
+      if (/^\\\((.|\s)+\\\)$/.test(text) || /^\\\[(.|\s)+\\\]$/.test(text) ||
+          /^\$\$(.|\s)+\$\$$/.test(text) ||
+          /^\\begin\{([^}]+)\}(.|\s)+\\end\{[^}]+\}$/.test(text)) {
+        code.outerHTML = code.innerHTML;  // remove <code></code>
+        continue;
+      }
+    }
+    i++;
+  }
+})();
+</script>
+<!-- dynamically load mathjax for compatibility with self-contained -->
+<script>
+(function () {
+  var script = document.createElement('script');
+  script.type = 'text/javascript';
+  script.src  = 'https://mathjax.rstudio.com/latest/MathJax.js?config=TeX-MML-AM_CHTML';
+  if (location.protocol !== 'file:' && /^https?:/.test(script.src))
+    script.src  = script.src.replace(/^https?:/, '');
+  document.getElementsByTagName('head')[0].appendChild(script);
+})();
+</script>
+  </body>
+</html>

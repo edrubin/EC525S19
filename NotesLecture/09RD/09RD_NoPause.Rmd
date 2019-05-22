@@ -175,12 +175,12 @@ name: schedule
 Regression discontinuity .super[.pink[†]]
 
 .footnote[
-.pink[†] These notes largely follow notes from [Michael Anderson](https://are.berkeley.edu/~mlanderson/ARE_Website/Home.html) and [Imbens and Lemieux (2008)](https://www.sciencedirect.com/science/article/pii/S0304407607001091).
+.pink[†] These notes largely follow notes from [Michael Anderson](https://are.berkeley.edu/~mlanderson/ARE_Website/Home.html), [Imbens and Lemieux (2008)](https://www.sciencedirect.com/science/article/pii/S0304407607001091), and notes from [Teppei Yamamoto](http://web.mit.edu/teppei/www/).
 ]
 
 ## Upcoming
 
-Midterm
+Problem set
 ---
 layout: true
 # Regression discontinuity
@@ -334,7 +334,7 @@ name: sharp-ex
 layout: false
 class: clear, middle
 
-.ex[Example] Is there effect of a political party winning an election on that party's likelihood of winning the following election?
+.ex[Ex.] Is there effect of a political party winning an election on that party's likelihood of winning the following election?
 
 Is there a benefit of incumbency (at the party level)?.super[.pink[†]]
 
@@ -1038,14 +1038,84 @@ layout: true
 # Sharp RDs
 
 ---
+name: sharp-practice
 ## In practice
 
 [Gelman and Imbens (2018)](https://amstat.tandfonline.com/doi/abs/10.1080/07350015.2017.1366909) on functional form:
 
-> We argue that controlling for global high-orderpolynomials in regression discontinuity analysis is a flawed approach with three major problems: it leads to noisy estimates, sensitivity to the degree of the polynomial, and poor coverage of confidence intervals. We recommend researchers instead use estimators based on local linear or quadratic polynomials or othersmooth functions.
+> We argue that .pink[controlling for global high-order polynomials in regression discontinuity analysis is a flawed approach] with three major problems: it leads to noisy estimates, sensitivity to the degree of the polynomial, and poor coverage of confidence intervals. We recommend researchers instead use estimators based on local linear or quadratic polynomials or othersmooth functions.
 
 
 See [Imbens and Kalyanaraman (2012)](https://academic.oup.com/restud/article-abstract/79/3/933/1533189) for optimal bandwidth selection.
+---
+name: sharp-more-estimation
+## Estimation
+
+1. .hi[Trim data] to a reasonable window around the threshold $c$.
+
+
+2. .hi[Recode] $\color{#e64173}{\text{X}_{i}}$ (the "forcing variable") as deviation from $c$, *i.e.*, $\widetilde{\text{X}}_i = \text{X}_{i} - c$
+  - $\widetilde{\text{X}}_{i} = 0$ if $\text{X}_{i}=c$
+  - $\widetilde{\text{X}}_{i} < 0$ if $\text{X}_{i}<c$ and thus $\text{D}_{i}=0$
+  - $\widetilde{\text{X}}_{i} > 0$ if $\text{X}_{i}>c$ and thus $\text{D}_{i}=1$
+
+
+3. Determine a model to .hi[estimate] $\color{#e64173}{\mathop{E}\left[ \text{Y}_{i} \mid \widetilde{\text{X}}_i \right]}$ for $\widetilde{\text{X}}_{i}$ above and below 0
+  - Linear with common slopes for $\mathop{E}\left[ \text{Y}_{i}\mid \widetilde{\text{X}}_i < 0 \right]$ and $\mathop{E}\left[ \text{Y}_{i}\mid \widetilde{\text{X}}_i > 0 \right]$
+  - Linear/quadratic/polynomial with differing slopes
+  - LOESS, kernel regression, *etc.*
+---
+## Estimation: Linear, common slope
+
+.note[Assumptions]
+1. $\color{#6A5ACD}{\mathop{E}\left[\text{Y}_{0i} | \text{X}_{i} = x\right]}$ is linear in $x$, *i.e.*, $\color{#6A5ACD}{\mathop{E}\left[ \text{Y}_{0i} \mid \text{X}_{i} \right]} = \color{#6A5ACD}{\alpha + \beta \text{X}_{i}}$
+2. Treatment effect does not depend upon $\tau$, *i.e.*, $\mathop{E}\left[ \text{Y}_{1i} - \text{Y}_{0i} \mid \text{X}_{i} \right] = \tau$
+
+where (1) comes from linearity and (2) comes from common slopes.
+
+
+$\implies \color{#e64173}{\mathop{E}\left[ \text{Y}_{1i} \mid \text{X}_{i} \right]} = \tau + \color{#6A5ACD}{\mathop{E}\left[ \text{Y}_{0i} \mid \text{X}_{i} \right]} = \tau + \color{#6A5ACD}{\alpha + \beta \text{X}_{i}}$
+
+
+Recall our definition of $\text{Y}_{i} = \text{D}_{i} \color{#e64173}{\text{Y}_{1i}} + (1-\text{D}_{i}) \color{#6A5ACD}{\text{Y}_{0i}}$.
+
+
+$\mathop{E}\left[ \text{Y}_{i} \mid \text{X}_{i},\,\text{D}_{i} \right] =$
+ $\text{D}_{i} \color{#e64173}{\mathop{E}\left[ \text{Y}_{1i}\mid \text{X}_{i} \right]} + (1- \text{D}_{i})\color{#6A5ACD}{\mathop{E}\left[ \text{Y}_{0i}\mid \text{X}_{i} \right]}$
+<br> $\quad = \alpha + \tau \text{D}_{i} + \beta \text{X}_{i}$
+ $= \alpha + \tau \text{D}_{i} + \beta \left(\widetilde{\text{X}}_{i} + c\right)$
+ $= \widetilde{\alpha} + \tau \text{D}_{i} + \beta \widetilde{\text{X}}_{i}$
+<br> which we can estimate by regressing $\text{Y}_{i}$ on $\text{D}_{i}$ and $\widetilde{\text{X}}_{i}$.
+---
+name: srd-linear-diff
+## Estimation: Linear, differing slopes
+
+.note[Assumption] $\color{#6A5ACD}{\mathop{E}\left[\text{Y}_{0i} | \text{X}_{i} = x\right]}$ and $\color{#e64173}{\mathop{E}\left[\text{Y}_{1i} | \text{X}_{i} = x\right]}$ are linear in $x$, *i.e.*, $\color{#6A5ACD}{\mathop{E}\left[ \text{Y}_{0i} \mid \text{X}_{i} \right]} = \color{#6A5ACD}{\alpha_0 + \beta_0 \text{X}_{i}}$ and $\color{#e64173}{\mathop{E}\left[ \text{Y}_{0i} \mid \text{X}_{i} \right]} = \color{#e64173}{\alpha_1 + \beta_1 \text{X}_{i}}$
+
+Now treatment effects can vary with $\text{X}_{i}$.
+
+
+$\implies \mathop{E}\left[\color{#e64173}{\text{Y}_{1i}} - \color{#6A5ACD}{\text{Y}_{0i}} \mid \text{X}_{i} \right] = \left( \alpha_1 - \alpha_0 \right) + \left( \beta_1 - \beta_0 \right)\text{X}_{i}$
+
+
+$\mathop{E}\left[ \text{Y}_{i} \mid \text{X}_{i},\,\text{D}_{i} \right]$
+ $=\text{D}_{i} \color{#e64173}{\mathop{E}\left[ \text{Y}_{1i}\mid \text{X}_{i} \right]} + (1- \text{D}_{i})\color{#6A5ACD}{\mathop{E}\left[ \text{Y}_{0i}\mid \text{X}_{i} \right]}$
+<br>
+ $\color{#ffffff}{\mathop{E}\left[ \text{Y}_{i} \mid \text{X}_{i},\,\text{D}_{i} \right]}= \color{#6A5ACD}{\alpha_0 + \beta_0 \text{X}_{i}} + (\color{#e64173}{\alpha_1} - \color{#6A5ACD}{\alpha_0})\text{D}_{i} + (\color{#e64173}{\beta_1} - \color{#6A5ACD}{\beta_0})\text{D}_{i}\text{X}_{i} \color{#ffffff}{\bigg|}$
+<br>
+ $\color{#ffffff}{\mathop{E}\left[ \text{Y}_{i} \mid \text{X}_{i},\,\text{D}_{i} \right]}= \widetilde{\alpha} + \beta_0 \widetilde{\text{X}}_{i} + \tau \text{D}_{i} + \widetilde{\beta}\text{D}_{i}\widetilde{\text{X}}_{i}$
+
+
+$\tau$ is the LATE at $\widetilde{\text{X}}_{i} = 0$ $\left(\text{X}_{i}=c\right)$.
+ Estimate: Regress $\text{Y}_{i}$ in $\widetilde{\text{X}}_{i}$, $\text{D}_{i}$, .it[and] $\text{D}_{i}\widetilde{\text{X}}_{i}$..super[.pink[†]]
+
+.footnote[
+.pink[†] See [Appendix](#srd-appendix) for omitted steps.
+]
+---
+## Estimation: Additional
+
+
 ---
 layout: true
 # Fuzzy RDs
@@ -1057,34 +1127,207 @@ class: inverse, middle
 name: fuzzy-setup
 ## Setup
 
+As with their sharp-RD relatives, .attn[fuzzy RDs] take advantage of a discontinuous change in treatment assignment across some threshold $c$.
+
+
+In a .attn[fuzzy regression discontinuity], the *probability* of treatment changes discontinuously as $\text{X}_{i}$ crosses $c$
+, but it is no longer deterministic.
+
+
+Formally,
+$$
+\begin{align}
+  0 < \lim_{x\downarrow c} \mathop{\text{Pr}}\left(\text{D}_{i} = 1\mid \text{X}_{i} = x\right) - \lim_{x\uparrow c} \mathop{\text{Pr}}\left(\text{D}_{i} = 1\mid \text{X}_{i} = x\right) < 1
+\end{align}
+$$
+
+.ex[*Ex.*,] Exceeding a minimum GRE requirement for graduate school.
+---
+## Threshold effects
+
+We now have .b[two effects] of $\text{X}_{i}$ crossing our threshold $c$.
+
+
+1. The effect of $\text{X}_{i}$ crossing $c$ .blue[on our outcome]
+$$
+\begin{align}
+  \color{#3b3b9a}{\lim_{x\downarrow c} \mathop{E}\left[\text{Y}_{i}\mid \text{X}_{i} = x\right] - \lim_{x\uparrow c} \mathop{E}\left[\text{Y}_{i}\mid \text{X}_{i} = x\right]}
+\end{align}
+$$
+
+
+1. The effect of $\text{X}_{i}$ crossing $c$ .turquoise[on the probability of treatment]
+$$
+\begin{align}
+   \color{#20B2AA}{\lim_{x\downarrow c} \mathop{E}\left[\text{D}_{i}\mid \text{X}_{i} = x\right] - \lim_{x\uparrow c} \mathop{E}\left[\text{D}_{i}\mid \text{X}_{i} = x\right]}
+\end{align}
+$$
+
+
+The treatment effect defined by a fuzzy RD is the ratio of (.blue[1]) to (.turquoise[2])
+$$
+\begin{align}
+  \tau_\text{FRD}  = \dfrac{\color{#3b3b9a}{\lim_{x\downarrow c} \mathop{E}\left[\text{Y}_{i}\mid \text{X}_{i} = x\right] - \lim_{x\uparrow c} \mathop{E}\left[\text{Y}_{i}\mid \text{X}_{i} = x\right]}}{\color{#20B2AA}{\lim_{x\downarrow c} \mathop{E}\left[\text{D}_{i}\mid \text{X}_{i} = x\right] - \lim_{x\uparrow c} \mathop{E}\left[\text{D}_{i}\mid \text{X}_{i} = x\right]}}
+\end{align}
+$$
+---
+name: fuzzy-iv
+## An old friend
+
+This definition of the fuzzy-RD treatment effect
+$$
+\begin{align}
+  \tau_\text{FRD}  = \dfrac{\color{#3b3b9a}{\lim_{x\downarrow c} \mathop{E}\left[\text{Y}_{i}\mid \text{X}_{i} = x\right] - \lim_{x\uparrow c} \mathop{E}\left[\text{Y}_{i}\mid \text{X}_{i} = x\right]}}{\color{#20B2AA}{\lim_{x\downarrow c} \mathop{E}\left[\text{D}_{i}\mid \text{X}_{i} = x\right] - \lim_{x\uparrow c} \mathop{E}\left[\text{D}_{i}\mid \text{X}_{i} = x\right]}}
+\end{align}
+$$
+should remind you of something
+—.hi-slate[IV], where $\text{Z}_{i} = \mathbb{I}\left\{ \text{X}_{i}\geq c \right\}$.
+
+
+Accordingly, fuzzy RDs are going to have the .hi-slate[same requirements and interpretation as IV].
+---
+name: fuzzy-formal
+## More formally
+
+Let $\text{D}_{i}\left( x^* \right)$ denote the .hi-slate[potential treatment status] of $i$ .hi-slate[with threshold] $\color{#314f4f}{x^*}$.
+
+Why write potential treatment status $\text{D}_{i}$ a function of the threshold?
+
+
+Changing the threshold (*e.g.*, voting age) generally makes more sense than changing $\text{X}_{i}$ (*e.g.*, age)..super[.pink[†]]
+
+.footnote[
+.pink[†] This observation/motivation can help with inference.
+]
+
+
+
+*I.e.*, changing the threshold changes treatment statuses at the marginal.
+
+
+.note[Assumption] $\text{D}_{i}\left(x^*\right)$ is non-increasing in $x^*$ at $x^*=c$.
+
+This is our monotonicity assumption for fuzzy RDs.
+ If we raise $x^*$ from $c$ to $c+\epsilon$, no one joins treatment—no defiers.
+
+---
+## Compliance
+
+Our .attn[compliers] in this setting are individuals such that
+
+$$
+\begin{align}
+  &\lim_{x^*\downarrow \text{X}_{i}} \text{D}_{i}\left( x^* \right) = 0
+  &\lim_{x^*\uparrow \text{X}_{i}} \text{D}_{i}\left( x^* \right) = 1
+\end{align}
+$$
+
+
+*i.e.*, .attn[compliers] are only treated when $x^*$ (the threshold) is *below* their $\text{X}_{i}$.
+
+
+Back to the fuzzy RD treatment effect
+
+$\tau_\text{FRD} = \dfrac{\lim_{x\downarrow c} \mathop{E}\left[\text{Y}_{i}\mid \text{X}_{i} = x\right] - \lim_{x\uparrow c} \mathop{E}\left[\text{Y}_{i}\mid \text{X}_{i} = x\right]}{\lim_{x\downarrow c} \mathop{E}\left[\text{D}_{i}\mid \text{X}_{i} = x\right] - \lim_{x\uparrow c} \mathop{E}\left[\text{D}_{i}\mid \text{X}_{i} = x\right]}$
+
+
+$\color{#ffffff}{\tau_\text{FRD}}= \mathop{E}[ \color{#e64173}{\text{Y}_{1i}} - \color{#6A5ACD}{\text{Y}_{0i}} | i$ is a complier and $\text{X}_{i}=c]$.
+
+
+Thus, $\tau_\text{FRD}$ can be a *very local* LATE.
+---
+layout: true
+# Graphical analysis
+
+---
+class: inverse, middle
+name: graph
+---
+name: graph-gen
+## General
+
+RD analyses hinge on their graphical analyses.
+
+If the discontinuity is not graphically apparent, most people are not going to care about the results of a few tortured regressions.
+
+
+You're arguing you know that treatment assignment changes across the threshold. If your reader/viewer cannot see it, they're likely not going to believe your regression tables..super[.pink[†]]
+
+.footnote[
+.pink[†] This skepticism may be well founded. We know RDs are sensitive to functional form—and researchers have been known to *p-hack*.
+]
+---
+## Three figures
+
+Most RD analyses will have some subset of three types of figures.
+
+1. .hi-slate[Outcomes] by the running/forcing variable] $\left( \text{X}_{i} \right)$
+<br>.it[Do we observe a treatment effect across the discontinuity?]
+
+
+1. .hi-slate[Covariates] by the running/forcing variable $\left( \text{X}_{i} \right)$
+<br>.it[Are covariates smooth/balanced across the discontinuity?]
+
+
+1. .hi-slate[Density] of running/forcing variable $\left( \text{X}_{i} \right)$
+<br>.it[Is there evidence of sorty into treatment (across the threshold)?]
+
+
+---
+layout: false
+name: srd-appendix
+# Appendix
+## Estimation: Linear, differing slopes
+
+Definitions of terms that [magically appear](#srd-linear-diff)
+
+- $\widetilde{\alpha} = \color{#6A5ACD}{\alpha_0} + \color{#6A5ACD}{\beta_0}c$
+
+- $\tau = \left( \color{#e64173}{\alpha_1} - \color{#6A5ACD}{\alpha_0} \right) + \left( \color{#e64173}{\beta_1} - \color{#6A5ACD}{\beta_0} \right)c$
+
+- $\widetilde{\beta} = \left( \color{#e64173}{\beta_1} - \color{#6A5ACD}{\beta_0} \right)$
+
 ---
 layout: false
 # Table of contents
 
 .col-left[
-### Admin
+#### Admin
 .smaller[
-
 1. [Schedule](#schedule)
 ]
 
-]
-
-.col-right[
-
-### RD
+#### General RD
 .smaller[
 1. [Setup](#rd-setup)
 1. [Framework](#rd-framework)
 1. [Examples](#rd-examples)
 1. [Sharp *vs.* fuzzy](#sharp-fuzzy)
-1. [Sharp RDs](#sharp)
-  - [Setup](#sharp-setup)
-  - [(Semi) Formally](#sharp-formal)
-  - [Estimation](#sharp-est)
-  - [Examples](#sharp-ex)
-  - [In practice](#sharp-practice)
-1. [Fuzzy RDs](#fuzzy)
+]
+
+#### [Graphical analysis](#graph)
+.smaller[
+1. [General](#graph-gen)
+]
+
+]
+
+.col-right[
+#### [Sharp RDs](#sharp)
+.smaller[
+1. [Setup](#sharp-setup)
+1. [(Semi) Formally](#sharp-formal)
+1. [Estimation](#sharp-est)
+1. [Examples](#sharp-ex)
+1. [In practice](#sharp-practice)
+1. [More estimation](#sharp-more-estimation)
+]
+
+#### [Fuzzy RDs](#fuzzy)
+.smaller[
+1. [Setup](#fuzzy-setup)
+1. [As IV](#fuzzy-iv)
+1. [Somewhat formally](#fuzzy-formal)
 ]
 ]
 ---
