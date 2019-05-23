@@ -115,6 +115,7 @@ The content of the lectures mainly follows *MHE* and [Michael Anderson](https://
 
 1. Sharp regression discontinuities
 1. Fuzzy regression discontinuities
+1. Graphical analyses
 
 **Note formats:** [.html](https://raw.githack.com/edrubin/EC525S19/master/NotesLecture/09RD/09RD.html) | [.html (no pause)](https://raw.githack.com/edrubin/EC525S19/master/NotesLecture/09RD/08IV_NoPause.html) | [.pdf](https://raw.githack.com/edrubin/EC525S19/master/NotesLecture/09RD/09RD.pdf) | [.pdf (no pause)](https://raw.githack.com/edrubin/EC525S19/master/NotesLecture/09RD/08IV_NoPause.pdf) | [.Rmd](https://raw.githack.com/edrubin/EC525S19/master/NotesLecture/09RD/09RD.Rmd)
 <br>**Readings:** MHE chapter 6 + C&T sections 25.6
@@ -187,6 +188,9 @@ The content of the lectures mainly follows *MHE* and [Michael Anderson](https://
 **[Problem set 1](https://raw.githack.com/edrubin/EC525S19/master/ProblemSets/PS01/ps01.pdf)**
 <br>*Due Sunday, 19 May 2019 by midnight*
 
+**[Problem set 2](https://raw.githack.com/edrubin/EC525S19/master/ProblemSets/PS02/ps02.pdf)**
+<br>*Due Wednesday, 29 May 2019 by midnight*
+
 ## Project
 
 Building a research project/proposal.
@@ -201,6 +205,7 @@ Step 2: [**Short proposal**](https://raw.githack.com/edrubin/EC525S19/master/Pro
 ## Practice problems
 
 1. [Instrumental variables](https://raw.githack.com/edrubin/EC525S19/master/NotesLecture/08IV/08IV_Practice.pdf)
+1. Regression discontinuity
 
 ## Resources
 
