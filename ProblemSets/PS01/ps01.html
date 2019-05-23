@@ -1,0 +1,269 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <title>Problem Set 1</title>
+    <meta charset="utf-8">
+    <meta name="author" content="EC 425/525: Econometrics" />
+    <link href="ps01_files/remark-css-0.0.1/default.css" rel="stylesheet" />
+    <link href="ps01_files/remark-css-0.0.1/metropolis.css" rel="stylesheet" />
+    <link href="ps01_files/remark-css-0.0.1/metropolis-fonts.css" rel="stylesheet" />
+    <script src="ps01_files/kePrint-0.0.1/kePrint.js"></script>
+    <link rel="stylesheet" href="my-css.css" type="text/css" />
+  </head>
+  <body>
+    <textarea id="source">
+class: center, middle, inverse, title-slide
+
+# Problem Set 1
+## Regression and Matching
+### <strong>EC 425/525:</strong> Econometrics
+### <br>Due <em>before</em> midnight (11:59pm) on .bold[Sunday, 19 May 2019]
+
+---
+
+class: clear
+
+
+
+.mono.b[DUE] Your solutions to this problem set are due *before* 11:59pm on Sunday, 19 May 2019 on [Canvas](https://canvas.uoregon.edu/).
+
+Your problem set .hi[must be typed] with .mono[R] code beneath your responses. _E.g._,  [`knitr`](https://yihui.name/knitr/) and [`R Markdown`](https://rmarkdown.rstudio.com).
+
+.mono.b[OBJECTIVE] This problem set has three purposes: (1) reinforce the econometrics topics we reviewed in class; (2) build your .mono[R] toolset; (3) start building your intuition about causality within econometrics.
+
+
+.mono.b[README] This problem set uses data from [LaLonde (1986)](http://people.hbs.edu/nashraf/LaLonde_1986.pdf), who compared the estimated effects of a randomized employment program—National Supported Work Demonstration (NSW)—to the estimated effects produced using non-experimental methods (_i.e._, pretending treatment had not been randomized). You should read (at least the first few pages of) the paper. More [here](http://users.nber.org/~rdehejia/data/nswdata3.html) from Rajeev Dehejia.
+
+.mono.b[01] Download and load two datasets: (1) [data from the randomized employment program](http://users.nber.org/~rdehejia/data/nsw.dta) (we'll call this the .b[NSW data]) and (2) [data on 2,490 potential 'control' individuals from the PSID (Panel Study of Income Dynamics)](http://users.nber.org/~rdehejia/data/psid_controls.dta) (we'll call this the .b[PSID data]).
+
+
+The last page of the problem set describes the variables in these data.
+
+.hi-pink[Note] .b[Questions .mono[02–07] use the .it[NSW data].]
+
+.mono.b[02] Regress real earnings in 1975 (the year before treatment) on treatment (and an intercept, which we will always assume should be included unless otherwise stated). Why/how is this regression (and its outcome) informative? What does it tell us?
+
+
+
+.mono.b[03] The program rolled out in 1976 and ended (at least for our purposes) in 1978, so we'll use earnings in 1978 to estimate whether the program had any sustained effect on earnings.
+
+Regress 1978 earnings on treatment. What do you find?
+
+
+
+.mono.b[04] What is required for us to interpret the estimated in .mono.b[03] as causal? Does our setting meet this requirement?
+
+.mono.b[05] Add controls for age, education, race (black and Hispanic). How does your estimated treatment effect and its standard change. Why do you think this happense?
+
+
+
+.mono.b[06] What is a "bad control"? Are any of the controls we added in .mono.b[05] "bad"? Briefly explain.
+
+.mono.b[07] Since we have an experiment, can we interpret the coefficient on .mono[nodegree] (not having a high-school diploma) as causal? What about its interaction with treatment? Briefly explain.
+
+.mono.b[08] Compare a simple difference in means to your results in the regression results in .mono.b[03].
+
+.it[Hint] The `dplyr` functions `group_by()` and `summarize()` could be helpful.
+
+
+
+.mono.b[09] Create a new dataset that combines .b[treated individuals from the .it[NSW data]] and .b[control individuals from the .it[PSID data]]. We'll refer to this dataset as our .b[mixed dataset].
+
+.it[Hint] Remember our old friends `filter()` and `bind_rows()` from `dplyr`.
+
+
+
+.hi-pink[Note] .b[Questions from .mono[10–13] use this .it[mixed dataset]], focusing on earnings in 1978.
+
+---
+class: clear
+
+.mono.b[10] Compare the difference in means from the .b[mixed dataset] to the difference from the .b[NSW dataset].
+
+.mono.b[11] Use our potential-outcomes (Rubin causal model) notation to explain how the difference with the mixed dataset may be biased. Does the sign of the difference across the two differences-in-means match what you would expect from our model of selection bias? Briefly explain.
+
+.mono.b[12] Time for nearest-neighbor matching. Use all six covariates.
+
+.move-right[
+.mono.b[12A] Estimate the average treatment effect on the treated by matching treated individuals to their nearest neighbor using a .b[Euclidean] metric.
+]
+
+.move-right[
+.mono.b[12B] Estimate the average treatment effect on the treated by matching treated individuals to their nearest neighbor using a .b[Mahalanobis] metric.
+]
+
+.move-right[
+.mono.b[12C] How do your estimates in .mono.b[12A] and .mono.b[12B] compare to your previous estimates?
+
+]
+
+.move-right[
+.b[Extra credit] Use kernel matching (any kernel) to estimate the treatment effect.
+]
+
+.move-right[]
+
+.mono.b[13] Now for propensity-score methods.
+
+.move-right[
+.mono.b[13A] Estimate the propensity score for each treated individual using the covariates using a logit model that is linear in the covariates. Which variables are predictive of treatment?
+
+.it[Hint:] The function `glm()` with `family = binomial` estimates a logit model.
+
+
+]
+
+.move-right[
+.mono.b[13B] Add the estimated propensity scores `\(\left(\widehat{p}_{i}\right)\)` to the mixed dataset. Is there overlap? Explain.
+
+.it[Hint:] You can access predictions from a model using `$fitted.values`.
+&lt;br&gt;.it[Another hint:] Try histograms grouped/filled by treatment status.
+
+
+]
+
+.move-right[
+.mono.b[13C] Enforce overlap using the minimum `\(\widehat{p}_i\)` observed in the treated group and the maximum `\(\widehat{p}_i\)` observed in the control group.
+]
+
+.move-right[
+.mono.b[13D] Estimate the treatment effect using a regression that conditions on `\(\widehat{p}_i\)`. What happens if you also include `\(\widehat{p}_i\)` interacted with treatment?
+]
+
+.move-right[
+.mono.b[13E] Now estimate the treatment effect by blocking on `\(\widehat{p}_i\)`.
+]
+
+.move-right[
+.b[Extra credit] Use the *doubly robust method* that combines regression and blocking.
+]
+
+.mono.b[14] Compare the various treatment effects that you've estimated in .mono.b[10–13]. How do they compare to the effects you estimated .mono.b[03]? Which estimates should we trust? Why?
+
+.mono.b[15] Write a simulation showing OLS is biased for `\(\beta_1\)` when (1) we omit `\(w_i\)` and (2) `\(w_i\)` correlates with `\(x_i\)`.
+$$
+`\begin{align}
+  y_i = \left( \beta_0 = 10 \right) + \left( \beta_1 = 5 \right) x_i + \left( \beta_2 = 5 \right) w_i + \varepsilon_i
+\end{align}`
+$$
+Your call on the exact distributions.
+
+Run 1,000 iterations, each with sample size 50. Plot your results.
+
+.b[Extra credit] Show (in figures) how the bias changes as you change the correlation between `\(x_i\)` and `\(w_i\)`.
+
+---
+class: clear
+
+## Data description
+
+Each row in the dataset gives records statistics for one of 709 commuting zones.
+
+In general, I've tried to stick with a naming convention. Variables that begin with .mono-small[i\\_] denote binary indicatory variables (taking on the value of .mono-small[0] or .mono-small[1]). Variables that begin with .mono-small[share_] give the share.
+
+&lt;br&gt;
+&lt;table class="table" style="width: auto !important; margin-left: auto; margin-right: auto;"&gt;
+ &lt;thead&gt;
+  &lt;tr&gt;
+   &lt;th style="text-align:left;"&gt; Variable &lt;/th&gt;
+   &lt;th style="text-align:left;"&gt; Description &lt;/th&gt;
+  &lt;/tr&gt;
+ &lt;/thead&gt;
+&lt;tbody&gt;
+  &lt;tr&gt;
+   &lt;td style="text-align:left;"&gt; .mono[data_id] &lt;/td&gt;
+   &lt;td style="text-align:left;"&gt; Dataset identifier. &lt;/td&gt;
+  &lt;/tr&gt;
+  &lt;tr&gt;
+   &lt;td style="text-align:left;"&gt; .mono[treat] &lt;/td&gt;
+   &lt;td style="text-align:left;"&gt; Treatment indicator (select to be part of NSW). &lt;/td&gt;
+  &lt;/tr&gt;
+  &lt;tr&gt;
+   &lt;td style="text-align:left;"&gt; .mono[age] &lt;/td&gt;
+   &lt;td style="text-align:left;"&gt; Age (years). &lt;/td&gt;
+  &lt;/tr&gt;
+  &lt;tr&gt;
+   &lt;td style="text-align:left;"&gt; .mono[education] &lt;/td&gt;
+   &lt;td style="text-align:left;"&gt; Education (years). &lt;/td&gt;
+  &lt;/tr&gt;
+  &lt;tr&gt;
+   &lt;td style="text-align:left;"&gt; .mono[black] &lt;/td&gt;
+   &lt;td style="text-align:left;"&gt; Indicator for whether the individual is black. &lt;/td&gt;
+  &lt;/tr&gt;
+  &lt;tr&gt;
+   &lt;td style="text-align:left;"&gt; .mono[hispanic] &lt;/td&gt;
+   &lt;td style="text-align:left;"&gt; Indicator for whether the individual is Hispanic. &lt;/td&gt;
+  &lt;/tr&gt;
+  &lt;tr&gt;
+   &lt;td style="text-align:left;"&gt; .mono[married] &lt;/td&gt;
+   &lt;td style="text-align:left;"&gt; Indicator for whether the individual is married. &lt;/td&gt;
+  &lt;/tr&gt;
+  &lt;tr&gt;
+   &lt;td style="text-align:left;"&gt; .mono[nodegree] &lt;/td&gt;
+   &lt;td style="text-align:left;"&gt; Indicator for individuals without a high-school diploma. &lt;/td&gt;
+  &lt;/tr&gt;
+  &lt;tr&gt;
+   &lt;td style="text-align:left;"&gt; .mono[re74] &lt;/td&gt;
+   &lt;td style="text-align:left;"&gt; Real earnings in 1974 (1982 dollars). &lt;/td&gt;
+  &lt;/tr&gt;
+  &lt;tr&gt;
+   &lt;td style="text-align:left;"&gt; .mono[re75] &lt;/td&gt;
+   &lt;td style="text-align:left;"&gt; Real earnings in 1975 (1982 dollars). &lt;/td&gt;
+  &lt;/tr&gt;
+  &lt;tr&gt;
+   &lt;td style="text-align:left;"&gt; .mono[re78] &lt;/td&gt;
+   &lt;td style="text-align:left;"&gt; Real earnings in 1978 (1982 dollars). &lt;/td&gt;
+  &lt;/tr&gt;
+&lt;/tbody&gt;
+&lt;/table&gt;
+
+.b[Note:] The NSW dataset does not include .mono[re74].
+    </textarea>
+<script src="https://remarkjs.com/downloads/remark-latest.min.js"></script>
+<script>var slideshow = remark.create({
+"ratio": "8.5:11",
+"highlightStyle": "github",
+"highlightLines": true,
+"countIncrementalSlides": false
+});
+if (window.HTMLWidgets) slideshow.on('afterShowSlide', function (slide) {
+  window.dispatchEvent(new Event('resize'));
+});
+(function() {
+  var d = document, s = d.createElement("style"), r = d.querySelector(".remark-slide-scaler");
+  if (!r) return;
+  s.type = "text/css"; s.innerHTML = "@page {size: " + r.style.width + " " + r.style.height +"; }";
+  d.head.appendChild(s);
+})();</script>
+
+<script>
+(function() {
+  var i, text, code, codes = document.getElementsByTagName('code');
+  for (i = 0; i < codes.length;) {
+    code = codes[i];
+    if (code.parentNode.tagName !== 'PRE' && code.childElementCount === 0) {
+      text = code.textContent;
+      if (/^\\\((.|\s)+\\\)$/.test(text) || /^\\\[(.|\s)+\\\]$/.test(text) ||
+          /^\$\$(.|\s)+\$\$$/.test(text) ||
+          /^\\begin\{([^}]+)\}(.|\s)+\\end\{[^}]+\}$/.test(text)) {
+        code.outerHTML = code.innerHTML;  // remove <code></code>
+        continue;
+      }
+    }
+    i++;
+  }
+})();
+</script>
+<!-- dynamically load mathjax for compatibility with self-contained -->
+<script>
+(function () {
+  var script = document.createElement('script');
+  script.type = 'text/javascript';
+  script.src  = 'https://mathjax.rstudio.com/latest/MathJax.js?config=TeX-MML-AM_CHTML';
+  if (location.protocol !== 'file:' && /^https?:/.test(script.src))
+    script.src  = script.src.replace(/^https?:/, '');
+  document.getElementsByTagName('head')[0].appendChild(script);
+})();
+</script>
+  </body>
+</html>

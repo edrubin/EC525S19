@@ -78,13 +78,57 @@ opts_chunk$set(
 .mono.b[DUE] Your solutions to this problem set are due *before* 11:59pm on Wednesday, 29 May 2019 on [Canvas](https://canvas.uoregon.edu/).
 <br>Your problem set .hi[must be typed] with .mono[R] code beneath your responses. _E.g._,  [`knitr`](https://yihui.name/knitr/) and [`R Markdown`](https://rmarkdown.rstudio.com).
 
-.mono.b[OBJECTIVE] We're going to walk through three classic applications of instrumental variables/two-stage least squares: measurement error, simultaneity, and randomized encouragement designs (REDs).
+.mono.b[OBJECTIVE] We're going to walk through three classic applications of instrumental variables/two-stage least squares: endogeneity, measurement error, and randomized encouragement designs (REDs).
 
-#### Measurement error
+### Part 1: Selection bias
 
-Let's get this problem set started with a good, old-fashioned simulation.
+As this problem follows one from Wooldridge, we'll use the `wooldridge` package. You need to install the `wooldridge` package and then load the birthweight data using `data("bwght")`. For (limited) information on the variables, see the help file (_i.e._, `?wooldridge::bwght`).
 
-.b.mono[01] Set up a data-generating process such that
+.mono.b[1.01] We want to better understand the effect of a number of variables on birth weight (`bwght`)—namely gender (`male`), birth order (`parity`), income (`faminc`), and cigarette smoking during pregnancy (`packs`), _i.e._,
+$$
+\begin{align}
+  \log(\text{bwght}_i) = \beta_0 + \beta_1 \text{male}_i + \beta_2 \text{parity}_i + \beta_3 \log(\text{faminc}_i) + \beta_4 \text{packs}_i + u_i
+\end{align}
+$$
+
+.mono.b[1.01] Why might you expect amount of smoking (`packs`) to be correlated with $u_i$?
+
+.mono.b[1.02] Suppose that you have data on average cigarette prices in each woman’s state of residence. Discuss whether this information is likely to satisfy the properties of a good instrumental variable for `packs`.
+
+.mono.b[1.03] Use the data in in `bwght` to estimate equation the equation above. First, use OLS. Then, use 2SLS, where `cigprice` is an instrument for `packs`. Discuss any important differences in the OLS and 2SLS estimates.
+
+.mono.b[1.04] Estimate the reduced form for `packs`. Does it raise any issues? What bearing does this conclusion have on your answer from .mono.b[1.03]?
+
+### Part 2: Randomized encouragement designs
+
+Another common implementation of IV/2SLS is a randomized encouragement design (RED), in which we randomly select individuals to receive "encouragement" (_e.g._, we call them to tell them about an exciting new program) in order to try to induce an exogenous change in program participation.
+
+Let's imagine we want estimate the effect of solar-panel installation on household electricity consumption.
+
+.mono.b[2.01] What would be the problem with comparing average electricity consumption for houses with solar panels to average electricity consumption without solar panels?
+
+.mono.b[2.02] We randomly 200 homes that have not yet installed solar panels. Within this sample, we randomly assign 100 houses to our "encouragement" group and 100 houses to our "non-encouragement" group. For the 100 houses in the encouragement group, we call/visit the households and tell them how awesome solar panels are—and how much money they could save with solar..super[.pink[†]]
+
+.footnote[
+.pink[†] Tangent: In case you haven't seen it, you should check out Google's [Project Sunroof](https://www.google.com/get/sunroof).
+]
+
+What do we need for our encouragement to be a valid instrument for solar panel installation? Do you think it is satisfied?
+
+---
+class: clear
+
+.mono.b[2.03] A year later, we conduct a survey and find that in the encouragement group, 15/100 homes now have solar panels. In the non-encouragement group, 5/100 homes now have solar panels. If we estimated the first stage, (regressing an indicator for solar panel on an intercept and an indicator for encouragement group), what would our estimates be?
+
+.mono.b[2.04] Imagine that average monthly electricity consumption in the encouragement group is 900 kWh (kilowatthours), while the average in the non-encouragement is 870 kWh. Based upon these numbers, what are the reduced-form (the effect of encouragement on energy consumption) and 2SLS estimates?
+
+.mono.b[2.05] What does the LATE in this setting mean—_i.e._, what does *local* mean in this setting?
+
+### Part 3: Measurement error
+
+Now for a good, old-fashioned simulation.
+
+.mono.b[3.01] Set up a data-generating process such that
 $$
 \begin{align}
   y_i = 3 + 7 x_i + u_i
@@ -105,35 +149,30 @@ where $\varepsilon_i$ is i.i.d. standard Normal and $\nu_i$ is i.i.d. $N(0,7)$. 
 
 This setting is *classical* measurement error—the error (or noise) in measurement (_i.e._, $\varepsilon_i$ and $\nu_i$) is uncorrelated with the true variable $\left( x_i \right)$.
 
-.it[Note] No results for this part of the problem. Just make sure you've set up the DGP.
+.it[Note:] No results for this part of the problem. Just make sure you've set up the DGP.
 
-.mono.b[02] Imagine you cannot observe $x_i$ and are stock with our noisily measured versions $w_{1i}$ and $w_{2i}$. Regress $y_i$ on $w_{1i}$. What do you get? What if you regress $y_i$ on both $w_{1i}$ *and* $w_{2i}$?
+.mono.b[3.02] Imagine you cannot observe $x_i$ and are stuck with our noisily measured versions $w_{1i}$ and/or $w_{2i}$. Regress $y_i$ on $w_{1i}$. What do you get? What if you regress $y_i$ on both $w_{1i}$ *and* $w_{2i}$?
 
-.mono.b[03] Now what happens if you *instrument* $w_{1i}$ with $w_{2i}$?
+.mono.b[3.03] Now what happens if you *instrument* $w_{1i}$ with $w_{2i}$?
 
-.mono.b[04] Confirm your results form .mono.b[02] and .mono.b[03] were not anomalies. In other words, run a simulation (at least 1,000 iterations) in which you
+.mono.b[3.04] Confirm your results form .mono.b[3.02] and .mono.b[3.03] were not anomalies. In other words, run a simulation (with at least 1,000 iterations). In each iteration, record the results of
 
-- regress $y_i$ on $w_{1i}$
-- regress $y_i$ on $w_{2i}$
-- instrument $w_{1i}$ *and* $w_{2i}$
-- instrument $w_{2i}$ *and* $w_{1i}$
+- regressing $y_i$ on $w_{1i}$
+- regressing $y_i$ on $w_{2i}$
+- instrumenting $w_{1i}$ with $w_{2i}$
+- instrumenting $w_{2i}$ with $w_{1i}$
 
 Report the results of your simulation. Do you see anything interesting? Does IV outperform OLS in the presence of measurement error (in terms of bias in $\hat{\beta}_1$)? What happens in your inference (look at the share of estimates in which you reject the null)?
-
-.mono.b[05] Now let $x_i$ .b[positively] correlate with $\varepsilon_i$ and .b[negatively] correlate with $\nu_i$, _i.e._, $\mathop{\text{Cov}} \left( x_i,\, \varepsilon_i \right) = 1$ and $\mathop{\text{Cov}} \left( x_i,\, \nu_i \right) = -2$. What happens to your results from .mono.b[04]?
-
-*Hint* You can use `mvrnorm()` from `MASS` to draw correlated variables from a multivariate Normal distribution (which you can assume here). See our simulation lab for details.
 
 ---
 class: clear
 
-.b[Simultaneity]
+.mono.b[3.05] Now let $x_i$ .b[positively] correlate with $\varepsilon_i$ and .b[negatively] correlate with $\nu_i$, _i.e._, $\mathop{\text{Cov}} \left( x_i,\, \varepsilon_i \right) = 1$ and $\mathop{\text{Cov}} \left( x_i,\, \nu_i \right) = -2$. What happens to your results from .mono.b[3.04]?
 
-.b[Randomized encouragement designs]
+*Hint* You can use `mvrnorm()` from `MASS` to draw correlated variables from a multivariate Normal distribution (which you can assume here). See our simulation lab for details.
 
-Time for some
+.b[Extra credit] For our simple linear regression setup, show (analytically) why OLS estimates for $\beta_1$ are biased toward zero. How does IV help?
 
-
-```{R, generate pdfs, include = F, eval = F}
+```{R, generate pdfs, include = F, eval = T}
 system("decktape remark ps02.html ps02.pdf --chrome-arg=--allow-file-access-from-files")
 ```

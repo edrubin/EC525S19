@@ -1,0 +1,267 @@
+---
+title: "Problem Set 1"
+subtitle: "Regression and Matching"
+author: "**EC 425/525:** Econometrics"
+date: "<br>Due *before* midnight (11:59pm) on .bold[Sunday, 19 May 2019]"
+output:
+  xaringan::moon_reader:
+    css: ['default', 'metropolis', 'metropolis-fonts', 'my-css.css']
+    # self_contained: true
+    nature:
+      ratio: '8.5:11'
+      highlightStyle: github
+      highlightLines: true
+      countIncrementalSlides: false
+---
+class: clear
+
+```{R, setup, include = F}
+# Packages
+library(pacman)
+p_load(
+  ggplot2, gridExtra, ggthemes, latex2exp, kableExtra,
+  tidyverse, broom, knitr, magrittr
+)
+# Colors
+red_pink <- "#e64173"
+turquoise <- "#20B2AA"
+grey_light <- "grey70"
+grey_mid <- "grey50"
+grey_dark <- "grey20"
+# Themes
+theme_axes_y <- theme_void() + theme(
+  text = element_text(family = "sans"),
+  axis.title = element_text(size = 11),
+  plot.title = element_text(size = 11, hjust = 0.5),
+  axis.title.x = element_text(hjust = .95, margin = margin(0.15, 0, 0, 0, unit = "lines")),
+  axis.title.y = element_text(vjust = .95, margin = margin(0, -0.2, 0, 0, unit = "lines")),
+  axis.text.y = element_text(
+    size = 10, angle = 0, hjust = 0.9, vjust = 0.5,
+    margin = margin(0, 0.4, 0, 0, unit = "lines")
+  ),
+  axis.line = element_line(
+    color = grey_light,
+    size = 0.25,
+    arrow = arrow(angle = 30, length = unit(0.07, "inches")
+  )),
+  plot.margin = structure(c(1, 0, 1, 0), unit = "lines", valid.unit = 3L, class = "unit"),
+  legend.position = "none"
+)
+theme_axes_x <- theme_void() + theme(
+  text = element_text(family = "sans"),
+  axis.title = element_text(size = 11),
+  plot.title = element_text(size = 11, hjust = 0.5),
+  axis.title.x = element_text(hjust = .95, margin = margin(0.15, 0, 0, 0, unit = "lines")),
+  axis.title.y = element_text(vjust = .95, margin = margin(0, -0.2, 0, 0, unit = "lines")),
+  axis.text.x = element_text(
+    size = 10, angle = 0, hjust = 0.9, vjust = 0.5,
+    margin = margin(0, 0.4, 0, 0, unit = "lines")
+  ),
+  axis.line = element_line(
+    color = grey_light,
+    size = 0.25,
+    arrow = arrow(angle = 30, length = unit(0.07, "inches")
+  )),
+  plot.margin = structure(c(1, 0, 1, 0), unit = "lines", valid.unit = 3L, class = "unit"),
+  legend.position = "none"
+)
+theme_set(theme_gray(base_size = 11))
+# Knitr options
+opts_chunk$set(
+  comment = "#>",
+  fig.align = "center",
+  warning = F,
+  message = F
+)
+```
+
+.mono.b[DUE] Your solutions to this problem set are due *before* 11:59pm on Sunday, 19 May 2019 on [Canvas](https://canvas.uoregon.edu/).
+
+Your problem set .hi[must be typed] with .mono[R] code beneath your responses. _E.g._,  [`knitr`](https://yihui.name/knitr/) and [`R Markdown`](https://rmarkdown.rstudio.com).
+
+.mono.b[OBJECTIVE] This problem set has three purposes: (1) reinforce the econometrics topics we reviewed in class; (2) build your .mono[R] toolset; (3) start building your intuition about causality within econometrics.
+
+
+.mono.b[README] This problem set uses data from [LaLonde (1986)](http://people.hbs.edu/nashraf/LaLonde_1986.pdf), who compared the estimated effects of a randomized employment program—National Supported Work Demonstration (NSW)—to the estimated effects produced using non-experimental methods (_i.e._, pretending treatment had not been randomized). You should read (at least the first few pages of) the paper. More [here](http://users.nber.org/~rdehejia/data/nswdata3.html) from Rajeev Dehejia.
+
+.mono.b[01] Download and load two datasets: (1) [data from the randomized employment program](http://users.nber.org/~rdehejia/data/nsw.dta) (we'll call this the .b[NSW data]) and (2) [data on 2,490 potential 'control' individuals from the PSID (Panel Study of Income Dynamics)](http://users.nber.org/~rdehejia/data/psid_controls.dta) (we'll call this the .b[PSID data]).
+
+```{R, key-01, include = F}
+# Load packages
+library(pacman)
+p_load(tidyverse, haven, estimatr, magrittr)
+# Load LaLonde's experimental data
+nsw_df <- read_dta("http://users.nber.org/~rdehejia/data/nsw.dta")
+# Load PSID potential controls
+psid_df <- read_dta("http://users.nber.org/~rdehejia/data/psid_controls.dta")
+```
+The last page of the problem set describes the variables in these data.
+
+.hi-pink[Note] .b[Questions .mono[02–07] use the .it[NSW data].]
+
+.mono.b[02] Regress real earnings in 1975 (the year before treatment) on treatment (and an intercept, which we will always assume should be included unless otherwise stated). Why/how is this regression (and its outcome) informative? What does it tell us?
+
+```{R, key-02, include = F}
+lm_robust(re75 ~ treat, data = nsw_df)
+```
+
+.mono.b[03] The program rolled out in 1976 and ended (at least for our purposes) in 1978, so we'll use earnings in 1978 to estimate whether the program had any sustained effect on earnings.
+
+Regress 1978 earnings on treatment. What do you find?
+
+```{R, key-03, include = F}
+lm_robust(re78 ~ treat, data = nsw_df)
+```
+
+.mono.b[04] What is required for us to interpret the estimated in .mono.b[03] as causal? Does our setting meet this requirement?
+
+.mono.b[05] Add controls for age, education, race (black and Hispanic). How does your estimated treatment effect and its standard change. Why do you think this happense?
+
+```{R, key-05, include = F}
+lm_robust(re78 ~ treat + age + education + black + hispanic + married + nodegree, data = nsw_df)
+```
+
+.mono.b[06] What is a "bad control"? Are any of the controls we added in .mono.b[05] "bad"? Briefly explain.
+
+.mono.b[07] Since we have an experiment, can we interpret the coefficient on .mono[nodegree] (not having a high-school diploma) as causal? What about its interaction with treatment? Briefly explain.
+
+.mono.b[08] Compare a simple difference in means to your results in the regression results in .mono.b[03].
+
+.it[Hint] The `dplyr` functions `group_by()` and `summarize()` could be helpful.
+
+```{R, key-08, include = F}
+nsw_df %>% group_by(treat) %>% summarize(mean(re78))
+```
+
+.mono.b[09] Create a new dataset that combines .b[treated individuals from the .it[NSW data]] and .b[control individuals from the .it[PSID data]]. We'll refer to this dataset as our .b[mixed dataset].
+
+.it[Hint] Remember our old friends `filter()` and `bind_rows()` from `dplyr`.
+
+```{R, key-09, include = F}
+mixed_df <- bind_rows(
+  filter(nsw_df, treat == 1),
+  psid_df
+)
+```
+
+.hi-pink[Note] .b[Questions from .mono[10–13] use this .it[mixed dataset]], focusing on earnings in 1978.
+
+---
+class: clear
+
+.mono.b[10] Compare the difference in means from the .b[mixed dataset] to the difference from the .b[NSW dataset].
+
+.mono.b[11] Use our potential-outcomes (Rubin causal model) notation to explain how the difference with the mixed dataset may be biased. Does the sign of the difference across the two differences-in-means match what you would expect from our model of selection bias? Briefly explain.
+
+.mono.b[12] Time for nearest-neighbor matching. Use all six covariates.
+
+.move-right[
+.mono.b[12A] Estimate the average treatment effect on the treated by matching treated individuals to their nearest neighbor using a .b[Euclidean] metric.
+]
+
+.move-right[
+.mono.b[12B] Estimate the average treatment effect on the treated by matching treated individuals to their nearest neighbor using a .b[Mahalanobis] metric.
+]
+
+.move-right[
+.mono.b[12C] How do your estimates in .mono.b[12A] and .mono.b[12B] compare to your previous estimates?
+
+]
+
+.move-right[
+.b[Extra credit] Use kernel matching (any kernel) to estimate the treatment effect.
+]
+
+.move-right[]
+
+.mono.b[13] Now for propensity-score methods.
+
+.move-right[
+.mono.b[13A] Estimate the propensity score for each treated individual using the covariates using a logit model that is linear in the covariates. Which variables are predictive of treatment?
+
+.it[Hint:] The function `glm()` with `family = binomial` estimates a logit model.
+
+```{R, key-13a, include = F}
+# Estimate logit model for propensity scores, linear in covariates
+pscore_logit <- glm(treat ~ age + education + black + hispanic + married + nodegree, data = mixed_df)
+```
+]
+
+.move-right[
+.mono.b[13B] Add the estimated propensity scores $\left(\widehat{p}_{i}\right)$ to the mixed dataset. Is there overlap? Explain.
+
+.it[Hint:] You can access predictions from a model using `$fitted.values`.
+<br>.it[Another hint:] Try histograms grouped/filled by treatment status.
+
+```{R, key-13b, include = F}
+# Add propensity scores
+mixed_df$p_score <- pscore_logit$fitted.values
+```
+]
+
+.move-right[
+.mono.b[13C] Enforce overlap using the minimum $\widehat{p}_i$ observed in the treated group and the maximum $\widehat{p}_i$ observed in the control group.
+]
+
+.move-right[
+.mono.b[13D] Estimate the treatment effect using a regression that conditions on $\widehat{p}_i$. What happens if you also include $\widehat{p}_i$ interacted with treatment?
+]
+
+.move-right[
+.mono.b[13E] Now estimate the treatment effect by blocking on $\widehat{p}_i$.
+]
+
+.move-right[
+.b[Extra credit] Use the *doubly robust method* that combines regression and blocking.
+]
+
+.mono.b[14] Compare the various treatment effects that you've estimated in .mono.b[10–13]. How do they compare to the effects you estimated .mono.b[03]? Which estimates should we trust? Why?
+
+.mono.b[15] Write a simulation showing OLS is biased for $\beta_1$ when (1) we omit $w_i$ and (2) $w_i$ correlates with $x_i$.
+$$
+\begin{align}
+  y_i = \left( \beta_0 = 10 \right) + \left( \beta_1 = 5 \right) x_i + \left( \beta_2 = 5 \right) w_i + \varepsilon_i
+\end{align}
+$$
+Your call on the exact distributions.
+
+Run 1,000 iterations, each with sample size 50. Plot your results.
+
+.b[Extra credit] Show (in figures) how the bias changes as you change the correlation between $x_i$ and $w_i$.
+
+---
+class: clear
+
+## Data description
+
+Each row in the dataset gives records statistics for one of 709 commuting zones.
+
+In general, I've tried to stick with a naming convention. Variables that begin with .mono-small[i\\_] denote binary indicatory variables (taking on the value of .mono-small[0] or .mono-small[1]). Variables that begin with .mono-small[share_] give the share.
+
+<br>
+```{R, background variables, echo = F, eval = T}
+var_tbl <- data.frame(
+  Variable = names(psid_df) %>% paste0(".mono[", ., "]"),
+  Description = c(
+    "Dataset identifier.",
+    "Treatment indicator (select to be part of NSW).",
+    "Age (years).",
+    "Education (years).",
+    "Indicator for whether the individual is black.",
+    "Indicator for whether the individual is Hispanic.",
+    "Indicator for whether the individual is married.",
+    "Indicator for individuals without a high-school diploma.",
+    "Real earnings in 1974 (1982 dollars).",
+    "Real earnings in 1975 (1982 dollars).",
+    "Real earnings in 1978 (1982 dollars)."
+  )
+)
+kable(var_tbl) %>%
+  kable_styling(full_width = F)
+```
+
+.b[Note:] The NSW dataset does not include .mono[re74].
+
+```{R, generate pdfs, include = F, eval = T}
+system("decktape remark ps01.html ps01.pdf --chrome-arg=--allow-file-access-from-files")
+```
