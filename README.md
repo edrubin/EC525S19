@@ -181,6 +181,13 @@ The content of the lectures mainly follows *MHE* and [Michael Anderson](https://
 
 **Note formats:** [.html](https://raw.githack.com/edrubin/EC525S19/master/NotesLab/07RMisc/07RMisc.html) | [.html (no pause)](https://raw.githack.com/edrubin/EC525S19/master/NotesLab/07RMisc/07RMisc_NoPause.html) | [.pdf](https://raw.githack.com/edrubin/EC525S19/master/NotesLab/07RMisc/07RMisc.pdf) | [.pdf (no pause)](https://raw.githack.com/edrubin/EC525S19/master/NotesLab/07RMisc/07RMisc_NoPause.pdf) | [.Rmd](https://raw.githack.com/edrubin/EC525S19/master/NotesLab/07RMisc/07RMisc.Rmd)
 
+**[Lab 08: Inference](https://raw.githack.com/edrubin/EC525S19/master/NotesLab/08RInference/08RInference.html)**
+
+1. Inference
+1. More inference
+
+**Note formats:** [.html](https://raw.githack.com/edrubin/EC525S19/master/NotesLab/08RInference/08RInference.html) | [.html (no pause)](https://raw.githack.com/edrubin/EC525S19/master/NotesLab/08RInference/08RInference_NoPause.html) | [.pdf](https://raw.githack.com/edrubin/EC525S19/master/NotesLab/08RInference/08RInference.pdf) | [.pdf (no pause)](https://raw.githack.com/edrubin/EC525S19/master/NotesLab/08RInference/08RInference_NoPause.pdf) | [.Rmd](https://raw.githack.com/edrubin/EC525S19/master/NotesLab/08RInference/08RInference.Rmd)
+
 ## Problem sets
 
 2–4 problem sets combining econometric theory and R.
