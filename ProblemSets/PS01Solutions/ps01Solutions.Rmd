@@ -1,0 +1,622 @@
+---
+title: "Problem Set 1 Solutions"
+subtitle: "Regression and Matching"
+author: "**EC 425/525:** Econometrics"
+date: "<br>Due *before* midnight (11:59pm) on .bold[Sunday, 19 May 2019]"
+output:
+  xaringan::moon_reader:
+    css: ['default', 'metropolis', 'metropolis-fonts', 'my-css.css']
+    # self_contained: true
+    nature:
+      ratio: '8.5:11'
+      highlightStyle: github
+      highlightLines: true
+      countIncrementalSlides: false
+---
+class: clear
+
+```{R, setup, include = F}
+# Packages
+library(pacman)
+p_load(
+  ggplot2, gridExtra, ggthemes, latex2exp, kableExtra,
+  tidyverse, broom, knitr, magrittr
+)
+# Colors
+red_pink <- "#e64173"
+turquoise <- "#20B2AA"
+grey_light <- "grey70"
+grey_mid <- "grey50"
+grey_dark <- "grey20"
+# Themes
+theme_axes_y <- theme_void() + theme(
+  text = element_text(family = "sans"),
+  axis.title = element_text(size = 11),
+  plot.title = element_text(size = 11, hjust = 0.5),
+  axis.title.x = element_text(hjust = .95, margin = margin(0.15, 0, 0, 0, unit = "lines")),
+  axis.title.y = element_text(vjust = .95, margin = margin(0, -0.2, 0, 0, unit = "lines")),
+  axis.text.y = element_text(
+    size = 10, angle = 0, hjust = 0.9, vjust = 0.5,
+    margin = margin(0, 0.4, 0, 0, unit = "lines")
+  ),
+  axis.line = element_line(
+    color = grey_light,
+    size = 0.25,
+    arrow = arrow(angle = 30, length = unit(0.07, "inches")
+  )),
+  plot.margin = structure(c(1, 0, 1, 0), unit = "lines", valid.unit = 3L, class = "unit"),
+  legend.position = "none"
+)
+theme_axes_x <- theme_void() + theme(
+  text = element_text(family = "sans"),
+  axis.title = element_text(size = 11),
+  plot.title = element_text(size = 11, hjust = 0.5),
+  axis.title.x = element_text(hjust = .95, margin = margin(0.15, 0, 0, 0, unit = "lines")),
+  axis.title.y = element_text(vjust = .95, margin = margin(0, -0.2, 0, 0, unit = "lines")),
+  axis.text.x = element_text(
+    size = 10, angle = 0, hjust = 0.9, vjust = 0.5,
+    margin = margin(0, 0.4, 0, 0, unit = "lines")
+  ),
+  axis.line = element_line(
+    color = grey_light,
+    size = 0.25,
+    arrow = arrow(angle = 30, length = unit(0.07, "inches")
+  )),
+  plot.margin = structure(c(1, 0, 1, 0), unit = "lines", valid.unit = 3L, class = "unit"),
+  legend.position = "none"
+)
+theme_set(theme_gray(base_size = 11))
+# Knitr options
+opts_chunk$set(
+  comment = "#>",
+  fig.align = "center",
+  warning = F,
+  message = F
+)
+```
+
+.mono.b[DUE] Your solutions to this problem set are due *before* 11:59pm on Sunday, 19 May 2019 on [Canvas](https://canvas.uoregon.edu/).
+
+Your problem set .hi[must be typed] with .mono[R] code beneath your responses. _E.g._,  [`knitr`](https://yihui.name/knitr/) and [`R Markdown`](https://rmarkdown.rstudio.com).
+
+.mono.b[OBJECTIVE] This problem set has three purposes: (1) reinforce the econometrics topics we reviewed in class; (2) build your .mono[R] toolset; (3) start building your intuition about causality within econometrics.
+
+
+.mono.b[README] This problem set uses data from [LaLonde (1986)](http://people.hbs.edu/nashraf/LaLonde_1986.pdf), who compared the estimated effects of a randomized employment program—National Supported Work Demonstration (NSW)—to the estimated effects produced using non-experimental methods (_i.e._, pretending treatment had not been randomized). You should read (at least the first few pages of) the paper. More [here](http://users.nber.org/~rdehejia/data/nswdata3.html) from Rajeev Dehejia.
+
+.mono.b[01] Download and load two datasets: (1) [data from the randomized employment program](http://users.nber.org/~rdehejia/data/nsw.dta) (we'll call this the .b[NSW data]) and (2) [data on 2,490 potential 'control' individuals from the PSID (Panel Study of Income Dynamics)](http://users.nber.org/~rdehejia/data/psid_controls.dta) (we'll call this the .b[PSID data]).
+
+The last page of the problem set describes the variables in these data.
+
+.pink[
+
+.b[Answer]
+
+```{R, key-01, include = T}
+# Load packages
+library(pacman)
+p_load(
+  ggplot2, gridExtra, ggthemes, latex2exp, kableExtra,
+  tidyverse, broom, knitr, haven,
+  estimatr, pdist, StatMatch, purrr,
+  huxtable, magrittr
+)
+# Load LaLonde's experimental data
+nsw_df <- read_dta("http://users.nber.org/~rdehejia/data/nsw.dta")
+# Load PSID potential controls
+psid_df <- read_dta("http://users.nber.org/~rdehejia/data/psid_controls.dta")
+```
+
+]
+
+.hi-pink[Note] .b[Questions .mono[02–07] use the .it[NSW data].]
+
+---
+class: clear
+
+.mono.b[02] Regress real earnings in 1975 (the year before treatment) on treatment (and an intercept, which we will always assume should be included unless otherwise stated). Why/how is this regression (and its outcome) informative? What does it tell us?
+
+.pink[
+
+.b[Answer]
+
+```{R, key-02, include = T}
+lm_robust(re75 ~ treat, data = nsw_df) %>% huxreg()
+```
+
+The results of this regression tell us whether there were significant differences between the treatment and control groups before the program began. Because the program (at some level) was randomized, we should find no significant differences. We find no significant difference in earnings before the program.
+
+]
+
+.mono.b[03] The program rolled out in 1976 and ended (at least for our purposes) in 1978, so we'll use earnings in 1978 to estimate whether the program had any sustained effect on earnings.
+
+Regress 1978 earnings on treatment. What do you find?
+
+.pink[
+
+.b[Answer]
+
+```{R, key-03, include = T}
+lm_robust(re78 ~ treat, data = nsw_df) %>% huxreg()
+```
+
+.b[Answer] We find marginally significant evidence (*p*-value of approximately 0.07) that earnings in 1978 (earnings at the end of the program) were higher for program participants. The estimated effet of the program is approximately $886 with a 95% confidence interval [-$72, $1,844].
+
+]
+
+---
+class: clear
+
+.mono.b[04] What is required for us to interpret the estimated in .mono.b[03] as causal? Does our setting meet this requirement?
+
+.pink[
+
+.b[Answer] To interpret these estimates as *causal*, we must believe that treatment was randomly assigned. In other words, we must believe that potential outcomes $\text{Y}_{0i}$ and $\text{Y}_{1i}$ are uncorrelated with treatment.
+
+*Note:* Because we are not conditioning on covariates, we must believe that treatment is exogenous (rather than conditionally exogenous).
+
+]
+
+.mono.b[05] Add controls for age, education, race (black and Hispanic). How does your estimated treatment effect and its standard change. Why do you think this happense?
+
+.pink[
+
+.b[Answer] Our point estimate decreases slightly—and is less significant (*p*-value of approx. 0.1).
+
+```{R, key-05, include = T}
+lm_robust(
+  re78 ~ treat + age + education + black + hispanic + married + nodegree,
+  data = nsw_df
+) %>% huxtable::huxreg()
+```
+
+]
+
+---
+class: clear
+
+.mono.b[06] What is a "bad control"? Are any of the controls we added in .mono.b[05] "bad"? Briefly explain.
+
+.pink[
+
+.b[Answer] A "bad control" is a covariate that is affected by treatment. The best controls are "fixed" prior to treatment, which seems to be the case for all of our control (with one potentical exception for marriage).
+
+]
+
+.mono.b[07] Since we have an experiment, can we interpret the coefficient on .mono[nodegree] (not having a high-school diploma) as causal? What about its interaction with treatment? Briefly explain.
+
+.pink[
+
+.b[Answer] Nope. We would need degree status to be as-good-as randomly assigned (uncorrelated with potential outcomes), which is likely not the case. Lots of things are correlated with degree status (think omitted-variable bias). Same issue with the interaction.
+
+]
+
+.mono.b[08] Compare a simple difference in means to your results in the regression results in .mono.b[03].
+
+.it[Hint] The `dplyr` functions `group_by()` and `summarize()` could be helpful.
+
+.pink[
+
+.b[Answer]
+
+```{R, key-08, include = T}
+nsw_df %>%
+  group_by(Trt = treat) %>%
+  summarize("Mean '78 Earnings" = mean(re78)) %>%
+  hux(add_colnames = T) %>%
+  set_number_format(0) %>%
+  set_bold(1, everywhere, T) %>%
+  set_bottom_border(1, everywhere, 0.01)
+```
+
+The difference in means here is exactly equal to the point estimate from 03.
+
+]
+
+.mono.b[09] Create a new dataset that combines .b[treated individuals from the .it[NSW data]] and .b[control individuals from the .it[PSID data]]. We'll refer to this dataset as our .b[mixed dataset].
+
+.it[Hint] Remember our old friends `filter()` and `bind_rows()` from `dplyr`.
+
+.pink[
+
+.b[Answer]
+
+```{R, key-09, include = T}
+mixed_df <- bind_rows(
+  filter(nsw_df, treat == 1),
+  psid_df
+)
+```
+
+]
+
+.hi-pink[Note] .b[Questions from .mono[10–13] use this .it[mixed dataset]], focusing on earnings in 1978.
+
+---
+class: clear
+
+.mono.b[10] Compare the difference in means from the .b[mixed dataset] to the difference from the .b[NSW dataset].
+
+.pink[
+
+.b[Answer]
+
+```{R, key-10, include = T}
+# Group means
+group_means <- bind_cols(
+  nsw_df %>% group_by(treat) %>% summarize(NSW = mean(re78)),
+  mixed_df %>% group_by(treat) %>% summarize(Mixed = mean(re78))
+) %>% select(-treat,-treat1) %>% as.data.frame()
+# Difference
+group_means[3,] <- apply(X = group_means, FUN = diff, MARGIN = 2)
+group_means %<>% mutate("Comparison" = c("Ctrl", "Trt", "Diff"))
+# Results
+group_means %>%
+  hux(add_colnames = T) %>%
+  set_number_format(0) %>%
+  set_bottom_border(1, everywhere, 0.01) %>%
+  set_bold(c(1,4), everywhere, T)
+```
+
+In the *mixed* dataset, the treatment group mean is much smaller than that the control group—the difference is negative, as opposed the positive difference between treatment and control in the NSW dataset.
+
+]
+
+.mono.b[11] Use our potential-outcomes (Rubin causal model) notation to explain how the difference with the mixed dataset may be biased. Does the sign of the difference across the two differences-in-means match what you would expect from our model of selection bias? Briefly explain.
+
+.pink[
+
+.b[Answer] We should be concerned that program participation correlates with potential outcomes (since the program targeted individuals with low expected employment outcomes). So we're concerned that $\text{D}_{i}$ (participation in the program) correlates negatively with $\text{Y}_{0i}$, meaning individuals who are not in the program likely have higher expected $\text{Y}_{0i}$ outcomes than folks who are in the program. Thus, we will have selection bias equal to
+$$
+\begin{align}
+  \mathop{E}\left[ \text{Y}_{0i} | \text{D}_{i}=1 \right] - \mathop{E}\left[ \text{Y}_{0i} | \text{D}_{i} = 0 \right] < 0
+\end{align}
+$$
+If the selection bias is sufficiently larget, it will flip the sign of a positive treatment effect, as we likely observe in the *mixed* dataset.
+
+]
+
+---
+class: clear
+
+.mono.b[12] Time for nearest-neighbor matching. Use all six covariates.
+
+.move-right[
+.mono.b[12A] Estimate the average treatment effect on the treated by matching treated individuals to their nearest neighbor using a .b[Euclidean] metric.
+]
+
+.pink[
+
+.b[Answer]
+
+```{R, key-12a, include = T}
+# Create covariate matrices of treatment and control
+trt <- mixed_df %>% filter(treat == 1)
+ctrl <- mixed_df %>% filter(treat == 0)
+trt_cov <- trt %>% select(age, education, black, hispanic, married, nodegree)
+ctrl_cov <- ctrl %>% select(age, education, black, hispanic, married, nodegree)
+# Calculate Euclidean distances using pdist()
+dist_mat <- pdist(X = trt_cov, Y = ctrl_cov) %>% as.matrix()
+# Calculate individual-level treatment effects from nearest neighbor(s)
+trt_12a <- map_dbl(1:nrow(trt), function(i) {
+  # Find which individuals are the nearest neighbors
+  i_nn <- dist_mat[i,] == min(dist_mat[i,], na.rm = T)
+  # Return the difference (allow for ties; take the mean)
+  trt$re78[i] - mean(ctrl$re78[i_nn], na.rm = T)
+})
+```
+
+Based upon Euclidean-distance-based nearest neighbor matching, our estimate for the treatment effect on the treated is approximately `r mean(trt_12a) %>% scales::comma()`.
+
+]
+
+.move-right[
+.mono.b[12B] Estimate the average treatment effect on the treated by matching treated individuals to their nearest neighbor using a .b[Mahalanobis] metric.
+]
+
+
+.pink[
+
+.b[Answer]
+
+```{R, key-12b, include = T}
+# Calculate Mahalanobis distances
+mdist_mat <- mahalanobis.dist(data.x = trt_cov, data.y = ctrl_cov) %>% as.matrix()
+# Calculate individual-level treatment effects from nearest neighbor(s)
+trt_12b <- map_dbl(1:nrow(trt), function(i) {
+  # Find which individuals are the nearest neighbors
+  i_nn <- mdist_mat[i,] == min(mdist_mat[i,], na.rm = T)
+  # Return the difference (allow for ties; take the mean)
+  trt$re78[i] - mean(ctrl$re78[i_nn], na.rm = T)
+})
+```
+
+Based upon Mahalanobis-distance-based nearest neighbor matching, our estimate for the treatment effect on the treated is approximately `r mean(trt_12b) %>% scales::comma()`.
+
+]
+
+.move-right[
+.mono.b[12C] How do your estimates in .mono.b[12A] and .mono.b[12B] compare to your previous estimates?
+
+]
+
+.pink[
+
+.b[Answer] Our experiment-based estimate was a positive (approximately) $886. The simple difference in means on the *mixed data* resulted in -$15,578. Matching on covariates via the Euclidean distance moved us to -$6,781, and matching on Mahalanobis distance moved us to -$3,986. So things seem to be getting better (if we take the NSW experiment-based estimate as truth), but we're still getting estimates with the wrong magnitude and sign—still likely biased from selection.
+
+]
+
+.move-right[
+.b[Extra credit] Use kernel matching (any kernel) to estimate the treatment effect.
+]
+
+---
+class: clear
+
+.move-right[]
+
+.mono.b[13] Now for propensity-score methods.
+
+.move-right[
+.mono.b[13A] Estimate the propensity score for each treated individual using the covariates using a logit model that is linear in the covariates. Which variables are predictive of treatment?
+
+.it[Hint:] The function `glm()` with `family = binomial` estimates a logit model.
+
+]
+
+.pink[
+
+.b[Answer]
+
+```{R, key-13a, include = T}
+# Estimate logit model for propensity scores, linear in covariates
+pscore_logit <- glm(
+  treat ~ age + education + black + hispanic + married + nodegree,
+  family = "binomial",
+  data = mixed_df
+)
+pscore_logit %>% huxreg()
+```
+
+Each covariate, excluding education, appears to be significantly predictive of treatment.
+
+]
+
+---
+class: clear
+
+.move-right[
+.mono.b[13B] Add the estimated propensity scores $\left(\widehat{p}_{i}\right)$ to the mixed dataset. Is there overlap? Explain.
+
+.it[Hint:] You can access predictions from a model using `$fitted.values`.
+<br>.it[Another hint:] Try histograms grouped/filled by treatment status.
+
+]
+
+.pink[
+
+.b[Answer] We do not have overlap: The minimum $\hat{p}$ in control is less than the minimum in the treatment group. The maximum $\hat{p}$ in the treatment group exceeds the maximum in the control group. That said, it's not too bad.
+
+```{R, key-13b, include = T, fig.height = 2.5, dev = "svg"}
+# Add propensity scores
+mixed_df$p_score <- pscore_logit$fitted.values
+# Plot overlap
+ggplot(
+  data = mixed_df,
+  aes(x = factor(treat, labels = c("Ctrl", "Trt")), y = p_score)
+) +
+geom_boxplot() +
+theme_pander() +
+xlab("") +
+ylab("Estimated propensity score") +
+ggtitle("Checking overlap") +
+coord_flip()
+# Summary table
+mixed_df %>%
+  group_by(treat) %>%
+  summarize(min(p_score), max(p_score)) %>%
+  hux(add_colnames = T)
+```
+
+]
+
+---
+class: clear
+
+.move-right[
+.mono.b[13C] Enforce overlap using the minimum $\widehat{p}_i$ observed in the treated group and the maximum $\widehat{p}_i$ observed in the control group.
+]
+
+.pink[
+
+.b[Answer]
+
+```{R, key-13c, include = T, fig.height = 2.5, dev = "svg"}
+# Find min p-score in trt and max in control
+lo_pscore <- filter(mixed_df, treat == 1)$p_score %>% min()
+hi_pscore <- filter(mixed_df, treat == 0)$p_score %>% max()
+# New dataset with overlap enforced
+overlap_df <- filter(mixed_df, between(p_score, lo_pscore, hi_pscore))
+# Plot overlap
+ggplot(
+  data = overlap_df,
+  aes(x = factor(treat, labels = c("Ctrl", "Trt")), y = p_score)
+) +
+geom_boxplot() +
+theme_pander() +
+xlab("") +
+ylab("Estimated propensity score") +
+ggtitle("Overlap enforced") +
+coord_flip()
+```
+]
+
+---
+class: clear
+
+.move-right[
+.mono.b[13D] Estimate the treatment effect using a regression that conditions on $\widehat{p}_i$. What happens if you also include $\widehat{p}_i$ interacted with treatment?
+]
+
+.pink[
+
+.b[Answer]
+
+```{R, key-13d, include = T}
+# Conditioning on estimated propensity score
+reg_13d_1 <- lm_robust(re78 ~ treat + p_score, data = overlap_df)
+# Conditioning on estimated propensity score and interacted trt.
+reg_13d_2 <- lm_robust(re78 ~ treat * p_score, data = overlap_df)
+# Results
+huxreg(reg_13d_1, reg_13d_2)
+```
+
+We're back to large, negative, and statistically significant estimates (for both specifications).
+
+]
+
+---
+class: clear
+
+.move-right[
+.mono.b[13E] Now estimate the treatment effect by blocking on $\widehat{p}_i$.
+]
+
+.pink[
+
+.b[Answer] I'm going to opt for 20 blocks
+
+```{R, key-13e, include = T}
+# Define how many blocks we want
+n_blocks <- 20
+# Find the spacing that will give us n_blocks blocks
+block_step <- (hi_pscore - lo_pscore) / n_blocks
+# Create the blocks' breaks
+block_breaks <- seq(from = lo_pscore, to = hi_pscore, by = block_step)
+# Cut the p-scores into 10, equally spaced blocks (using breaks above)
+overlap_df %<>% mutate(
+  block = cut(p_score, breaks = block_breaks, labels = F, include.lowest = T)
+)
+# Iterate over blocks, calculating (1) the trt. effect and (2) N
+est_blocks <- map_dfr(1:20, function(b) {
+  # Subset to the block's data
+  block_df <- overlap_df %>% filter(block == b)
+  # Estimate the block's treatment effect
+  t_b <- mean(filter(block_df, treat == 1)$re78) - mean(filter(block_df, treat == 0)$re78)
+  # The number of individuals in block b
+  n_b <- nrow(block_df)
+  # Return a data.frame of the two answers
+  data.frame(est = t_b, n = n_b)
+})
+# Weighted average of the individual blocks' treatment effects
+t_block <- weighted.mean(
+  x = est_blocks$est,
+  w = est_blocks$n
+)
+```
+
+Blocking on propensity scores (20 blocks), we estimate a treatment effect of approximately `r t_block %>% scales::dollar()`.
+
+]
+
+.move-right[
+.b[Extra credit] Use the *doubly robust method* that combines regression and blocking.
+]
+
+.mono.b[14] Compare the various treatment effects that you've estimated in .mono.b[10–13]. How do they compare to the effects you estimated .mono.b[03]? Which estimates should we trust? Why?
+
+.pink[
+
+.b[Answer] As discussed above, our estimate of the program's effect on 1978 earnings from the experiment (NSW) is positive and marginally significant. When we lose our experimental data and attempt to condition our way back to identification (with varying degrees of sophistication), we consistently estimate negative and significant effects.
+
+We should most trust the estimates that use randomized variation in the treatment. With these data, our conditional indpenedence assumption is most likely valid, while it is most likely violated for the rest of the estimation strategies.
+
+]
+
+---
+class: clear
+
+.mono.b[15] Write a simulation showing OLS is biased for $\beta_1$ when (1) we omit $w_i$ and (2) $w_i$ correlates with $x_i$.
+$$
+\begin{align}
+  y_i = \left( \beta_0 = 10 \right) + \left( \beta_1 = 5 \right) x_i + \left( \beta_2 = 5 \right) w_i + \varepsilon_i
+\end{align}
+$$
+Your call on the exact distributions.
+
+Run 1,000 iterations, each with sample size 50. Plot your results.
+
+.b[Extra credit] Show (in figures) how the bias changes as you change the correlation between $x_i$ and $w_i$.
+
+.pink[
+
+.b[Answer] $w_i$ and $x_i$ are multivariate Normal with means of 0, var. of 1, and covariance 0.3. $\varepsilon_i \sim$ N(0,1).
+
+```{R, key-15, include = T, cache = T}
+# Function: One iteration of simulation
+fun_iter <- function(n) {
+  # Covariance matrix for x and w
+  Σ <- matrix(data = c(1, 0.3, 0.3, 1), ncol = 2)
+  μ <- c(0, 0)
+  # Generate w and x
+  iter_df <- MASS::mvrnorm(n = n, mu = μ, Sigma = Σ) %>% as_tibble()
+  names(iter_df) <- c("w", "x")
+  # Generate y
+  iter_df %<>% mutate(y = 10 + 5 * x + 5 * w + rnorm(n))
+  # Run a regression without w
+  bind_rows(
+    lm_robust(y ~ x, data = iter_df) %>% tidy() %>% filter(term == "x"),
+    lm_robust(y ~ x + w, data = iter_df) %>% tidy() %>% filter(term == "x")
+  ) %>% mutate(reg = c("Omitted", "Correct"))
+}
+
+# Run the simulation 1,000 times with sample size 50
+set.seed(12345)
+sim_df <- map_dfr(rep(50, 1000), fun_iter)
+```
+
+```{R, key-15-plot, inclue = F, fig.height = 2.75, dev = "svg"}
+# Plot results
+ggplot(data = sim_df, aes(x = estimate, fill = reg)) +
+geom_density(color = NA, alpha = 0.9) +
+geom_hline(yintercept = 0) +
+scale_fill_manual("Specification", values = c("#6A5ACD", "#FFA500")) +
+theme_pander()
+```
+
+]
+
+
+---
+class: clear
+
+## Data description
+
+<br>
+
+```{R, background variables, echo = F, eval = T}
+var_tbl <- data.frame(
+  Variable = names(psid_df) %>% paste0(".mono[", ., "]"),
+  Description = c(
+    "Dataset identifier.",
+    "Treatment indicator (select to be part of NSW).",
+    "Age (years).",
+    "Education (years).",
+    "Indicator for whether the individual is black.",
+    "Indicator for whether the individual is Hispanic.",
+    "Indicator for whether the individual is married.",
+    "Indicator for individuals without a high-school diploma.",
+    "Real earnings in 1974 (1982 dollars).",
+    "Real earnings in 1975 (1982 dollars).",
+    "Real earnings in 1978 (1982 dollars)."
+  )
+)
+kable(var_tbl) %>%
+  kable_styling(full_width = F)
+```
+
+.b[Note:] The NSW dataset does not include .mono[re74].
+
+```{R, generate pdfs, include = F, eval = T}
+system("decktape remark ps01Solutions.html ps01Solutions.pdf --chrome-arg=--allow-file-access-from-files")
+```

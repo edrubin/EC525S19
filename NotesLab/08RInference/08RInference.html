@@ -4,7 +4,7 @@
     <title>Inference</title>
     <meta charset="utf-8">
     <meta name="author" content="Edward Rubin" />
-    <meta name="date" content="2019-05-24" />
+    <meta name="date" content="2019-05-25" />
     <link href="08RInference_files/remark-css-0.0.1/default.css" rel="stylesheet" />
     <link href="08RInference_files/remark-css-0.0.1/metropolis.css" rel="stylesheet" />
     <link href="08RInference_files/remark-css-0.0.1/metropolis-fonts.css" rel="stylesheet" />
@@ -17,7 +17,7 @@ class: center, middle, inverse, title-slide
 # Inference
 ## EC 425/525, Lab 8
 ### Edward Rubin
-### 24 May 2019
+### 25 May 2019
 
 ---
 
@@ -422,8 +422,7 @@ layout: true
 class: clear
 ---
 
-First we need to write the data generating process for one iteration.
-
+First we need to write the .hi-slate[data generating process for one iteration].
 
 
 ```r
@@ -449,27 +448,27 @@ sim_dgp &lt;- function(n = 100, n_grps = 10, σν = 1, ση = 1) {
 ```
 ---
 
-Now we analyze.
+Now we .hi-slate[analyze] the data within one iteration.
 
 ```r
 # Analyze 'data'
 sim_analyze &lt;- function(data) {
   # Conventional SEs
-  se_ols &lt;- lm_robust(y ~ x, data = data, se_type = "classical") %&gt;%
-    tidy() %&gt;% extract2(2,3)
+  result_ols &lt;- lm_robust(y ~ x, data = data, se_type = "classical") %&gt;%
+    tidy() %&gt;% filter(term == "x") %&gt;% select(2:5)
   # Cluster-robust SEs
-  se_cl &lt;- lm_robust(y ~ x, data = data, clusters = g) %&gt;%
-    tidy() %&gt;% extract2(2,3)
-  # Return a data frame of results
-  data.frame(
-    se = c(se_ols, se_cl),
-    type = c("conventional", "clustered")
-  )
+  result_cl &lt;- lm_robust(y ~ x, data = data, clusters = g) %&gt;%
+    tidy() %&gt;% filter(term == "x") %&gt;% select(2:5)
+  # Bind results together and add column for standard errors
+  results_df &lt;- bind_rows(result_ols, result_cl) %&gt;%
+    mutate(type = c("conventional", "clustered"))
+  # Return results
+  return(results_df)
 }
 ```
 ---
 
-Now put them together with another function.
+Now put the pieces together.
 
 ```r
 # Join sim_dgp and sim_analyze
@@ -481,7 +480,7 @@ sim_iter &lt;- function(n = 100, n_grps = 10, σν = 1, ση = 1) {
 
 ---
 
-And we run the simulation.
+And we .hi-slate[run the simulation] (10,000 times).
 
 ```r
 # Load and set up 'furrr'
@@ -489,10 +488,10 @@ p_load(furrr)
 plan(multiprocess, workers = 8)
 # Set a seed
 set.seed(1234)
-# Run the simulation 1,000 times
+# Run the simulation 1e4 times
 sim_df &lt;- future_map_dfr(
-  # Repeat sample size 100 for 1000 times
-  rep(100, 1000),
+  # Repeat sample size 100 for 1e4 times
+  rep(100, 1e4),
   # Our function
   sim_iter,
   # Let furrr know we want to set a seed
@@ -502,8 +501,17 @@ sim_df &lt;- future_map_dfr(
 
 ---
 
-&lt;img src="08RInference_files/figure-html/plot-sim-1.svg" style="display: block; margin: auto;" /&gt;
+.hi-slate[Comparing standard errors]
 
+&lt;img src="08RInference_files/figure-html/plot-sim-se-1.svg" style="display: block; margin: auto;" /&gt;
+---
+
+.hi-slate[Comparing _t_ statistics]
+
+&lt;img src="08RInference_files/figure-html/plot-sim-tstat-1.svg" style="display: block; margin: auto;" /&gt;
+---
+
+`sim_df %&gt;% group_by(type) %&gt;% summarize(mean(p.value &lt; 0.05))`
 
 
 

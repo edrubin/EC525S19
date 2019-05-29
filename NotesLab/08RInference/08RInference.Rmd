@@ -452,8 +452,7 @@ layout: true
 class: clear
 ---
 
-First we need to write the data generating process for one iteration.
-
+First we need to write the .hi-slate[data generating process for one iteration].
 
 ```{R, dgp-code, eval = T}
 # The DGP
@@ -478,26 +477,26 @@ sim_dgp <- function(n = 100, n_grps = 10, σν = 1, ση = 1) {
 ```
 ---
 
-Now we analyze.
+Now we .hi-slate[analyze] the data within one iteration.
 ```{R, reg-code, eval = T}
 # Analyze 'data'
 sim_analyze <- function(data) {
   # Conventional SEs
-  se_ols <- lm_robust(y ~ x, data = data, se_type = "classical") %>%
-    tidy() %>% extract2(2,3)
+  result_ols <- lm_robust(y ~ x, data = data, se_type = "classical") %>%
+    tidy() %>% filter(term == "x") %>% select(2:5)
   # Cluster-robust SEs
-  se_cl <- lm_robust(y ~ x, data = data, clusters = g) %>%
-    tidy() %>% extract2(2,3)
-  # Return a data frame of results
-  data.frame(
-    se = c(se_ols, se_cl),
-    type = c("conventional", "clustered")
-  )
+  result_cl <- lm_robust(y ~ x, data = data, clusters = g) %>%
+    tidy() %>% filter(term == "x") %>% select(2:5)
+  # Bind results together and add column for standard errors
+  results_df <- bind_rows(result_ols, result_cl) %>%
+    mutate(type = c("conventional", "clustered"))
+  # Return results
+  return(results_df)
 }
 ```
 ---
 
-Now put them together with another function.
+Now put the pieces together.
 ```{R, sim-code, eval = T}
 # Join sim_dgp and sim_analyze
 sim_iter <- function(n = 100, n_grps = 10, σν = 1, ση = 1) {
@@ -508,17 +507,17 @@ sim_iter <- function(n = 100, n_grps = 10, σν = 1, ση = 1) {
 
 ---
 
-And we run the simulation.
+And we .hi-slate[run the simulation] (10,000 times).
 ```{R, sim-run, eval = T, cache = T}
 # Load and set up 'furrr'
 p_load(furrr)
 plan(multiprocess, workers = 8)
 # Set a seed
 set.seed(1234)
-# Run the simulation 1,000 times
+# Run the simulation 1e4 times
 sim_df <- future_map_dfr(
-  # Repeat sample size 100 for 1000 times
-  rep(100, 1000),
+  # Repeat sample size 100 for 1e4 times
+  rep(100, 1e4),
   # Our function
   sim_iter,
   # Let furrr know we want to set a seed
@@ -528,17 +527,34 @@ sim_df <- future_map_dfr(
 
 ---
 
-```{R, plot-sim, echo = F, fig.height = 7.7}
-ggplot(data = sim_df, aes(x = se, fill = type)) +
+.hi-slate[Comparing standard errors]
+
+```{R, plot-sim-se, echo = F, eval = T}
+ggplot(data = sim_df, aes(x = std.error, fill = type)) +
 geom_density(color = NA, alpha = 0.9) +
 geom_hline(yintercept = 0) +
 xlab("Standard error") +
 ylab("Density") +
 scale_fill_manual("S.E.", values = c(orange, purple)) +
 theme_pander(base_size = 22, base_family = "Fira Sans Book")
+```
+---
+
+.hi-slate[Comparing _t_ statistics]
+
+```{R, plot-sim-tstat, echo = F, eval = T}
+ggplot(data = sim_df, aes(x = statistic, fill = type)) +
+geom_density(color = NA, alpha = 0.9) +
+geom_hline(yintercept = 0) +
+xlab("t Statistic") +
+ylab("Density") +
+scale_fill_manual("S.E.", values = c(orange, purple)) +
+theme_pander(base_size = 22, base_family = "Fira Sans Book")
 
 ```
+---
 
+`sim_df %>% group_by(type) %>% summarize(mean(p.value < 0.05))`
 
 
 
@@ -562,7 +578,7 @@ layout: false
 ---
 exclude: true
 
-```{R, generate pdfs, include = F, eval = T}
+```{R, generate pdfs, include = F, eval = F}
 source("../../ScriptsR/unpause.R")
 unpause("08RInference.Rmd", ".", T, T)
 ```
