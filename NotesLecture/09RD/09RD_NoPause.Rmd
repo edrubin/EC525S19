@@ -356,7 +356,7 @@ y1 <- function(x) 0.85 / (1 + exp(-4 * x)) + 0.1
 gg_df <- data.frame(x = c(-1, 1))
 ```
 
-```{R, s1, echo = F}
+```{R, s1, echo = F, cache = T}
 ggplot(data = gg_df, aes(x)) +
 stat_function(fun = y0, color = purple, size = 1) +
 scale_x_continuous(
@@ -375,7 +375,7 @@ theme_pander(base_size = 20, base_family = "Fira Sans Book")
 count: false
 Let's start with $\color{#6A5ACD}{\mathop{E}\left[ \text{Y}_{0i} \mid \text{X}_{i} \right]}$ and $\color{#e64173}{\mathop{E}\left[ \text{Y}_{1i} \mid \text{X}_{i} \right]}$.
 
-```{R, s2, echo = F}
+```{R, s2, echo = F, cache = T}
 ggplot(data = gg_df, aes(x)) +
 stat_function(fun = y0, color = purple, size = 1) +
 stat_function(fun = y1, color = red_pink, size = 1) +
@@ -394,7 +394,7 @@ theme_pander(base_size = 20, base_family = "Fira Sans Book")
 ---
 You only win an election if your .hi-slate[margin of victory exceeds zero].
 
-```{R, s3, echo = F}
+```{R, s3, echo = F, cache = T}
 ggplot() +
 geom_vline(xintercept = 0, color = slate, size = 1, alpha = 0.75) +
 stat_function(
@@ -436,7 +436,7 @@ theme_pander(base_size = 20, base_family = "Fira Sans Book")
 ---
 $\color{#e64173}{\mathop{E}\left[ \text{Y}_{1i} \mid \text{X}_{i} \right]} - \color{#6A5ACD}{\mathop{E}\left[ \text{Y}_{0i} \mid \text{X}_{i} \right]}$ .hi-slate[at the discontinuity] gives $\color{#FFA500}{\tau_\text{SRD}}$.
 
-```{R, s4, echo = F}
+```{R, s4, echo = F, cache = T}
 ggplot() +
 geom_vline(xintercept = 0, color = slate, size = 1, alpha = 0.3) +
 stat_function(
@@ -542,7 +542,7 @@ theme_pander(base_size = 20, base_family = "Fira Sans Book") +
 theme(legend.position = "none")
 ```
 
-```{R, s5, echo = F}
+```{R, s5, echo = F, cache = T}
 gg_srd
 ```
 ---
@@ -557,7 +557,7 @@ class: clear, middle
 ---
 .note[Option 1a] Linear regression with constant slopes (and all data)
 
-```{R, s6, echo = F}
+```{R, s6, echo = F, cache = T}
 lm_tmp <- lm(y ~ x + I(x>0), data = srd_df)
 lm_fun <- function(x) predict(lm_tmp, data.frame(x = x))
 s6 <- gg_srd +
@@ -582,7 +582,7 @@ s6
 ---
 .note[Option 1a] Linear regression with constant slopes (and all data)
 
-```{R, s7, echo = F}
+```{R, s7, echo = F, cache = T}
 s6 +
 geom_errorbar(
   data = tibble(x = 0, y0 = lm_fun(-1e-3), y1 = lm_fun(1e-3)),
@@ -593,7 +593,7 @@ geom_errorbar(
 ---
 .note[Option 1b] Linear regression with constant slopes; limited to +/- 50%.
 
-```{R, s8, echo = F}
+```{R, s8, echo = F, cache = T}
 lm_tmp <- lm(y ~ x + I(x>0), data = srd_df %>% filter(abs(x) < 0.5))
 lm_fun <- function(x) predict(lm_tmp, data.frame(x = x))
 gg_srd +
@@ -622,7 +622,7 @@ geom_errorbar(
 ---
 .note[Option 2a] Linear regression with differing slopes (and all data)
 
-```{R, s9, echo = F}
+```{R, s9, echo = F, cache = T}
 lm_tmp <- lm(y ~ x * I(x>0), data = srd_df)
 lm_fun <- function(x) predict(lm_tmp, data.frame(x = x))
 gg_srd +
@@ -651,7 +651,7 @@ geom_errorbar(
 ---
 .note[Option 2b] Linear regression with differing slopes; limited to +/- 50%.
 
-```{R, s10, echo = F}
+```{R, s10, echo = F, cache = T}
 lm_tmp <- lm(y ~ x * I(x>0), data = srd_df %>% filter(abs(x) < 0.5))
 lm_fun <- function(x) predict(lm_tmp, data.frame(x = x))
 gg_srd +
@@ -680,7 +680,7 @@ geom_errorbar(
 ---
 .note[Option 2c] Linear regression with differing slopes; limited to +/- 25%.
 
-```{R, s11, echo = F}
+```{R, s11, echo = F, cache = T}
 lm_tmp <- lm(y ~ x * I(x>0), data = srd_df %>% filter(abs(x) < 0.25))
 lm_fun <- function(x) predict(lm_tmp, data.frame(x = x))
 gg_srd +
@@ -709,7 +709,7 @@ geom_errorbar(
 ---
 .note[Option 3] Differing quadratic regressions (limited to +/- 50%).
 
-```{R, s12, echo = F}
+```{R, s12, echo = F, cache = T}
 lm_tmp <- lm(y ~ poly(x,2) * I(x>0), data = srd_df %>% filter(abs(x) < 0.5))
 lm_fun <- function(x) predict(lm_tmp, data.frame(x = x))
 gg_srd +
@@ -738,7 +738,7 @@ geom_errorbar(
 ---
 .note[Option 4a] Differing local (LOESS) regressions (limited to +/- 50%).
 
-```{R, s13, echo = F}
+```{R, s13, echo = F, cache = T}
 lm_tmp <- loess(y ~ x * I(x>0), data = srd_df %>% filter(abs(x) < 0.5))
 lm_fun <- function(x) predict(lm_tmp, data.frame(x = x))
 gg_srd +
@@ -767,7 +767,7 @@ geom_errorbar(
 ---
 .note[Option 4b] Differing local (LOESS) regressions (all data).
 
-```{R, s14, echo = F}
+```{R, s14, echo = F, cache = T}
 lm_tmp <- loess(y ~ x * I(x>0), data = srd_df)
 lm_fun <- function(x) predict(lm_tmp, data.frame(x = x))
 gg_srd +
@@ -796,7 +796,7 @@ geom_errorbar(
 ---
 .note[Note] Functional form can be very important.
 
-```{R, s15a, echo = F}
+```{R, s15a, echo = F, cache = T}
 # No effect
 set.seed(12345)
 null <- function(x) 0.95 / (1 + exp(-5 * x))
@@ -835,7 +835,7 @@ theme(legend.position = "none")
 count: false
 .note[Note] Functional form can be very important.
 
-```{R, s15b, echo = F}
+```{R, s15b, echo = F, cache = T}
 ggplot() +
 geom_vline(xintercept = 0, color = slate, size = 1, alpha = 0.1) +
 stat_function(
@@ -865,7 +865,7 @@ theme(legend.position = "none")
 count: false
 .note[Note] Functional form can be very important.
 
-```{R, s15c, echo = F}
+```{R, s15c, echo = F, cache = T}
 ggplot() +
 geom_vline(xintercept = 0, color = slate, size = 1, alpha = 0.1) +
 stat_function(
@@ -911,7 +911,7 @@ stat_function(
 count: false
 .note[Note] Functional form can be very important.
 
-```{R, s15d, echo = F}
+```{R, s15d, echo = F, cache = T}
 ggplot() +
 geom_vline(xintercept = 0, color = slate, size = 1, alpha = 0.1) +
 stat_function(
@@ -962,7 +962,7 @@ geom_errorbar(
 count: false
 .note[Note] Functional form can be very important.
 
-```{R, s15e, echo = F}
+```{R, s15e, echo = F, cache = T}
 ggplot() +
 geom_vline(xintercept = 0, color = slate, size = 1, alpha = 0.1) +
 stat_function(
@@ -1012,7 +1012,7 @@ geom_errorbar(
 ---
 The continuity of $\color{#6A5ACD}{\mathop{E}\left[ \text{Y}_{0i}\mid \text{X}_{i} = x\right]}$ (in $x$) is also very important. No sorting.
 
-```{R, s16, echo = F}
+```{R, s16, echo = F, cache = T}
 ggplot(data = gg_df, aes(x)) +
 geom_vline(xintercept = 0, color = slate, size = 1, alpha = 0.1) +
 stat_function(fun = y0, color = purple, size = 1, xlim = c(-1,0)) +
@@ -1246,7 +1246,7 @@ name: graph
 name: graph-gen
 ## General
 
-RD analyses hinge on their graphical analyses.
+.hi-slate[RD analyses hinge on their graphical analyses.]
 
 If the discontinuity is not graphically apparent, most people are not going to care about the results of a few tortured regressions.
 
@@ -1272,6 +1272,182 @@ Most RD analyses will have some subset of three types of figures.
 1. .hi-slate[Density] of running/forcing variable $\left( \text{X}_{i} \right)$
 <br>.it[Is there evidence of sorty into treatment (across the threshold)?]
 
+---
+name: graph-outcome
+## Outcomes by running variable
+
+These figures tend to show the average value of the outcome $\text{Y}_{i}$ at evenly spaced bins of the running variable $\text{X}_{i}$.
+
+
+We have two parameter choices
+
+1. Binwidth $\left( h \right)$
+2. Numbers of bins below and above threshold $\left( K_0,\, K_1 \right)$
+
+that yield $K=K_0+K_1$ bins $\left( k=1,\, \ldots,\, K \right)$
+$$
+\begin{align}
+  b_k = c - \left( K_0 - k + 1 \right) \times h
+\end{align}
+$$
+
+
+We then calculate summaries for each bin.
+
+---
+## Outcomes by running variable
+
+The bin's .hi-slate[number of observations], $N_k$
+$$
+\begin{align}
+   N_k = \sum_{i=1}^N \mathbb{I}\left\{ b_k < \text{X}_{i} \le b_{k+1} \right\}
+\end{align}
+$$
+The .hi-slate[average treatment level] in the bin, $\overline{D}_k$ (for fuzzy RDs)
+$$
+\begin{align}
+   \overline{D}_k = \dfrac{1}{N_k} \sum_{i=1}^N \text{D}_{i} \times \mathbb{I}\left\{ b_k < \text{X}_{i} \le b_{k+1} \right\}
+\end{align}
+$$
+The .hi-slate[average outcome] in the bin, $\overline{Y}_k$
+$$
+\begin{align}
+   \overline{Y}_k = \dfrac{1}{N_k} \sum_{i=1}^N \text{Y}_{i} \times \mathbb{I}\left\{ b_k < \text{X}_{i} \le b_{k+1} \right\}
+\end{align}
+$$
+---
+exclude: true
+
+
+```{R, graph0, echo = F}
+# Generate data
+set.seed(123)
+graph_df <- tibble(
+  x = seq(from = -25.5, to = 15.5, by = 1),
+  d = (x + 30)^0.5 + rnorm(length(x), sd = 0.5) - 1 + 2 * (x > 0)
+) %>%
+mutate(d = d / (max(d) * 1.1)) %>%
+mutate(n = runif(n = n(), min = 100, max = 150) %>% round(0)) %>%
+mutate(y = 1 + d * 4 + (x > 0) * 2 + rnorm(n(), sd = 0.5)) %>%
+mutate(z = 2 * ((x - mean(x))/sd(x))^3 + rnorm(n(), sd = 1))
+```
+
+---
+## Outcomes by running variable
+
+We then plot $\overline{\text{D}}_k$ against the midpoint of each bin.
+
+
+.qa[Q] Does crossing $c$ clearly affect $\mathop{\text{Pr}}\left(\text{D}_{i}=1\right)$? .grey-light[(Fuzzy RD first stage)]
+
+
+```{R, graph-d, echo = F, fig.height = 3.5, fig.width = 7.5, fig.align = "left"}
+ggplot(data = graph_df, aes(x = x, y = d)) +
+geom_hline(yintercept = 0, size = 0.1) +
+geom_vline(xintercept = 0, color = red_pink, size = 1) +
+geom_point(size = 2.5) +
+scale_y_continuous(TeX("$\\bar{D}_k$"), limits = c(0, 1)) +
+scale_x_continuous(TeX("$X_i - c$")) +
+theme_pander(base_size = 20, base_family = "Fira Sans Book") +
+theme(axis.title.y = element_text(angle = 0, vjust = 0.5, family = "Helvetica"))
+```
+---
+## Outcomes by running variable
+
+And then plot $\overline{\text{Y}}_k$ against the midpoint of each bin.
+
+.qa[Q] Does crossing $c$ clearly affect our outcome $\text{Y}_{i}$? .grey-light[(Fuzzy RD reduced form)]
+
+```{R, graph-y, echo = F, fig.height = 3.5, fig.width = 7.5, fig.align = "left"}
+ggplot(data = graph_df, aes(x = x, y = y)) +
+geom_hline(yintercept = 0, size = 0.1) +
+geom_vline(xintercept = 0, color = red_pink, size = 1) +
+geom_point(size = 2.5) +
+scale_y_continuous(TeX("$\\bar{Y}_k$")) +
+scale_x_continuous(TeX("$X_i - c$")) +
+theme_pander(base_size = 20, base_family = "Fira Sans Book") +
+theme(axis.title.y = element_text(angle = 0, vjust = 0.5, family = "Helvetica"))
+```
+
+---
+name: graph-cov
+## Covariates by running variable
+
+Now we apply the same approach to covariates $\left( \text{Z}_{i} \right)$.
+
+
+.qa[Q] Are covariates .hi-slate[smooth] across $c$? If not, your RD may be invalid.
+
+
+```{R, graph-z, echo = F, fig.height = 3.5, fig.width = 7.5, fig.align = "left"}
+ggplot(data = graph_df, aes(x = x, y = z)) +
+geom_hline(yintercept = 0, size = 0.1) +
+geom_vline(xintercept = 0, color = red_pink, size = 1) +
+geom_point(size = 2.5) +
+scale_y_continuous(TeX("$\\bar{Z}_k$")) +
+scale_x_continuous(TeX("$X_i - c$")) +
+theme_pander(base_size = 20, base_family = "Fira Sans Book") +
+theme(axis.title.y = element_text(angle = 0, vjust = 0.5, family = "Helvetica"))
+```
+---
+name: graph-run
+## Density of running variable
+
+Finally we looking for other violations of smoothness—particularly in form gaming the threshold.
+
+In other words: Are individuals .hi-slate[bunching] just above or just below the threshold?
+
+If so, folks just below the threshold don't give us the clean counterfactual that we want for the folks just above the threshold.
+
+McCrary (2008) suggests testing the density of $\text{X}_{i}$ at $c$.
+---
+name: graph-run
+## Density of running variable
+
+Effectively, we can plot $N_k$ at the midpoint of each bin.
+
+
+.qa[Q] Is the distribution of $\text{X}_{i}$ smooth across $c$?
+
+
+```{R, graph-run, echo = F, fig.height = 3.5, fig.width = 7.5, fig.align = "left"}
+ggplot(data = graph_df, aes(x = x, y = n)) +
+geom_hline(yintercept = 0, size = 0.1) +
+geom_vline(xintercept = 0, color = red_pink, size = 1) +
+geom_point(size = 2.5) +
+scale_y_continuous(TeX("$N_k$")) +
+scale_x_continuous(TeX("$X_i - c$")) +
+theme_pander(base_size = 20, base_family = "Fira Sans Book") +
+theme(axis.title.y = element_text(angle = 0, vjust = 0.5, family = "Helvetica"))
+```
+---
+## Density of running variable
+
+.hi-slate[Likely bunching] (problem)
+
+.qa[Q] Is the distribution of $\text{X}_{i}$ smooth across $c$?
+
+```{R, graph-bunching, echo = F, fig.height = 3.5, fig.width = 7.5, fig.align = "left"}
+ggplot(
+  data = graph_df %>% mutate(n = n - 75 * between(x, -5, 0) + 75 * between(x, 0, 3)),
+  aes(x = x, y = n)) +
+geom_hline(yintercept = 0, size = 0.1) +
+geom_vline(xintercept = 0, color = red_pink, size = 1) +
+geom_point(size = 2.5) +
+scale_y_continuous(TeX("$N_k$")) +
+scale_x_continuous(TeX("$X_i - c$")) +
+theme_pander(base_size = 20, base_family = "Fira Sans Book") +
+theme(axis.title.y = element_text(angle = 0, vjust = 0.5, family = "Helvetica"))
+```
+
+---
+## Additional points
+
+1. No bin should cross the threshold.
+2. Are there discontinuities other than $c$? Should there be? Smoothness?
+
+
+Again, if these graphs are not clear and convincing, it's going to be hard to make the case that you have a true/credible discontinuity.
 
 ---
 layout: false
@@ -1308,6 +1484,9 @@ layout: false
 #### [Graphical analysis](#graph)
 .smaller[
 1. [General](#graph-gen)
+1. [Outcomes by $\text{X}_{i}$](#graph-outcome)
+1. [Covariates by $\text{X}_{i}$](#graph-cov)
+1. [Density of $\text{X}_{i}$](#graph-run)
 ]
 
 ]

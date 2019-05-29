@@ -4,7 +4,7 @@
     <title>Regression Discontinuity</title>
     <meta charset="utf-8">
     <meta name="author" content="Edward Rubin" />
-    <meta name="date" content="2019-05-22" />
+    <meta name="date" content="2019-05-29" />
     <link href="09RD_NoPause_files/remark-css-0.0.1/default.css" rel="stylesheet" />
     <link href="09RD_NoPause_files/remark-css-0.0.1/metropolis.css" rel="stylesheet" />
     <link href="09RD_NoPause_files/remark-css-0.0.1/metropolis-fonts.css" rel="stylesheet" />
@@ -17,7 +17,7 @@ class: center, middle, inverse, title-slide
 # Regression Discontinuity
 ## EC 425/525, Set 9
 ### Edward Rubin
-### 22 May 2019
+### 29 May 2019
 
 ---
 
@@ -535,7 +535,7 @@ name: graph
 name: graph-gen
 ## General
 
-RD analyses hinge on their graphical analyses.
+.hi-slate[RD analyses hinge on their graphical analyses.]
 
 If the discontinuity is not graphically apparent, most people are not going to care about the results of a few tortured regressions.
 
@@ -561,6 +561,124 @@ Most RD analyses will have some subset of three types of figures.
 1. .hi-slate[Density] of running/forcing variable `\(\left( \text{X}_{i} \right)\)`
 &lt;br&gt;.it[Is there evidence of sorty into treatment (across the threshold)?]
 
+---
+name: graph-outcome
+## Outcomes by running variable
+
+These figures tend to show the average value of the outcome `\(\text{Y}_{i}\)` at evenly spaced bins of the running variable `\(\text{X}_{i}\)`.
+
+
+We have two parameter choices
+
+1. Binwidth `\(\left( h \right)\)`
+2. Numbers of bins below and above threshold `\(\left( K_0,\, K_1 \right)\)`
+
+that yield `\(K=K_0+K_1\)` bins `\(\left( k=1,\, \ldots,\, K \right)\)`
+$$
+`\begin{align}
+  b_k = c - \left( K_0 - k + 1 \right) \times h
+\end{align}`
+$$
+
+
+We then calculate summaries for each bin.
+
+---
+## Outcomes by running variable
+
+The bin's .hi-slate[number of observations], `\(N_k\)`
+$$
+`\begin{align}
+   N_k = \sum_{i=1}^N \mathbb{I}\left\{ b_k &lt; \text{X}_{i} \le b_{k+1} \right\}
+\end{align}`
+$$
+The .hi-slate[average treatment level] in the bin, `\(\overline{D}_k\)` (for fuzzy RDs)
+$$
+`\begin{align}
+   \overline{D}_k = \dfrac{1}{N_k} \sum_{i=1}^N \text{D}_{i} \times \mathbb{I}\left\{ b_k &lt; \text{X}_{i} \le b_{k+1} \right\}
+\end{align}`
+$$
+The .hi-slate[average outcome] in the bin, `\(\overline{Y}_k\)`
+$$
+`\begin{align}
+   \overline{Y}_k = \dfrac{1}{N_k} \sum_{i=1}^N \text{Y}_{i} \times \mathbb{I}\left\{ b_k &lt; \text{X}_{i} \le b_{k+1} \right\}
+\end{align}`
+$$
+---
+exclude: true
+
+
+
+
+---
+## Outcomes by running variable
+
+We then plot `\(\overline{\text{D}}_k\)` against the midpoint of each bin.
+
+
+.qa[Q] Does crossing `\(c\)` clearly affect `\(\mathop{\text{Pr}}\left(\text{D}_{i}=1\right)\)`? .grey-light[(Fuzzy RD first stage)]
+
+
+&lt;img src="09RD_NoPause_files/figure-html/graph-d-1.svg" style="display: block; margin: auto auto auto 0;" /&gt;
+---
+## Outcomes by running variable
+
+And then plot `\(\overline{\text{Y}}_k\)` against the midpoint of each bin.
+
+.qa[Q] Does crossing `\(c\)` clearly affect our outcome `\(\text{Y}_{i}\)`? .grey-light[(Fuzzy RD reduced form)]
+
+&lt;img src="09RD_NoPause_files/figure-html/graph-y-1.svg" style="display: block; margin: auto auto auto 0;" /&gt;
+
+---
+name: graph-cov
+## Covariates by running variable
+
+Now we apply the same approach to covariates `\(\left( \text{Z}_{i} \right)\)`.
+
+
+.qa[Q] Are covariates .hi-slate[smooth] across `\(c\)`? If not, your RD may be invalid.
+
+
+&lt;img src="09RD_NoPause_files/figure-html/graph-z-1.svg" style="display: block; margin: auto auto auto 0;" /&gt;
+---
+name: graph-run
+## Density of running variable
+
+Finally we looking for other violations of smoothness—particularly in form gaming the threshold.
+
+In other words: Are individuals .hi-slate[bunching] just above or just below the threshold?
+
+If so, folks just below the threshold don't give us the clean counterfactual that we want for the folks just above the threshold.
+
+McCrary (2008) suggests testing the density of `\(\text{X}_{i}\)` at `\(c\)`.
+---
+name: graph-run
+## Density of running variable
+
+Effectively, we can plot `\(N_k\)` at the midpoint of each bin.
+
+
+.qa[Q] Is the distribution of `\(\text{X}_{i}\)` smooth across `\(c\)`?
+
+
+&lt;img src="09RD_NoPause_files/figure-html/graph-run-1.svg" style="display: block; margin: auto auto auto 0;" /&gt;
+---
+## Density of running variable
+
+.hi-slate[Likely bunching] (problem)
+
+.qa[Q] Is the distribution of `\(\text{X}_{i}\)` smooth across `\(c\)`?
+
+&lt;img src="09RD_NoPause_files/figure-html/graph-bunching-1.svg" style="display: block; margin: auto auto auto 0;" /&gt;
+
+---
+## Additional points
+
+1. No bin should cross the threshold.
+2. Are there discontinuities other than `\(c\)`? Should there be? Smoothness?
+
+
+Again, if these graphs are not clear and convincing, it's going to be hard to make the case that you have a true/credible discontinuity.
 
 ---
 layout: false
@@ -597,6 +715,9 @@ layout: false
 #### [Graphical analysis](#graph)
 .smaller[
 1. [General](#graph-gen)
+1. [Outcomes by `\(\text{X}_{i}\)`](#graph-outcome)
+1. [Covariates by `\(\text{X}_{i}\)`](#graph-cov)
+1. [Density of `\(\text{X}_{i}\)`](#graph-run)
 ]
 
 ]
