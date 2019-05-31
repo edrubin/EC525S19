@@ -1,4 +1,10 @@
 base
+methods
+datasets
+utils
+grDevices
+graphics
+stats
 pacman
 ggplot2
 gridExtra
@@ -18,13 +24,14 @@ knitr
 magrittr
 haven
 estimatr
-huxtable
 pdist
 proxy
 clue
+grid
 Matrix
 survival
 survey
 RANN
 lpSolve
 StatMatch
+huxtable

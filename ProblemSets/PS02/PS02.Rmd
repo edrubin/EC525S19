@@ -174,5 +174,5 @@ class: clear
 .b[Extra credit] For our simple linear regression setup, show (analytically) why OLS estimates for $\beta_1$ are biased toward zero. How does IV help?
 
 ```{R, generate pdfs, include = F, eval = T}
-system("decktape remark ps02.html ps02.pdf --chrome-arg=--allow-file-access-from-files")
+system("decktape remark PS02.html PS02.pdf --chrome-arg=--allow-file-access-from-files")
 ```

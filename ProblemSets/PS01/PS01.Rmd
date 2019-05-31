@@ -260,5 +260,5 @@ kable(var_tbl) %>%
 .b[Note:] The NSW dataset does not include .mono[re74].
 
 ```{R, generate pdfs, include = F, eval = T}
-system("decktape remark ps01.html ps01.pdf --chrome-arg=--allow-file-access-from-files")
+system("decktape remark PS01.html PS01.pdf --chrome-arg=--allow-file-access-from-files")
 ```
