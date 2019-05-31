@@ -1090,7 +1090,7 @@ $\mathop{E}\left[ \text{Y}_{i} \mid \text{X}_{i},\,\text{D}_{i} \right] =$
 name: srd-linear-diff
 ## Estimation: Linear, differing slopes
 
-.note[Assumption] $\color{#6A5ACD}{\mathop{E}\left[\text{Y}_{0i} | \text{X}_{i} = x\right]}$ and $\color{#e64173}{\mathop{E}\left[\text{Y}_{1i} | \text{X}_{i} = x\right]}$ are linear in $x$, *i.e.*, $\color{#6A5ACD}{\mathop{E}\left[ \text{Y}_{0i} \mid \text{X}_{i} \right]} = \color{#6A5ACD}{\alpha_0 + \beta_0 \text{X}_{i}}$ and $\color{#e64173}{\mathop{E}\left[ \text{Y}_{0i} \mid \text{X}_{i} \right]} = \color{#e64173}{\alpha_1 + \beta_1 \text{X}_{i}}$
+.note[Assumption] $\color{#6A5ACD}{\mathop{E}\left[\text{Y}_{0i} | \text{X}_{i} = x\right]}$ and $\color{#e64173}{\mathop{E}\left[\text{Y}_{1i} | \text{X}_{i} = x\right]}$ are linear in $x$, *i.e.*, $\color{#6A5ACD}{\mathop{E}\left[ \text{Y}_{0i} \mid \text{X}_{i} \right]} = \color{#6A5ACD}{\alpha_0 + \beta_0 \text{X}_{i}}$ and $\color{#e64173}{\mathop{E}\left[ \text{Y}_{1i} \mid \text{X}_{i} \right]} = \color{#e64173}{\alpha_1 + \beta_1 \text{X}_{i}}$
 
 Now treatment effects can vary with $\text{X}_{i}$.
 

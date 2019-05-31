@@ -192,12 +192,13 @@ The content of the lectures mainly follows *MHE* and [Michael Anderson](https://
 
 2–4 problem sets combining econometric theory and R.
 
-**[Problem set 1](https://raw.githack.com/edrubin/EC525S19/master/ProblemSets/PS01/ps01.pdf)**
+**[Problem set 1](https://raw.githack.com/edrubin/EC525S19/master/ProblemSets/PS01/PS01.pdf)**
 <br>*Due Sunday, 19 May 2019 by midnight*
-<br>[Solutions](https://raw.githack.com/edrubin/EC525S19/master/ProblemSets/PS01Solutions/ps01Solutions.pdf)
+<br>[Solutions](https://raw.githack.com/edrubin/EC525S19/master/ProblemSets/PS01Solutions/PS01Solutions.pdf)
 
-**[Problem set 2](https://raw.githack.com/edrubin/EC525S19/master/ProblemSets/PS02/ps02.pdf)**
+**[Problem set 2](https://raw.githack.com/edrubin/EC525S19/master/ProblemSets/PS02/PS02.pdf)**
 <br>*Due Wednesday, 29 May 2019 by midnight*
+<br>[Solutions](https://raw.githack.com/edrubin/EC525S19/master/ProblemSets/PS02Solutions/PS02Solutions.pdf)
 
 ## Project
 

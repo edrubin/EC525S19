@@ -1,0 +1,574 @@
+---
+title: "Problem Set 2 Solutions"
+subtitle: "Operation IV"
+author: "**EC 425/525:** Econometrics"
+date: "<br>Due *before* midnight (11:59pm) on .bold[Wednesday, 29 May 2019]"
+output:
+  xaringan::moon_reader:
+    css: ['default', 'metropolis', 'metropolis-fonts', 'my-css.css']
+    # self_contained: true
+    nature:
+      ratio: '8.5:11'
+      highlightStyle: github
+      highlightLines: true
+      countIncrementalSlides: false
+---
+class: clear
+
+```{R, setup, include = F}
+# Packages
+library(pacman)
+p_load(
+  ggplot2, gridExtra, ggthemes, latex2exp, kableExtra,
+  tidyverse, broom, knitr, magrittr
+)
+# Colors
+red_pink <- "#e64173"
+turquoise <- "#20B2AA"
+grey_light <- "grey70"
+grey_mid <- "grey50"
+grey_dark <- "grey20"
+# Themes
+theme_axes_y <- theme_void() + theme(
+  text = element_text(family = "sans"),
+  axis.title = element_text(size = 11),
+  plot.title = element_text(size = 11, hjust = 0.5),
+  axis.title.x = element_text(hjust = .95, margin = margin(0.15, 0, 0, 0, unit = "lines")),
+  axis.title.y = element_text(vjust = .95, margin = margin(0, -0.2, 0, 0, unit = "lines")),
+  axis.text.y = element_text(
+    size = 10, angle = 0, hjust = 0.9, vjust = 0.5,
+    margin = margin(0, 0.4, 0, 0, unit = "lines")
+  ),
+  axis.line = element_line(
+    color = grey_light,
+    size = 0.25,
+    arrow = arrow(angle = 30, length = unit(0.07, "inches")
+  )),
+  plot.margin = structure(c(1, 0, 1, 0), unit = "lines", valid.unit = 3L, class = "unit"),
+  legend.position = "none"
+)
+theme_axes_x <- theme_void() + theme(
+  text = element_text(family = "sans"),
+  axis.title = element_text(size = 11),
+  plot.title = element_text(size = 11, hjust = 0.5),
+  axis.title.x = element_text(hjust = .95, margin = margin(0.15, 0, 0, 0, unit = "lines")),
+  axis.title.y = element_text(vjust = .95, margin = margin(0, -0.2, 0, 0, unit = "lines")),
+  axis.text.x = element_text(
+    size = 10, angle = 0, hjust = 0.9, vjust = 0.5,
+    margin = margin(0, 0.4, 0, 0, unit = "lines")
+  ),
+  axis.line = element_line(
+    color = grey_light,
+    size = 0.25,
+    arrow = arrow(angle = 30, length = unit(0.07, "inches")
+  )),
+  plot.margin = structure(c(1, 0, 1, 0), unit = "lines", valid.unit = 3L, class = "unit"),
+  legend.position = "none"
+)
+theme_set(theme_gray(base_size = 11))
+# Knitr options
+opts_chunk$set(
+  comment = "#>",
+  fig.align = "center",
+  warning = F,
+  message = F
+)
+```
+
+.mono.b[DUE] Your solutions to this problem set are due *before* 11:59pm on Wednesday, 29 May 2019 on [Canvas](https://canvas.uoregon.edu/).
+<br>Your problem set .hi[must be typed] with .mono[R] code beneath your responses. _E.g._,  [`knitr`](https://yihui.name/knitr/) and [`R Markdown`](https://rmarkdown.rstudio.com).
+
+.mono.b[OBJECTIVE] We're going to walk through three classic applications of instrumental variables/two-stage least squares: endogeneity, measurement error, and randomized encouragement designs (REDs).
+
+### Part 1: Selection bias
+
+As this problem follows one from Wooldridge, we'll use the `wooldridge` package. You need to install the `wooldridge` package and then load the birthweight data using `data("bwght")`. For (limited) information on the variables, see the help file (_i.e._, `?wooldridge::bwght`).
+
+.mono.b[1.01] We want to better understand the effect of a number of variables on birth weight (`bwght`)—namely gender (`male`), birth order (`parity`), income (`faminc`), and cigarette smoking during pregnancy (`packs`), _i.e._,
+$$
+\begin{align}
+  \log(\text{bwght}_i) = \beta_0 + \beta_1 \text{male}_i + \beta_2 \text{parity}_i + \beta_3 \log(\text{faminc}_i) + \beta_4 \text{packs}_i + u_i
+\end{align}
+$$
+
+.mono.b[1.01] Why might you expect amount of smoking (`packs`) to be correlated with $u_i$?
+
+.pink[
+.b[Answer] We're worried about selection into smoking (in other words, omitted-variable bias). Namely, we may expect that children born to women who smoke during pregnancy may have had different birthweights than children born to women who do not smoke during pregnancy, regardless of the number of cigarettes their mothers smoked during pregnancy.
+]
+
+.mono.b[1.02] Suppose that you have data on average cigarette prices in each woman’s state of residence. Discuss whether this information is likely to satisfy the properties of a good instrumental variable for `packs`.
+
+.pink[
+.b[Answer] Maybe? We have three requirements for our instrument.
+1. .b[First stage] It seems plausible that cigarette prices will affect quantity smoked (something about the law of demand).
+2. .b[Exclusion restriction] We need our instrument to be uncorrelated with other determinants of birthweight (determinants not included in the regression model above). This may not be true—just as quantities respond to prices, prices can respond to quantities (simultaneity). Further, economic shocks may affect cigarette prices *and* birthweight (through channels excluded from our model above). Thus, cigarette prices may not have a super believable exclusion restriction.
+3. .b[Monotonicity] We need need the instrument (cigarette prices) to have a monotone effect on our endogenous regression (smoking behavior). This requirement seems reasonable if we think that price increases will only reduce smoking or will not affect smoking. If we think that some people smoke more when prices are high (*e.g.*, some signal of defiance of a cigarette tax), then we do not have monotonicity.
+]
+
+---
+class: clear
+
+.mono.b[1.03] Use the data in in `bwght` to estimate equation the equation above. First, use OLS. Then, use 2SLS, where `cigprice` is an instrument for `packs`. Discuss any important differences in the OLS and 2SLS estimates.
+
+.pink[
+
+.b[Answer]
+
+```{R, key-1-03, message = F, include = T}
+# Setup
+library(pacman)
+p_load(
+  wooldridge,
+  tidyverse, huxtable,
+  ggplot2, ggthemes,
+  future, furrr,
+  estimatr, magrittr
+)
+# OLS
+est_ols <- lm_robust(bwght ~ male + parity + faminc + packs, data = bwght)
+# 2SLS
+est_2sls <- iv_robust(
+  bwght ~ male + parity + faminc + packs |
+  male + parity + faminc + cigprice,
+  data = bwght
+)
+# Table of results
+huxreg("OLS" = est_ols, "2SLS" = est_2sls, statistics = "N")
+```
+
+One major difference: All statistically significant coefficients are no longer significant.
+
+Related: we previously estimated a negative and significant effect of smoking on birthweight. Now we estimate a positive and not significant effect.
+
+]
+
+---
+class: clear
+
+.mono.b[1.04] Estimate the reduced form for `packs`. Does it raise any issues? What bearing does this conclusion have on your answer from .mono.b[1.03]?
+
+.pink[
+
+.b[Answer]
+
+```{R, key-1-4, message = F, include = T}
+# The reduced form
+est_rf <- lm_robust(bwght ~ male + parity + faminc + cigprice, data = bwght)
+# The reduced form
+est_fs <- lm_robust(packs ~ male + parity + faminc + cigprice, data = bwght)
+# Table
+huxreg(
+    "OLS" = est_ols, "2SLS" = est_2sls, "Red. form" = est_rf, "1st stage" = est_fs,
+    statistics = "N"
+)[c(1,10:14),] %>%
+insert_row(c("Dep. Var.:", rep("Birth Weight", 3), "# Cig.")) %>%
+merge_cells(c(1,1), c(2,4)) %>%
+insert_row(c("", 1:4 %>% paste0("(", ., ")"))) %>%
+add_footnote("Note: I'm not showing all coefficients to preserve space.") %>%
+set_all_borders(0) %>%
+set_top_border(c(1,8), everywhere, 1) %>%
+set_top_border(4, 2:5, 0.5) %>%
+set_top_border(3, 2:4, 0.5 )
+```
+
+We see that our reduced form shows a positive and not statistically significant effect of cigarette prices on birth weight. This is the sign we might expect in the absence of exclusion-restriction violations, as higher prices should reduce smoking and increase birth weight.
+
+On the other hand, our 2SLS estimate is positive, which we might not have expected (again, not significant, so don't put too much weight on this result). We know that the 2SLS coefficient is the ration of the reduced-form coefficient and the first-stage coefficent. Thus, we know that the first-stage coefficient is also positive (though tiny and not significant)—implying higher prices lead to higher consumption. Again, this relationship is not statistically significant, so I wouldn't interpret this results as saying cigarettes are a Giffen good. Finally, because the first-stage coefficient is so small, it is magnifying our (not-significant) effect from the reduced form.
+
+.it[Note:] You did not have to estimate the first stage.
+
+]
+
+---
+class: clear
+
+### Part 2: Randomized encouragement designs
+
+Another common implementation of IV/2SLS is a randomized encouragement design (RED), in which we randomly select individuals to receive "encouragement" (_e.g._, we call them to tell them about an exciting new program) in order to try to induce an exogenous change in program participation.
+
+Let's imagine we want estimate the effect of solar-panel installation on household electricity consumption.
+
+.mono.b[2.01] What would be the problem with comparing average electricity consumption for houses with solar panels to average electricity consumption without solar panels?
+
+.pink[
+
+.b[Answer] Selection bias. There are a lot of reasons why households with solar panels might differ in observable and unobservable ways from households without solar panels.
+
+]
+
+.mono.b[2.02] We randomly select 200 homes that have not yet installed solar panels. Within this sample, we randomly assign 100 houses to our "encouragement" group and 100 houses to our "non-encouragement" group. For the 100 houses in the encouragement group, we call/visit the households and tell them how awesome solar panels are—and how much money they could save with solar..super[.pink[†]]
+
+.footnote[
+.pink[†] Tangent: In case you haven't seen it, you should check out Google's [Project Sunroof](https://www.google.com/get/sunroof).
+]
+
+What do we need for our encouragement to be a valid instrument for solar panel installation? Do you think it is satisfied?
+
+.pink[
+
+.b[Answer] We need
+1. .b[First stage] If our encouragement increases purchases of solar panels, then we will have a first stage. If the encouragement doesn't affect solar panel purchasing, then we will not have a valid instrument.
+2. .b[Exclusion restriction] We need our instrument—randomly showing up at someone's home to talk about solare panels—to only affect energy consumption through solar-panel purchases. This requirement should be fine as long as our encouragement doesn't directly affect households' energy consumption. We should make sure the encouragement doesn't actually talk about conserving energy. One related concern is that our instrument may increase the salience of energy consumption/costs for treated households.
+3. .b[Monotonicity] We need assignment to encouragement to move folks from no-panel to panel or no-panel to no-panel. This is fine, as none of our encouragement group has panels. We also need assignment to non-encouragement to not cause someone to buy a solar panel. This requirement seems plausible, as non-encouragement folks likely do not know they are part of the non-encouragement group.
+
+]
+
+---
+class: clear
+
+.mono.b[2.03] A year later, we conduct a survey and find that in the encouragement group, 15/100 homes now have solar panels. In the non-encouragement group, 5/100 homes now have solar panels. If we estimated the first stage, (regressing an indicator for solar panel on an intercept and an indicator for encouragement group), what would our estimates be?
+
+.pink[
+
+.b[Answer] The first stage
+$$
+\begin{align}
+  \mathbb{I}\left( \text{Solar Panel} \right)_i = \gamma_0 + \gamma_1 \mathbb{I}\left( \text{Encouraged} \right)_i + u_i
+\end{align}
+$$
+compares the share of solar panels in the encouragement group and control group, so $\hat\gamma_1=$ 0.10.
+
+]
+
+.mono.b[2.04] Imagine that average monthly electricity consumption in the encouragement group is 900 kWh (kilowatthours), while the average in the non-encouragement is 870 kWh. Based upon these numbers, what are the reduced-form (the effect of encouragement on energy consumption) and 2SLS estimates?
+
+.pink[
+
+.b[Answer] The reduced form
+$$
+\begin{align}
+  \text{Consumption}_i = \pi_0 + \pi_1 \mathbb{I}\left( \text{Encouraged} \right)_i + v_i
+\end{align}
+$$
+compares the mean consumption in the encouragement group and control group, so $\hat\pi_1=$ 30.
+
+We know the 2SLS estimate is the ratio of the reduced-form estimate and the first-stage estimate, so $\hat\beta_1=\hat\pi/\hat\gamma=$ 30/0.10 $=$ 300.
+
+]
+
+.mono.b[2.05] What does the LATE in this setting mean—_i.e._, what does *local* mean in this setting?
+
+.pink[
+
+.b[Answer] Recall that the LATE is for determined by *compliers*. In this setting, compliers are individuals who install solar panels when they are part of our encouragement group—folks who respond to our encouragement (learning about solar panel/energy savings causes them to install a solar panel).
+
+]
+
+---
+class: clear
+
+### Part 3: Measurement error
+
+Now for a good, old-fashioned simulation.
+
+.mono.b[3.01] Set up a data-generating process such that
+$$
+\begin{align}
+  y_i = 3 + 7 x_i + u_i
+\end{align}
+$$
+where $x_i\overset{\text{iid}}{\sim}N(5,5)$ and $u_i\overset{\text{iid}}{\sim}N(0,3)$.
+
+In this simulation, we want to imagine what would happen if we could not observe $x_i$ (or if $x_i$ is measured with error/noise).
+
+Thus, we want to create two additional variables: $w_{1i}$ and $w_{2i}$, such that
+$$
+\begin{align}
+  w_{1i} &= x_i + \varepsilon_i \\
+  w_{2i} &= x_i + \nu_i
+\end{align}
+$$
+where $\varepsilon_i$ is i.i.d. standard Normal and $\nu_i$ is i.i.d. $N(0,7)$. For this problem, the sample size will be 50.
+
+This setting is *classical* measurement error—the error (or noise) in measurement (_i.e._, $\varepsilon_i$ and $\nu_i$) is uncorrelated with the true variable $\left( x_i \right)$.
+
+.it[Note:] No results for this part of the problem. Just make sure you've set up the DGP.
+
+.pink[
+
+.b[Answer]
+
+```{R, key-3-01, include = T}
+# Function: DGP
+fun_dgp <- function(i, n = 50) {
+  # Generate x and u
+  x <- rnorm(n, mean = 5, sd = sqrt(5))
+  y <- 3 + 7 * x + rnorm(n, sd = sqrt(3))
+  # Generate w1 and w2
+  w1 <- x + rnorm(n)
+  w2 <- x + rnorm(n, sd = sqrt(7))
+  # Return tibble of variables
+  return(tibble(y, x, w1, w2))
+}
+# Generate a dataset
+set.seed(12345)
+gen_df <- fun_dgp(1)
+```
+
+]
+
+---
+class: clear
+
+.mono.b[3.02] Imagine you cannot observe $x_i$ and are stuck with our noisily measured versions $w_{1i}$ and/or $w_{2i}$. Regress $y_i$ on $w_{1i}$. What do you get? What if you regress $y_i$ on both $w_{1i}$ *and* $w_{2i}$?
+
+.pink[
+
+.b[Answer] When we use $w_1$ instead of $x$, we have an attenuated effect (less than 7). Adding $w_2$ to the regression does not appear to improve anything. Notice that the 95% confidence intervals for columns 2–4 would reject the true effect of $x$ on $y$ (_i.e._, $\beta_1=$ 7).
+
+.it[Note] I included additional regression (columns 1 and 3) that you did not need to include.
+
+```{R, key-3-02, include = T}
+# Regress y on x
+est_x <- lm_robust(y ~ x, data = gen_df)
+# Regress y on w1
+est_w1 <- lm_robust(y ~ w1, data = gen_df)
+# Regress y on w2
+est_w2 <- lm_robust(y ~ w2, data = gen_df)
+# Regress y on w1 and w2
+est_w1w2 <- lm_robust(y ~ w1 + w2, data = gen_df)
+# Table
+huxreg(est_x, est_w1, est_w2, est_w1w2)
+```
+
+]
+
+---
+class: clear
+
+.mono.b[3.03] Now what happens if you *instrument* $w_{1i}$ with $w_{2i}$?
+
+.pink[
+
+.b[Answer] When we instrument $w_1$ with $w_2$ (meaning we use $w_2$ as our instrument), our point estimate is much closer to the true value. In fact, our 95% confidence interval now contains the true value. Also notice that our standard errors have substantially increased with IV.
+
+```{R, key-3-03, include = T}
+# Instrument w1 with w2
+iv_w1_w2 <- iv_robust(y ~ w1 | w2, data = gen_df)
+# Table
+huxreg("OLS" = est_x, "OLS" = est_w1, "IV"= iv_w1_w2)
+```
+
+]
+
+.mono.b[3.04] Confirm your results form .mono.b[3.02] and .mono.b[3.03] were not anomalies. In other words, run a simulation (with at least 1,000 iterations). In each iteration, record the results of
+
+- regressing $y_i$ on $w_{1i}$
+- regressing $y_i$ on $w_{2i}$
+- instrumenting $w_{1i}$ with $w_{2i}$
+- instrumenting $w_{2i}$ with $w_{1i}$
+
+Report the results of your simulation. Do you see anything interesting? Does IV outperform OLS in the presence of measurement error (in terms of bias in $\hat{\beta}_1$)? What happens in your inference (look at the share of estimates in which you reject the null)?
+
+---
+class: clear
+
+.pink[
+
+.b[Answer] First we write a function to perform our desired analyses
+
+```{R, key-3-04-a, include = T}
+# Function: Generate data and analyze
+fun_analysis <- function(i, i_df) {
+  # Regress y on w1; grab the coefficient
+  ols1 <- lm_robust(y ~ w1, data = i_df) %>% tidy() %>% filter(term == "w1")
+  # Regress y on w2; grab the coefficient
+  ols2 <- lm_robust(y ~ w2, data = i_df) %>% tidy() %>% filter(term == "w2")
+  # IV w1 with w2; grab the coefficient
+  iv1 <- iv_robust(y ~ w1 | w2, data = i_df) %>% tidy() %>% filter(term == "w1")
+  # IV w2 with w1; grab the coefficient
+  iv2 <- iv_robust(y ~ w2 | w1, data = i_df) %>% tidy() %>% filter(term == "w2")
+  # Results with extra columns for model and iteration
+  res_df <- bind_rows(ols1, ols2, iv1, iv2) %>% mutate(
+    # Variable for the model
+    model = c("OLS w1", "OLS w2", "IV w1|w2", "IV w2|w1"),
+    # Iteration
+    iter = i
+  )
+  # Return results
+  return(res_df)
+}
+```
+
+Now a function that puts the two individual functions together.
+
+```{R, key-3-04-b, include = T}
+fun_iter <- function(i, n = 50) {
+  # Generate and analyze the data
+  fun_analysis(i = i, i_df = fun_dgp(i, n))
+}
+```
+
+Now run the function 10,000 times (you needed at least 1,000).
+
+```{R, key-3-04-c, cache = T, include = T}
+# Set the seed
+set.seed(12345)
+# Tell R (furrr) to parallelize
+plan(multiprocess, workers = 8)
+# Usin map_dfr from furrr: Parallelize and bind resulting data frames
+sim_df <- future_map_dfr(
+  # The argument to our function: The iteration number (10,000)
+  1:1e4,
+  # The function for each iteration
+  fun_iter,
+  # Tell map_dfr to use the set seed
+  .options = future_options(seed = T)
+)
+```
+
+.it[Figures on the next page(s).]
+
+]
+
+---
+class: clear
+
+.pink[
+
+.b[Answer, continued]
+
+```{R, key-3-04-plot1, out.width = '90%', fig.asp = 1/2.5, dev = 'svg', include = T}
+ggplot(data = sim_df, aes(x = estimate, fill = model)) +
+geom_density(color = NA, alpha = 0.5) +
+geom_vline(xintercept = 7, size = 0.5, linetype = "dashed") +
+geom_hline(yintercept = 0, size = 0.1) +
+xlim(1.5, 13) +
+scale_fill_viridis_d("") +
+theme_pander() + theme(legend.position = "bottom")
+```
+
+Two items to notice:
+1. More measurement error $\left( w_2 \right)$ leads to more attenuation bias.
+1. Instrumenting $w_1$ (less noisy) with $w_2$ (more noisy) is more efficient than the reverse.
+
+You have options to look at inference. Let's look at the distribution of _t_ statistics testing that our estimate differs from the true value of 7:
+
+```{R, key-3-04-plot2, out.width = '90%', fig.asp = 1/2.5, dev = 'svg', include = T}
+ggplot(data = sim_df, aes(x = (estimate - 7)/std.error, fill = model)) +
+geom_density(color = NA, alpha = 0.5) +
+geom_vline(xintercept = qt(p = 0.975, df = 48), size = 0.5, linetype = "dashed") +
+geom_vline(xintercept = qt(p = 0.025, df = 48), size = 0.5, linetype = "dashed") +
+xlab("t statistic testing truth") +
+scale_fill_viridis_d("") +
+theme_pander() + theme(legend.position = "bottom")
+```
+
+]
+
+
+---
+class: clear
+
+.pink[
+
+.b[Answer, continued] Alterantively, we could just create a table for the share of iterations that do reject $\hat\beta_1=$ 7 (truth) for each model...
+```{R, key-3-04-e, include = T}
+sim_df %>%
+  group_by(model) %>%
+  summarize(mean(!(conf.low < 7 & conf.high > 7))) %>%
+  hux()
+```
+
+
+]
+
+.mono.b[3.05] Now let $x_i$ .b[positively] correlate with $\varepsilon_i$ and .b[negatively] correlate with $\nu_i$, _i.e._, $\mathop{\text{Cov}} \left( x_i,\, \varepsilon_i \right) = 1$ and $\mathop{\text{Cov}} \left( x_i,\, \nu_i \right) = -2$. What happens to your results from .mono.b[3.04]?
+
+*Hint* You can use `mvrnorm()` from `MASS` to draw correlated variables from a multivariate Normal distribution (which you can assume here). See our simulation lab for details.
+
+.pink[
+
+.b[Answer] First we need to slightly modify our DGP. We need to define a $3\times 3$ variance-covariance matrix for $x,\, \varepsilon,$ and $\nu$.
+
+```{R, key-3-05-a, include = T}
+# Function: DGP
+fun_dgp2 <- function(i, n = 50) {
+  # Define the covariance matrix for x, ε, and ν
+  Σ <- matrix(c(
+     5,  1, -2,
+     1,  1,  0,
+    -2,  0,  7
+  ), byrow = T, ncol = 3)
+  # Vector means for
+  μ <- c(5, 0, 0)
+  # Generate x, ε, and ν (and convert to tibble)
+  i_df <- MASS::mvrnorm(n = n, Sigma = Σ, mu = μ) %>% as_tibble()
+  names(i_df) <- c("x", "ε", "ν")
+  # Calculate w1, w2, and y
+  i_df %<>% mutate(
+    y = 3 + 7 * x + rnorm(n, sd = sqrt(3)),
+    w1 = x + ε,
+    w2 = x + ν
+  )
+  # Return tibble of variables
+  return(i_df)
+}
+```
+
+]
+
+---
+class: clear
+
+.pink[
+
+.b[Answer, continued] Now we create a new function to run one iteration and then run the simulation.
+
+```{R, key-3-05-b, include = T}
+fun_iter2 <- function(i, n = 50) {
+  # Generate and analyze the data
+  fun_analysis(i = i, i_df = fun_dgp2(i, n))
+}
+```
+
+```{R, key-3-05-c, cache = T, include = T}
+# Set the seed
+set.seed(12345)
+# Tell R (furrr) to parallelize
+plan(multiprocess, workers = 8)
+# Usin map_dfr from furrr: Parallelize and bind resulting data frames
+sim2_df <- future_map_dfr(
+  # The argument to our function: The iteration number (10,000)
+  1:1e4,
+  # The function for each iteration
+  fun_iter2,
+  # Tell map_dfr to use the set seed
+  .options = future_options(seed = T)
+)
+```
+
+Plotting the distributions of point estimates and _t_ statistics (as before), things are a mess. None of the distributions are anywhere near the true estimate, and the inference is mostly a mess, as well.
+
+.b[The takeaway: Correcting measurement error with IV requires classical measurement error.]
+```{R, key-3-05-plot1, out.width = '90%', fig.asp = 1/2.5, dev = 'svg', echo = F, include = T}
+ggplot(data = sim2_df, aes(x = estimate, fill = model)) +
+geom_density(color = NA, alpha = 0.5) +
+geom_vline(xintercept = 7, size = 0.5, linetype = "dashed") +
+geom_hline(yintercept = 0, size = 0.1) +
+xlim(0, 20) +
+scale_fill_viridis_d("") +
+theme_pander() + theme(legend.position = "bottom")
+```
+```{R, key-3-05-plot2, out.width = '90%', fig.asp = 1/2.5, dev = 'svg', echo = F, include = T}
+ggplot(data = sim2_df, aes(x = (estimate - 7)/std.error, fill = model)) +
+geom_density(color = NA, alpha = 0.5) +
+xlim(-12.5, 3) +
+geom_vline(xintercept = qt(p = 0.975, df = 48), size = 0.5, linetype = "dashed") +
+geom_vline(xintercept = qt(p = 0.025, df = 48), size = 0.5, linetype = "dashed") +
+xlab("t statistic testing truth") +
+scale_fill_viridis_d("") +
+theme_pander() + theme(legend.position = "bottom")
+```
+
+
+]
+---
+class: clear
+
+.b[Extra credit] For our simple linear regression setup, show (analytically) why OLS estimates for $\beta_1$ are biased toward zero. How does IV help?
+
+```{R, generate pdfs, include = F, eval = T}
+system("decktape remark ps02Solutions.html ps02Solutions.pdf --chrome-arg=--allow-file-access-from-files")
+```
