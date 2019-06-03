@@ -1,0 +1,733 @@
+---
+title: "Inference: Clustering"
+subtitle: "EC 425/525, Set 9"
+author: "Edward Rubin"
+date: "`r format(Sys.time(), '%d %B %Y')`"
+output:
+  xaringan::moon_reader:
+    css: ['default', 'metropolis', 'metropolis-fonts', 'my-css.css']
+    # self_contained: true
+    nature:
+      highlightStyle: github
+      highlightLines: true
+      countIncrementalSlides: false
+---
+class: inverse, middle
+
+```{R, setup, include = F}
+# devtools::install_github("dill/emoGG")
+library(pacman)
+p_load(
+  broom, tidyverse,
+  latex2exp, ggplot2, ggthemes, ggforce, viridis, extrafont, gridExtra,
+  kableExtra, snakecase, janitor,
+  data.table, dplyr, estimatr,
+  lubridate, knitr, parallel, furrr,
+  lfe,
+  huxtable,
+  here, magrittr
+)
+# Define pink color
+red_pink <- "#e64173"
+turquoise <- "#20B2AA"
+orange <- "#FFA500"
+red <- "#fb6107"
+blue <- "#3b3b9a"
+green <- "#8bb174"
+grey_light <- "grey70"
+grey_mid <- "grey50"
+grey_dark <- "grey20"
+purple <- "#6A5ACD"
+slate <- "#314f4f"
+# Dark slate grey: #314f4f
+# Knitr options
+opts_chunk$set(
+  comment = "#>",
+  fig.align = "center",
+  fig.height = 7,
+  fig.width = 10.5,
+  warning = F,
+  message = F
+)
+opts_chunk$set(dev = "svg")
+options(device = function(file, width, height) {
+  svg(tempfile(), width = width, height = height)
+})
+options(knitr.table.format = "html")
+```
+
+# Prologue
+
+---
+name: schedule
+
+# Schedule
+
+## Last time
+
+Regression discontinuities
+
+## Today
+
+Inference and clustering
+---
+layout: true
+# Inference
+
+---
+class: inverse, middle
+---
+name: motive
+## Motivation
+
+So far, we've focused on carefully .hi[obtaining causal estimates] of the effect of some treatment $\text{D}_{i}$ on our outcome $\text{Y}_{i}$.
+
+
+Our discussion of research designs and their requirements/assumptions has centered on .hi[avoiding selection and securing unbiased and/or consistent estimates] for $\tau$.
+
+
+In other words, we've concentrated on .hi[point estimates].
+
+What about .hi-purple[inference]?
+---
+## Shminference .super[.pink[†]]
+
+.footnote[
+.pink[†] What is [*shminference*](https://en.wikipedia.org/wiki/Shm-reduplication)?
+]
+
+
+.qa[Q] Why care about inference?
+
+
+.qa[A] I'll give you two reasons.
+
+
+1. We often want to .hi[test theories/hypotheses]. Point estimates (*i.e.*, $\hat{\beta}$) can't do this alone. Inference finishes the job.
+
+
+2. Other times, we want to .hi[*measure* the effect] of a treatment. Inference helps us think about the .hi[precision] of our estimates.
+
+
+.note[Note:] Similar reasoning can apply to bounding forecasting/predictions.
+
+
+If you want answers, then you need to do inference
+ correctly.
+---
+## What's so complicated?
+
+Angrist and Pischke told us that "correcting" our standard errors for heteroskedasticity may increase the standard errors up to 25%.
+
+What else are we worried about?
+
+---
+## What we're worried about
+
+- .hi-slate[Transformations of estimators], *i.e.*, $\mathop{\text{Var}} \left[ f\left(\hat\beta\right) \right] \neq f\!\left(\mathop{\text{Var}} \left[ \hat\beta \right]\right)$
+
+
+- .hi-slate[Dependence/correlation in our disturbance], *i.e.*, $\mathop{\text{Cov}} \left(\varepsilon_i,\,\varepsilon_j \right)\neq 0$
+  - .slate[Autocorrelation] $\varepsilon_t = \rho \varepsilon_{t-1} + \varepsilon_t$
+  - .slate[Correlated shocks within groups] $\varepsilon_i = \varepsilon_{g(i)} + \varepsilon_i$
+
+
+- .hi-slate[Finite-sample properties] *vs.* asymptotic properties
+
+
+- .hi-slate[Power] and .hi-slate[minimal detectable effects]
+
+
+- .hi-slate[Multiple-hypothesis testing] and .hi-slate[*p-hacking*]
+
+
+.it[In other words:] We've got a lot to worry/think about.
+---
+layout: true
+# Clustering
+
+---
+name: clustering
+class: inverse, middle
+---
+## Setup
+
+Many studies—observational and experimental—have a treatment that is assigned to all/most individuals within a group.
+- Classrooms/schools
+- Households
+- Villages/counties/states
+
+
+Furthermore, we might imagine individuals within the same group may have correlated disturbances. For $i$ and $j$ in group $g$
+$$
+\begin{align}
+  \mathop{\text{Cov}} \left( \varepsilon_{i},\, \varepsilon_{j} \right) = \mathop{E}\left[ \varepsilon_{i} \varepsilon_{j} \right] = \rho_\varepsilon \sigma^2_\varepsilon
+\end{align}
+$$
+where $\rho_\varepsilon$ gives the within-group correlation of disturbances—what *MHE* calls the .attn[intraclass correlation coefficient].
+---
+## Setup
+
+In other words, we have a regression
+$$
+\begin{align}
+  y_{i} = \beta_0 + \beta_1 x_{g(i)} + \varepsilon_i
+\end{align}
+$$
+where individual $i$ is in group $g$, and $\text{X}_{g(i)}$ only varies across groups.
+
+
+For within-group correlation, we can use an additive random-effects model
+$$
+\begin{align}
+  \varepsilon_i = \nu_{g(i)} + \eta_i
+\end{align}
+$$
+meaning group members all receive a common shock $\nu_{g(i)}$, and individuals receive independent shocks $\eta_i$.
+
+
+.note[Note] We assume $\eta_i$ is independent of $\eta_j$ $\left( i\neq j \right)$ and $\nu_g$ $\left( \forall g \right)$.
+---
+## Additive random effects
+
+Based upon this model we've set up
+$$
+\begin{align}
+  \varepsilon_i = \nu_{g(i)} + \eta_i
+\end{align}
+$$
+the covariance between individuals $i$ and $j$ in group $g$ is
+$$
+\begin{align}
+  \mathop{\text{Cov}} \left( \varepsilon_i,\, \varepsilon_j \right) &= \mathop{E}\left[ \varepsilon_i \varepsilon_j \right] = \mathop{E}\left[ \left( \nu_g + \eta_i \right) \left( \nu_g + \eta_j \right) \right] = \mathop{E}\left[ \nu_g^2 \right] = \sigma^2_\nu
+  \\ &= \rho_\varepsilon\sigma^2_\varepsilon
+  \\ &= \rho_\varepsilon \left( \sigma^2_\nu + \sigma^2_\eta \right)
+\end{align}
+$$
+
+Thus, we can write the intraclass correlation coefficient as
+$$
+\begin{align}
+  \rho_\varepsilon = \dfrac{\sigma^2_\nu}{\sigma^2_\varepsilon} = \dfrac{\sigma^2_\nu}{\sigma^2_\nu + \sigma^2_\eta}
+\end{align}
+$$
+---
+## What is $\rho_\varepsilon?$
+
+Let's review what we know.
+$$
+\begin{align}
+  \varepsilon_i = \nu_{g(i)} + \eta_i \quad\quad \color{#6A5ACD}{\text{and}} \quad\quad \rho_\varepsilon = \dfrac{\sigma^2_\nu}{\sigma^2_\varepsilon} = \dfrac{\sigma^2_\nu}{\sigma^2_\nu + \sigma^2_\eta}
+\end{align}
+$$
+
+
+One way to think about $\rho_\varepsilon$ is as the .hi[share of the variance of the disturbance] $\varepsilon_i$ .hi[accounted for by the shared disurbance] $\nu_{g(i)}$.
+
+
+As $\nu_{g(i)}$ accounts for more and more of the variation in $\varepsilon_i$, $\rho_\varepsilon\rightarrow 1$.
+
+---
+## So...
+
+.qa[Q] Why do we care about $\rho_\varepsilon$?
+
+
+.qa[A] It tells us by how wrong our standard errors can be if we treat all observations as independent.
+
+
+Let $\mathop{\text{Var}_o} \left( \hat\beta_1 \right)$ denote the conventional variance formula for OLS estimator..super[.pink[†]]
+.footnote[
+.pink[†] which treats all disturbances as independent (and identically distributed).
+]
+
+
+Let $\mathop{\text{Var}} \left( \hat\beta_1 \right)$ denote the actual variance of $\hat\beta_1$.
+
+---
+name: moulton
+## So....
+
+With (.hi-slate[1]) nonstochasic regressors fixed by group *and* (.hi-slate[2]) groups of size $n$
+
+$\quad\dfrac{\mathop{\text{Var}} \left( \hat\beta_1 \right)}{\mathop{\text{Var}_o} \left( \hat\beta_1 \right)} = 1 + (n-1) \rho_\varepsilon\quad$
+$\implies \quad \dfrac{\mathop{\text{S.E.}} \left( \hat\beta_1 \right)}{\mathop{\text{S.E.}_o} \left( \hat\beta_1 \right)} = \sqrt{1 + (n-1) \rho_\varepsilon}$
+
+
+The term $\sqrt{1 + (n-1) \rho_\varepsilon}$ is called the .attn[Moulton factor].super[.pink[†]].
+
+The .attn[Moulton factor] tells us by what factor standard errors will be wrong if we ignore within-group correlation (conditional on assumptions .hi-slate[1] and .hi-slate[2]).
+
+.footnote[
+.pink[†] After [Moulton (1986)](https://www.sciencedirect.com/science/article/pii/0304407686900217).
+]
+
+
+.qa[Q] What happens if $\rho =$ 1?
+ What if you duplicated your dataset?
+<br>.qa[Q] What happens as $n$ increases?
+
+---
+name: moulton-example
+## The Moulton factor
+
+The Moulton factor
+$$
+\begin{align}
+  \dfrac{\mathop{\text{S.E.}} \left( \hat\beta_1 \right)}{\mathop{\text{S.E.}_o} \left( \hat\beta_1 \right)} = \sqrt{1 + (n-1) \rho_\varepsilon}
+\end{align}
+$$
+shows even when $\rho_\varepsilon$ is small, we can have vary large standard error issues.
+
+
+.ex[Ex] An experiment on 400 schools, each with 1,000 students.
+
+
+If $\rho_\varepsilon = 0.01$, the Moulton factor is $\sqrt{1 + (1,000-1)\times0.01}\approx 3.32$.
+
+---
+name: moulton-tstat
+## Test statistics
+
+.note[Recall] $t_\text{stat} = \dfrac{\hat{\beta}_1}{\mathop{\text{S.E.}} \left( \hat\beta_1 \right)}$.
+
+
+$\therefore \dfrac{t_o}{t}$
+ $= \dfrac{\hat{\beta}_1/\mathop{\text{S.E.}_o} \left( \hat\beta_1 \right)}{\hat{\beta}_1/\mathop{\text{S.E.}} \left( \hat\beta_1 \right)}$
+ $=\dfrac{\mathop{\text{S.E.}} \left( \hat\beta_1 \right)}{\mathop{\text{S.E.}_o} \left( \hat\beta_1 \right)}$
+ $=$ the Moulton factor.
+
+
+.ex[Ex] Thus, in our example of 400 schools with 1,000 students, ignoring within-school correlation of $\rho_\varepsilon=$ 0.01 would lead us test statistics that are more than 3 times as large as they should be.
+
+
+This is why economics seminars have standard-error police.
+---
+## Relaxing assumptions
+
+If we allow regressors to vary by individual and groups to differ in size $\left( n_g \right)$,
+$$
+\begin{align}
+  \dfrac{\mathop{\text{Var}} \left( \hat\beta_1 \right)}{\mathop{\text{Var}_o} \left( \hat\beta_1 \right)} =
+  1 + \left[ \dfrac{\mathop{\text{Var}} \left( n_g \right)}{\overline{n}} + \overline{n} - 1 \right]\rho_x \rho_\varepsilon
+\end{align}
+$$
+where $\rho_x$ denotes the intraclass (within-group) correlation of $x_i$..super[.pink[†]]
+
+.footnote[
+.pink[†] See *MHE* for mathematical definitions and the derivation.
+]
+
+
+.attn[Important] The Moulton factor for this general model depends upon the amount of within-group correlation in $x_i$ *and* $\varepsilon_i$.
+
+
+The special case is also important, as treatment is often fixed at some level.
+---
+name: cluster_answers
+## The answer
+
+.qa[Q] So what do we do now?
+
+
+.qa[A] We've got options (as usual)
+
+1. Parametrically model the random effects
+2. Cluster-robust standard error (estimator)
+3. Aggregate up to the group (or a similar method)
+4. Block (group-based) bootstrap
+5. GLS/MLE modeling $y_i$ and $\varepsilon_i$
+
+
+.hi-orange[Most common:] Cluster-robust standard errors
+<br> .hi-red[Runner up:] Block bootstrap
+<br> .hi-pink[Second runner up:] Group-level analysis
+
+---
+name: cluster-robust
+## Cluster-robust standard errors
+
+[Liang and Zeger (1986)](https://doi.org/10.1093/biomet/73.1.13) extend White's heteroskedasticity-robust covariance matrix to allow for both clustering and heteroskedasticity..super[.pink[†]]
+
+.footnote[
+.pink[†] When people say *clustering*, they typically mean *correlated disturbances within a group.*
+]
+
+
+.smaller[
+$$
+\begin{align}
+  \hat{\Omega}_\text{cl} = \left( \text{X}^\prime \text{X} \right)^{-1} \left( \sum_g \text{X}_g' \hat{\Psi}_g \text{X}_g \right) \left( \text{X}^\prime \text{X} \right)^{-1}
+\end{align}
+$$
+]
+.smaller[
+$$
+\begin{align}
+  \hat{\Psi}_g = a e_g e_g' = a
+  \begin{bmatrix}
+    e_{1g}^2 & e_{1g} e_{2g} & \cdots & e_{1g} e_{n_g g} \\
+    e_{1g} e_{2g} & e_{2g}^2 & e_{2g} \cdots & e_{2g} e_{n_g g} \\
+    \vdots & \vdots & \ddots & \vdots \\
+    e_{1g} e_{n_g g} & e_{2g} e_{n_g g} & \cdots & e_{n_g g}^2
+  \end{bmatrix}
+\end{align}
+$$
+]
+
+where $e_{g}$ are the OLS residuals for group $g$, $e_{ig}$ is the residual for individual $i$ in group $g$, and $a$ is a degrees-of-freedom adjustment.
+---
+## Cluster-robust standard errors
+
+.note[Derivation] Let $\text{x}_i$ denote observation $i$ (row) from $\text{X}$.
+<div class="math-left-align">
+$$
+\begin{align}
+  \mathop{\text{Var}} \left( \hat\beta \bigg| \text{X} \right) = \mathop{E}\left[ \left( \hat\beta - \beta \right)\left( \hat\beta - \beta \right)' \bigg| \text{X} \right] = \mathop{E}\left[ \left( \mathbf{\text{X}}^\prime \mathbf{\text{X}} \right)^{-1} \text{X}' \varepsilon \varepsilon' \text{X} \left( \mathbf{\text{X}}^\prime \mathbf{\text{X}} \right)^{-1} \bigg| \text{X} \right]
+\end{align}
+$$
+$$
+\begin{align}
+  \color{#ffffff}{\mathop{\text{Var}} \left( \hat\beta \bigg| \text{X} \right)} =\left( \mathbf{\text{X}}^\prime \mathbf{\text{X}} \right)^{-1} \color{#e64173}{\text{X}'\mathop{E}\left[  \varepsilon \varepsilon' | \text{X} \right]\text{X}}  \left( \mathbf{\text{X}}^\prime \mathbf{\text{X}} \right)^{-1}
+\end{align}
+$$
+$$
+\begin{align}
+  \color{#ffffff}{\mathop{\text{Var}} \left( \hat\beta \bigg| \text{X} \right)} =\left( \sum_{i=1}^N \text{x}_i'\text{x}_i \right)^{-1} \color{#e64173}{\left( \sum_{i=1}^N\sum_{j=1}^N \text{x}_i' \text{x}_j \mathop{E}\left[ \varepsilon_j \varepsilon_i \big| \text{X} \right] \right)} \left( \sum_{i=1}^N \text{x}_i'\text{x}_i \right)^{-1}
+\end{align}
+$$
+</div>
+.qa[Q] Can we estimate $\color{#e64173}{\left( \sum_i\sum_j \text{x}_i' \text{x}_j \mathop{E}\left[ \varepsilon_j \varepsilon_i \big| \text{X} \right] \right)}$ with $\sum_i\sum_j \text{x}_i' \text{x}_j e_j e_i = \text{X}'e e'\text{X}$?
+<br>.qa[A] No. Recall with OLS, $\text{X}'e=0$.
+ But we will do something similar.
+---
+## Cluster-robust standard errors
+
+Imagine we have $G$ clusters with some unknown .pink[dependence between observations within a cluster] and .purple[independence between clusters].
+
+
+Then we can ignore $\text{x}_i' \text{x}_j \mathop{E}\left[ \varepsilon_j \varepsilon_i \big| \text{X} \right]$ if $i$ and $j$ are in .purple[different clusters].
+
+
+We can estimate $\color{#e64173}{ \sum_i\sum_j \text{x}_i' \text{x}_j \mathop{E}\left[ \varepsilon_j \varepsilon_i \big| \text{X} \right]}$ with
+
+$$
+\begin{align}
+  \color{#e64173}{ \sum_{g=1}^{G} \left(\sum_{i=1}^{N_g}\sum_{j=1}^{N_g} \text{x}_i' \text{x}_j e_j e_i\right)} = \color{#e64173}{\sum_{g=1}^{G} \text{X}_{g}' e_g e_g' \text{X}_{g}}
+\end{align}
+$$
+*I.e.*, to learn about .pink[within-group] covariance, we calculate these .pink[within-group] cross products and then sum over groups..super[.pink[†]]
+
+.footnote[
+.pink[†] Group sizes can vary.
+]
+
+---
+## Guidelines for group number/size
+
+.hi-slate[Large] $\color{#314f4f}{G}$.slate[,] .hi-slate[Small] $\color{#314f4f}{N_g}$
+<br>
+Clustered-standard errors work well. $G>N_g$ and $G>20$.
+
+.hi-slate[Large] $\color{#314f4f}{G}$.slate[,] .hi-slate[Large] $\color{#314f4f}{N_g}$
+<br>
+We might be concerned about the number of within-group cross terms here. However, for moderately large $G$ (50?), cluster-robust standard errors appear to perform well with large $N_g$.
+
+.hi-slate[Small] $\color{#314f4f}{G}$.slate[,] .hi-slate[Large] $\color{#314f4f}{N_g}$
+<br>
+Cluster-robust standard errors do not work well (definitely $G<10$).
+<br>.note[Options] Collapse groups? Wild clustered bootstrap?
+
+.hi-slate[Small] $\color{#314f4f}{G}$.slate[,] .hi-slate[Small] $\color{#314f4f}{N_g}$
+<br>
+Essentially the same issues and solutions as small $G$ with large $N_g$.
+---
+name: cluster-extensions
+## Further extensions
+
+We've discussed the standard cluster-robust variance-covariance estimator.
+
+.attn[Multi-way clustering] allows multiple levels/dimensions in which individuals are *clustered*.
+
+- For .note[nested clusters] (_e.g._, state and county), people commonly cluster at the highest (largest) unit.
+
+- For .note[non-nested clusters] (_e.g._, state and year), [Cameron, Gelbach, and Miller (2011)](https://www.tandfonline.com/doi/abs/10.1198/jbes.2010.07136) provide a covariance estimator
+$$
+\begin{align}
+  \mathop{\text{Var}} \left( \hat\beta \right) = \mathop{\text{Var}_\text{State}} \left( \hat\beta \right) + \mathop{\text{Var}_\text{Year}} \left( \hat\beta \right) - \mathop{\text{Var}_\text{State-Year}} \left( \hat\beta \right)
+\end{align}
+$$
+where $\mathop{\text{Var}}_\text{State} \left( \hat\beta \right)$ denotes the covariance of $\hat\beta$ clustered by state.
+
+---
+## Further extensions
+
+We've discussed the standard cluster-robust variance-covariance estimator.
+
+The term .attn[Conley standard errors] is often used to describe situations in which you have spatial clustering/correlation that you can describe via a function like spatial distance..super[.pink[†]]
+
+.footnote[
+.pink[†] They also are robust to heteroskedasticity and autocorrelation within units.
+]
+
+See [Conley (1999)](https://www.sciencedirect.com/science/article/pii/S0304407698000840) for the paper and [this blog by Dan Christensen and Thiemo Fetzer](http://www.trfetzer.com/using-r-to-estimate-spatial-hac-errors-per-conley/) for practical implementation in .mono[R] and .mono[Stata].
+
+---
+## Cluster-robust standard errors
+
+So now you know what `lm_robust()`, `iv_robust()`, *etc.* are doing when you specify a variable for clustering (*e.g.*, `clusters = var`).
+
+
+.pull-left[
+`lm_robust()` .hi-slate[without clustering]
+```{R, ex-cluster-1}
+# Estimate without clusters
+vote_no <- lm_robust(
+  voteA ~ expendA + expendB,
+  fixed_effects = state,
+  data = wooldridge::vote1
+)
+```
+]
+.pull-right[
+`lm_robust()` .hi-slate[with clustering]
+```{R, ex-cluster-2}
+# Estimate with clusters
+vote_cl <- lm_robust(
+  voteA ~ expendA + expendB,
+  fixed_effects = state,
+  clusters = state,
+  data = wooldridge::vote1
+)
+```
+]
+---
+exclude: true
+layout: false
+class: clear, middle
+
+```{R, ex-cluster-table, echo = F}
+huxreg("No clustering" = vote_no, "With clustering" = vote_cl)
+```
+
+---
+layout: false
+class: clear, middle
+
+Time for a simulation.
+
+---
+layout: true
+# Cluster simulation
+
+---
+name: cluser-sim
+class: inverse, middle
+---
+## The DGP
+
+Let's opt for a simple-ish example..super[.pink[†]]
+
+.footnote[
+.pink[†] So we have more room for problem sets/exams.
+]
+
+$$
+\begin{align}
+  y_{ig} &= \left( \beta_0 = 1 \right) + \left( \beta_1 = 2 \right) x_{1,g} + \left( \beta_2 = 0 \right) x_{2,g} + \varepsilon_{ig} \\
+  \varepsilon_{ig} &= \nu_g + \eta_i
+\end{align}
+$$
+where the $\eta_i\perp\eta_j$, $\eta_i\perp\nu_g$, and $\nu_g\perp\nu_h$.
+
+
+Let's assume $\eta_i\sim N(0,1)$ and $\nu_g\sim N(0,1)$. And $x_g\sim N(0,1)$.
+
+Plus $N_g = 100$ with 10 groups.
+
+
+.note[Note] Small $G$ with large-ish $N_g$.
+
+---
+layout: true
+class: clear
+---
+
+First we need to write the .hi-slate[data generating process for one iteration].
+
+```{R, dgp-code, eval = T}
+# The DGP
+sim_dgp <- function(n = 100, n_grps = 10, σν = 1, ση = 1) {
+  # Create the right number of observations
+  sample_df <- expand.grid(i = 1:n, g = 1:n_grps) %>% as_tibble()
+  # Create a unique ID (from 1 to number of observations)
+  sample_df %<>% mutate(id = 1:(n * n_grps))
+  # Sample ν at the group level (NOTE: DON'T FORGET TO UNGROUP)
+  sample_df %<>% group_by(g) %>%
+    mutate(ν = rnorm(1, sd = σν)) %>% ungroup()
+  # Sample η at the individual level
+  sample_df %<>% mutate(η = rnorm(n * n_grps, sd = ση))
+  # Sample x_g from N(0,1)
+  sample_df %<>% group_by(g) %>%
+    mutate(x1 = rnorm(1), x2 = rnorm(1)) %>% ungroup()
+  # Calculate y
+  sample_df %<>% mutate(y = 1 + 2 * x1 + 0 * x2 + ν + η)
+  # Return
+  return(sample_df)
+}
+```
+---
+
+Now we .hi-slate[analyze] the data within one iteration.
+```{R, reg-code, eval = T}
+# Analyze 'data'
+sim_analyze <- function(data) {
+  # Conventional SEs
+  result_ols <- lm_robust(
+    y ~ x1 + x2, data = data, se_type = "classical"
+  ) %>% tidy() %>% filter(term %in% c("x1", "x2")) %>% select(1:5) %>%
+  mutate(type = "conventional")
+  # Cluster-robust SEs
+  result_cl <- lm_robust(
+    y ~ x1 + x2, data = data, clusters = g
+  ) %>% tidy() %>% filter(term %in% c("x1", "x2")) %>% select(1:5) %>%
+  mutate(type = "clustered")
+  # Bind results together and add column for standard errors
+  results_df <- bind_rows(result_ols, result_cl)
+  # Return results
+  return(results_df)
+}
+```
+---
+
+Now put the pieces together.
+```{R, sim-code, eval = T}
+# Join sim_dgp and sim_analyze
+sim_iter <- function(n = 100, n_grps = 10, σν = 1, ση = 1) {
+  # Run the analysis in sim_analyze on the output of sim_dgp
+  sim_dgp(n = 100, n_grps = 10, σν = 1, ση = 1) %>% sim_analyze()
+}
+```
+
+---
+
+And we .hi-slate[run the simulation] (10,000 times).
+```{R, sim-run, eval = T, cache = T}
+# Load and set up furrr
+p_load(furrr)
+plan(multiprocess, workers = 10)
+# Set a seed
+set.seed(1234)
+# Run the simulation 1e4 times
+sim_df <- future_map_dfr(
+  # Repeat sample size 100 for 1e4 times
+  rep(100, 1e4),
+  # Our function
+  sim_iter,
+  # Let furrr know we want to set a seed
+  .options = future_options(seed = T)
+)
+```
+
+---
+
+.hi-slate[Comparing standard errors] for $\hat\beta_1$ (coefficient on $x_1$)
+
+```{R, plot-sim-se, echo = F, eval = T}
+ggplot(
+  data = sim_df %>% filter(term == "x1"),
+  aes(x = std.error, fill = type)
+) +
+geom_density(color = NA, alpha = 0.9) +
+geom_hline(yintercept = 0) +
+xlab("Standard error") +
+ylab("Density") +
+scale_fill_manual("S.E.", values = c(orange, purple)) +
+theme_pander(base_size = 22, base_family = "Fira Sans Book")
+```
+---
+
+.hi-slate[Comparing _t_ statistics] for $\hat\beta_1$ (coefficient on $x_1$)
+
+```{R, plot-sim-tstat, echo = F, eval = T}
+ggplot(
+  data = sim_df %>% filter(term == "x1"),
+  aes(x = statistic, fill = type)
+) +
+geom_density(color = NA, alpha = 0.9) +
+geom_hline(yintercept = 0) +
+xlab("t Statistic") +
+ylab("Density") +
+scale_fill_manual("S.E.", values = c(orange, purple)) +
+theme_pander(base_size = 22, base_family = "Fira Sans Book")
+```
+---
+
+.hi-slate[Comparing _t_ statistics] for $\hat\beta_2$ (coefficient on $x_2$)
+
+```{R, plot-sim-tstat-x2, echo = F, eval = T}
+ggplot(
+  data = sim_df %>% filter(term == "x2"),
+  aes(x = statistic, fill = type)
+) +
+geom_density(color = NA, alpha = 0.9) +
+geom_hline(yintercept = 0) +
+xlab("t Statistic") +
+ylab("Density") +
+scale_fill_manual("S.E.", values = c(orange, purple)) +
+theme_pander(base_size = 22, base_family = "Fira Sans Book")
+```
+---
+class: middle
+
+.center.b.slate.pull-up[Rejection rates]
+```{R, cl-sim-summary, echo = F}
+sim_df %>%
+  group_by(term, type) %>%
+  summarize(mean(p.value < 0.05)) %>%
+  hux()
+```
+
+1. We definitely can see the .b[need for clustering].<br>Conventional standard errors are rejecting a true H.sub[o] 80% of the time.
+
+2. .b[Cluster-robust standard errors are struggling] a bit in this situation.<br>Small $G$; large $N_g$. Rejecting false H.sub[o] 88% and true H.sub[o] 3.7% of the time.
+
+
+---
+name: resources
+## Resources from the literature
+
+[A Practitioner’s Guide to Cluster-Robust Inference](http://jhr.uwpress.org/content/50/2/317.refs)<br>Cameron and Miller (2015)
+
+[Robust Inference With Multiway Clustering](https://www.tandfonline.com/doi/abs/10.1198/jbes.2010.07136)<br>Cameron, Gelbach, and Miller (2011)
+
+[Bootstrap-Based Improvements for Inference with Clustered Errors](https://www.mitpressjournals.org/doi/abs/10.1162/rest.90.3.414)<br>Cameron, Gelbach, and Miller (2008)
+
+[How Much Should We Trust Differences-In-Differences Estimates?](https://academic.oup.com/qje/article-abstract/119/1/249/1876068)<br>Bertrand, Duflo, and Mullainathan (2004)
+
+
+---
+layout: false
+# Table of contents
+
+.pull-left[
+### Inference
+.small[
+1. [Motivation](#motive)
+1. [Clustering](#clustering)
+1. [Moulton factors](#moulton)
+  - [Example](#moulton-example)
+  - [Test statistics](#moulton-tstats)
+1. [Answers](#cluster-answers)
+1. [Cluster-robust S.E.s](#cluster-robust)
+1. [Clustering extensions](#cluster-extensions)
+1. [Simulation](#simulation)
+1. [Resources](#resources)
+]]
+
+---
+exclude: true
+
+```{R, generate pdfs, include = F, eval = T}
+source("../../ScriptsR/unpause.R")
+```

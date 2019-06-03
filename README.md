@@ -122,6 +122,27 @@ The content of the lectures mainly follows *MHE* and [Michael Anderson](https://
 
 *Another note on the notes:* I create the slides with [`xaringan`](https://github.com/yihui/xaringan/wiki) in [R](cran.r-project.org). Thanks to [Grant McDermott](grantmcdermott.com/) for encouraging me to make this switch.
 
+**[Lecture 10: Inference: Clustering](https://raw.githack.com/edrubin/EC525S19/master/NotesLecture/10Clustering/10Clustering.html)**
+
+1. General inference
+1. Moulton
+1. Cluster-robust standard errors
+
+**Note formats:** [.html](https://raw.githack.com/edrubin/EC525S19/master/NotesLecture/10Clustering/10Clustering.html) | [.html (no pause)](https://raw.githack.com/edrubin/EC525S19/master/NotesLecture/10Clustering/08IV_NoPause.html) | [.pdf](https://raw.githack.com/edrubin/EC525S19/master/NotesLecture/10Clustering/10Clustering.pdf) | [.pdf (no pause)](https://raw.githack.com/edrubin/EC525S19/master/NotesLecture/10Clustering/08IV_NoPause.pdf) | [.Rmd](https://raw.githack.com/edrubin/EC525S19/master/NotesLecture/10Clustering/10Clustering.Rmd)
+<br>**Readings:** MHE chapter 8
+
+**[Lecture 11: Inference: Resampling and Randomization](https://raw.githack.com/edrubin/EC525S19/master/NotesLecture/11Randomization/11Randomization.html)**
+
+1. Resampling
+1. The bootstrap
+1. Permutation tests (Fisher)
+1. Randomization inference (Neyman-Pearson)
+
+**Note formats:** [.html](https://raw.githack.com/edrubin/EC525S19/master/NotesLecture/11Randomization/11Randomization.html) | [.html (no pause)](https://raw.githack.com/edrubin/EC525S19/master/NotesLecture/11Randomization/08IV_NoPause.html) | [.pdf](https://raw.githack.com/edrubin/EC525S19/master/NotesLecture/11Randomization/11Randomization.pdf) | [.pdf (no pause)](https://raw.githack.com/edrubin/EC525S19/master/NotesLecture/11Randomization/08IV_NoPause.pdf) | [.Rmd](https://raw.githack.com/edrubin/EC525S19/master/NotesLecture/11Randomization/11Randomization.Rmd)
+<br>**Readings:** MHE chapter 6 + C&T sections 25.6
+
+*Another note on the notes:* I create the slides with [`xaringan`](https://github.com/yihui/xaringan/wiki) in [R](cran.r-project.org). Thanks to [Grant McDermott](grantmcdermott.com/) for encouraging me to make this switch.
+
 ## Lab slides
 
 **[Lab 01: R Intro/Review](https://raw.githack.com/edrubin/EC525S19/master/NotesLab/01RBasics/01RBasics.html)**
@@ -180,13 +201,6 @@ The content of the lectures mainly follows *MHE* and [Michael Anderson](https://
 1. Logical vectors and `which()`
 
 **Note formats:** [.html](https://raw.githack.com/edrubin/EC525S19/master/NotesLab/07RMisc/07RMisc.html) | [.html (no pause)](https://raw.githack.com/edrubin/EC525S19/master/NotesLab/07RMisc/07RMisc_NoPause.html) | [.pdf](https://raw.githack.com/edrubin/EC525S19/master/NotesLab/07RMisc/07RMisc.pdf) | [.pdf (no pause)](https://raw.githack.com/edrubin/EC525S19/master/NotesLab/07RMisc/07RMisc_NoPause.pdf) | [.Rmd](https://raw.githack.com/edrubin/EC525S19/master/NotesLab/07RMisc/07RMisc.Rmd)
-
-**[Lab 08: Inference](https://raw.githack.com/edrubin/EC525S19/master/NotesLab/08RInference/08RInference.html)**
-
-1. Inference
-1. More inference
-
-**Note formats:** [.html](https://raw.githack.com/edrubin/EC525S19/master/NotesLab/08RInference/08RInference.html) | [.html (no pause)](https://raw.githack.com/edrubin/EC525S19/master/NotesLab/08RInference/08RInference_NoPause.html) | [.pdf](https://raw.githack.com/edrubin/EC525S19/master/NotesLab/08RInference/08RInference.pdf) | [.pdf (no pause)](https://raw.githack.com/edrubin/EC525S19/master/NotesLab/08RInference/08RInference_NoPause.pdf) | [.Rmd](https://raw.githack.com/edrubin/EC525S19/master/NotesLab/08RInference/08RInference.Rmd)
 
 ## Problem sets
 

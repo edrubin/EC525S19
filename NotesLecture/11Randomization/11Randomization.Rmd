@@ -1,0 +1,872 @@
+---
+title: "Inference and Randomization"
+subtitle: "EC 425/525, Set 11"
+author: "Edward Rubin"
+date: "`r format(Sys.time(), '%d %B %Y')`"
+output:
+  xaringan::moon_reader:
+    css: ['default', 'metropolis', 'metropolis-fonts', 'my-css.css']
+    # self_contained: true
+    nature:
+      highlightStyle: github
+      highlightLines: true
+      countIncrementalSlides: false
+---
+class: inverse, middle
+
+```{R, setup, include = F}
+# devtools::install_github("dill/emoGG")
+library(pacman)
+p_load(
+  broom, tidyverse,
+  ggplot2, ggthemes, ggforce, ggridges,
+  latex2exp, viridis, extrafont, gridExtra,
+  kableExtra, snakecase, janitor,
+  data.table, dplyr,
+  lubridate, knitr, future, furrr,
+  estimatr, here, magrittr
+)
+# Define pink color
+red_pink <- "#e64173"
+turquoise <- "#20B2AA"
+orange <- "#FFA500"
+red <- "#fb6107"
+blue <- "#3b3b9a"
+green <- "#8bb174"
+grey_light <- "grey70"
+grey_mid <- "grey50"
+grey_dark <- "grey20"
+purple <- "#6A5ACD"
+slate <- "#314f4f"
+# Dark slate grey: #314f4f
+# Knitr options
+opts_chunk$set(
+  comment = "#>",
+  fig.align = "center",
+  fig.height = 7,
+  fig.width = 10.5,
+  warning = F,
+  message = F
+)
+opts_chunk$set(dev = "svg")
+options(device = function(file, width, height) {
+  svg(tempfile(), width = width, height = height)
+})
+options(crayon.enabled = F)
+options(knitr.table.format = "html")
+# A blank theme for ggplot
+theme_empty <- theme_bw() + theme(
+  line = element_blank(),
+  rect = element_blank(),
+  strip.text = element_blank(),
+  axis.text = element_blank(),
+  plot.title = element_blank(),
+  axis.title = element_blank(),
+  plot.margin = structure(c(0, 0, -0.5, -1), unit = "lines", valid.unit = 3L, class = "unit"),
+  legend.position = "none"
+)
+theme_simple <- theme_bw() + theme(
+  line = element_blank(),
+  panel.grid = element_blank(),
+  rect = element_blank(),
+  strip.text = element_blank(),
+  axis.text.x = element_text(size = 18, family = "STIXGeneral"),
+  axis.text.y = element_blank(),
+  axis.ticks = element_blank(),
+  plot.title = element_blank(),
+  axis.title = element_blank(),
+  # plot.margin = structure(c(0, 0, -1, -1), unit = "lines", valid.unit = 3L, class = "unit"),
+  legend.position = "none"
+)
+theme_axes_math <- theme_void() + theme(
+  text = element_text(family = "MathJax_Math"),
+  axis.title = element_text(size = 22),
+  axis.title.x = element_text(hjust = .95, margin = margin(0.15, 0, 0, 0, unit = "lines")),
+  axis.title.y = element_text(vjust = .95, margin = margin(0, 0.15, 0, 0, unit = "lines")),
+  axis.line = element_line(
+    color = "grey70",
+    size = 0.25,
+    arrow = arrow(angle = 30, length = unit(0.15, "inches")
+  )),
+  plot.margin = structure(c(1, 0, 1, 0), unit = "lines", valid.unit = 3L, class = "unit"),
+  legend.position = "none"
+)
+theme_axes_serif <- theme_void() + theme(
+  text = element_text(family = "MathJax_Main"),
+  axis.title = element_text(size = 22),
+  axis.title.x = element_text(hjust = .95, margin = margin(0.15, 0, 0, 0, unit = "lines")),
+  axis.title.y = element_text(vjust = .95, margin = margin(0, 0.15, 0, 0, unit = "lines")),
+  axis.line = element_line(
+    color = "grey70",
+    size = 0.25,
+    arrow = arrow(angle = 30, length = unit(0.15, "inches")
+  )),
+  plot.margin = structure(c(1, 0, 1, 0), unit = "lines", valid.unit = 3L, class = "unit"),
+  legend.position = "none"
+)
+theme_axes <- theme_void() + theme(
+  text = element_text(family = "Fira Sans Book"),
+  axis.title = element_text(size = 18),
+  axis.title.x = element_text(hjust = .95, margin = margin(0.15, 0, 0, 0, unit = "lines")),
+  axis.title.y = element_text(vjust = .95, margin = margin(0, 0.15, 0, 0, unit = "lines")),
+  axis.line = element_line(
+    color = grey_light,
+    size = 0.25,
+    arrow = arrow(angle = 30, length = unit(0.15, "inches")
+  )),
+  plot.margin = structure(c(1, 0, 1, 0), unit = "lines", valid.unit = 3L, class = "unit"),
+  legend.position = "none"
+)
+theme_set(theme_gray(base_size = 20))
+# Column names for regression results
+reg_columns <- c("Term", "Est.", "S.E.", "t stat.", "p-Value")
+# Function for formatting p values
+format_pvi <- function(pv) {
+  return(ifelse(
+    pv < 0.0001,
+    "<0.0001",
+    round(pv, 4) %>% format(scientific = F)
+  ))
+}
+format_pv <- function(pvs) lapply(X = pvs, FUN = format_pvi) %>% unlist()
+# Tidy regression results table
+tidy_table <- function(x, terms, highlight_row = 1, highlight_color = "black", highlight_bold = T, digits = c(NA, 3, 3, 2, 5), title = NULL) {
+  x %>%
+    tidy() %>%
+    select(1:5) %>%
+    mutate(
+      term = terms,
+      p.value = p.value %>% format_pv()
+    ) %>%
+    kable(
+      col.names = reg_columns,
+      escape = F,
+      digits = digits,
+      caption = title
+    ) %>%
+    kable_styling(font_size = 20) %>%
+    row_spec(1:nrow(tidy(x)), background = "white") %>%
+    row_spec(highlight_row, bold = highlight_bold, color = highlight_color)
+}
+```
+
+$$
+\begin{align}
+  \def\ci{\perp\mkern-10mu\perp}
+\end{align}
+$$
+
+
+# Prologue
+
+---
+name: schedule
+
+# Schedule
+
+## Last time
+
+An analytical solution to cluter-robust inference
+
+## Today
+
+Inference using (re)randomization .super[.pink[†]]
+
+.footnote[
+.pink[†] Parts of these notes closely follow notes from [Kosuke Imai](https://imai.fas.harvard.edu).
+]
+
+## Upcoming
+
+The end is near. As is the final.
+---
+layout: true
+# Inference and (re)randomization
+
+---
+class: inverse, middle
+---
+## Inference recap
+
+Our inference techniques have focused on (asymptotic) .attn[analytical methods].
+
+1. Choose (or derive) an estimator
+
+2. Derived the estimator's (asymptotic) distribution.super[.pink[†]]
+
+3. Construct confidence intervals or hypothesis tests
+
+.footnote[
+.pink[†] And, consequently, standard errors.
+]
+---
+name: resampling
+## Resampling
+
+.attn[Resampling methods] offers a different, more computationally intense (less asymptoically intense) approach.
+
+--
+
+A .attn[resampling method] involves repeatedly drawing samples (*resampling*) from a dataset and refitting the model of interest on each sample. We can learn about the behavior of the model through its performance across the many iterations..super[.pink[†]]
+
+.footnote[
+.pink[†] This approach is very similar to our Monte Carlo simulations, except that we will sample *with replacement* from a single dataset.
+]
+
+--
+
+.note[Common implementations:] Bootstrap (and jackknife), cross validation, permutation tests/randomization inference
+
+---
+layout: true
+# The bootstrap
+
+---
+name: boot
+class: inverse, middle
+---
+## Basics
+
+.attn[Bootstrapping] resamples, .it[with replacement], from the original dataset.
+
+--
+
+- In each sample, we apply our estimator.
+- Then, we consider the distribution/properties of these estimates.
+
+This resampling helps us better understand the uncertainty associated with our estimator (within the current data setting).
+
+---
+name: boot-formal
+## More formally
+
+Let's formalize the bootstrap a bit.
+- $Z$ denotes our original dataset (_e.g._, $Z = \left[ \text{Y} \mid \text{X} \right]$ in our standard setup).
+
+--
+- $\hat\alpha(Z)$ refers to the estimate for $\alpha$ derived from our dataset $Z$.
+
+--
+- We draw $B$ bootstrap samples $b\in \left\{ 1,\,\ldots,\, B \right\}$.
+
+--
+- $Z^{\star 1}$ represents our first bootstrap sample $\left( b=1 \right)$.
+
+--
+- $\hat{\alpha}^{\star 1} = \hat\alpha(Z^{\star1})$ is our estimator evaluated on the first bootstrap sample.
+
+--
+
+The .attn[bootstrapped standard error] of $\hat\alpha$ is the standard deviation of the $\hat\alpha^{\star b}$
+
+$$
+\begin{align}
+  \mathop{\text{SE}_{B}}\left( \hat\alpha \right) = \sqrt{\dfrac{1}{B} \sum_{b=1}^{B} \left( \hat\alpha^{\star b} - \dfrac{1}{B} \sum_{\ell=1}^{B} \hat\alpha^{\star \ell} \right)^2}
+\end{align}
+$$
+---
+exclude: true
+
+```{R, ex-boot-0, echo = F}
+# Generate the dataset
+set.seed(123)
+n = 9
+z = tibble(x = 1:n, y = 1 + x + rnorm(n, sd = 5))
+b = lm(y ~ x, data = z)$coefficient[2]
+boot_colors <- magma(n, begin = 0.1, end = 0.93)
+s = 1:n
+base_df <- expand.grid(x = 1:sqrt(n), y = 1:sqrt(n)) %>% as_tibble()
+# Bootstrap 1
+s1 <- sample(1:n, n, replace = T)
+z1 <- z[s1,]
+b1 <- lm(y ~ x, data = z1)$coefficient[2]
+# Bootstrap 2
+s2 <- sample(1:n, n, replace = T)
+z2 <- z[s2,]
+b2 <- lm(y ~ x, data = z2)$coefficient[2]
+# Bootstrap 3
+s3 <- sample(1:n, n, replace = T)
+z3 <- z[s3,]
+b3 <- lm(y ~ x, data = z3)$coefficient[2]
+# Bootstrap 4
+s4 <- sample(1:n, n, replace = T)
+z4 <- z[s4,]
+b4 <- lm(y ~ x, data = z4)$coefficient[2]
+```
+
+---
+name: boot-graph
+## More graphically
+
+.thin-left[
+$$Z$$
+```{R, g1-boot0, echo = F, out.width = "100%"}
+# Graph individuals
+ggplot(
+  data = base_df %>% mutate(fill = 1:n, lab = s),
+  aes(x, y, fill = as.factor(fill))
+) +
+geom_tile(color = "white", size = 1.5) +
+geom_text(aes(label = lab), color = "white", size = 20) +
+coord_equal() +
+scale_fill_manual(values = boot_colors[s]) +
+scale_color_manual(values = boot_colors[s]) +
+theme_void() +
+theme(legend.position = "none")
+```
+
+$$\hat\beta = `r b %>% round(3)`$$
+
+```{R, g2-boot0, echo = F, out.width = '100%'}
+# Graph individuals
+ggplot(
+  data = z %>% mutate(s = 1:n),
+  aes(x, y, color = as.factor(s))
+) +
+geom_smooth(method = lm, se = F, color = "grey85", size = 5) +
+geom_point(size = 20, alpha = 0.5) +
+coord_equal() +
+xlim(-0.5,n+0.5) +
+scale_color_manual(values = boot_colors[s]) +
+theme_void() +
+theme(legend.position = "none")
+```
+]
+
+--
+
+.thin-left[
+$$Z^{\star 1}$$
+```{R, g1-boot1, echo = F, out.width = "100%"}
+# Graph individuals
+ggplot(
+  data = base_df %>% mutate(fill = 1:n, lab = s1),
+  aes(x, y, fill = as.factor(fill))
+) +
+geom_tile(color = "white", size = 1.5) +
+geom_text(aes(label = lab), color = "white", size = 20) +
+coord_equal() +
+scale_fill_manual(values = boot_colors[s1]) +
+scale_color_manual(values = boot_colors[s1]) +
+theme_void() +
+theme(legend.position = "none")
+```
+
+$$\hat\beta = `r b1 %>% round(3)`$$
+
+```{R, g2-boot1, echo = F, out.width = '100%'}
+# Graph individuals
+ggplot(
+  data = z1 %>% mutate(s = 1:n),
+  aes(x, y, color = as.factor(s))
+) +
+geom_smooth(method = lm, se = F, color = "grey85", size = 5) +
+geom_point(size = 20, alpha = 0.5) +
+coord_equal() +
+xlim(-0.5,n+0.5) +
+scale_color_manual(values = boot_colors[s1]) +
+theme_void() +
+theme(legend.position = "none")
+```
+]
+
+--
+
+.thin-left[
+$$Z^{\star 2}$$
+```{R, g1-boot2, echo = F, out.width = "100%"}
+# Graph individuals
+ggplot(
+  data = base_df %>% mutate(fill = 1:n, lab = s2),
+  aes(x, y, fill = as.factor(fill))
+) +
+geom_tile(color = "white", size = 1.5) +
+geom_text(aes(label = lab), color = "white", size = 20) +
+coord_equal() +
+scale_fill_manual(values = boot_colors[s2]) +
+scale_color_manual(values = boot_colors[s2]) +
+theme_void() +
+theme(legend.position = "none")
+```
+
+$$\hat\beta = `r b2 %>% round(3)`$$
+
+```{R, g2-boot2, echo = F, out.width = '100%'}
+# Graph individuals
+ggplot(
+  data = z2 %>% mutate(s = 1:n),
+  aes(x, y, color = as.factor(s))
+) +
+geom_smooth(method = lm, se = F, color = "grey85", size = 5) +
+geom_point(size = 20, alpha = 0.5) +
+coord_equal() +
+xlim(-0.5,n+0.5) +
+scale_color_manual(values = boot_colors[s2]) +
+theme_void() +
+theme(legend.position = "none")
+```
+]
+
+--
+
+.left5[
+<br><br><br>⋯
+]
+
+.thin-left[
+$$Z^{\star B}$$
+```{R, g1-boot3, echo = F, out.width = "100%"}
+# Graph individuals
+ggplot(
+  data = base_df %>% mutate(fill = 1:n, lab = s3),
+  aes(x, y, fill = as.factor(fill))
+) +
+geom_tile(color = "white", size = 1.5) +
+geom_text(aes(label = lab), color = "white", size = 20) +
+coord_equal() +
+scale_fill_manual(values = boot_colors[s3]) +
+scale_color_manual(values = boot_colors[s3]) +
+theme_void() +
+theme(legend.position = "none")
+```
+
+$$\hat\beta = `r b3 %>% round(3)`$$
+
+```{R, g2-boot3, echo = F, out.width = '100%'}
+# Graph individuals
+ggplot(
+  data = z3 %>% mutate(s = 1:n),
+  aes(x, y, color = as.factor(s))
+) +
+geom_smooth(method = lm, se = F, color = "grey85", size = 5) +
+geom_point(size = 20, alpha = 0.5) +
+coord_equal() +
+xlim(-0.5,n+0.5) +
+scale_color_manual(values = boot_colors[s3]) +
+theme_void() +
+theme(legend.position = "none")
+```
+]
+
+---
+
+Running this bootstrap 10,000 times
+
+```{R, boot-full, cache = T, eval = T}
+plan(multiprocess, workers = 10)
+# Set a seed
+set.seed(123)
+# Run the simulation 1e4 times
+boot_df <- future_map_dfr(
+  # Repeat sample size 100 for 1e4 times
+  rep(n, 1e4),
+  # Our function
+  function(n) {
+    # Estimates via bootstrap
+    est <- lm(y ~ x, data = z[sample(1:n, n, replace = T), ])
+    # Return a tibble
+    data.frame(int = est$coefficients[1], coef = est$coefficients[2])
+  },
+  # Let furrr know we want to set a seed
+  .options = future_options(seed = T)
+)
+```
+---
+layout: false
+class: clear, middle
+
+```{R, boot-full-graph, echo = F, dev = 'png', dpi = 250, cache = T}
+ggplot(
+  data = z,
+  aes(x, y, fill = as.factor(1:n))
+) +
+geom_abline(
+  data = boot_df,
+  aes(intercept = int, slope = coef),
+  color = "grey50",
+  alpha = 0.01
+) +
+geom_abline(
+  intercept = lm(y ~ x, z)$coefficient[1],
+  slope = lm(y ~ x, z)$coefficient[2],
+  color = "black",
+  size = 1.25
+) +
+geom_point(
+  size = 10,
+  stroke = 0.75,
+  color = "white",
+  shape = 21
+) +
+# coord_equal() +
+# xlim(-0.5,n+0.5) +
+scale_fill_manual(values = boot_colors[s]) +
+theme_void() +
+theme(legend.position = "none")
+```
+
+---
+layout: true
+# The bootstrap
+
+---
+## Comparison
+
+In this 10,000-sample bootstrap, we calculate a standard error for $\hat\beta_1$ of approximately `r sd(boot_df$coef) %>% round(3)`.
+
+--
+
+If we go the old-fashioned OLS route $\left( s^2 \left(\text{X}'\text{X}\right)^2 \right)$, we estimate `r tidy(lm(y~x,z))[2,3] %>% as.numeric() %>% round(3)`.
+
+Not bad.
+---
+layout: true
+# Permutation tests
+
+---
+name: perm
+class: inverse, middle
+---
+name: perm-motive
+## Motivation
+
+Consider the null hypothesis of *no average treatment effect*, _i.e._,
+.center[
+H.sub[o]:  $\overline{\text{Y}}_{0} = \overline{\text{Y}}_{1}  \quad \left(\implies \overline{\tau}=0 \right)$
+]
+
+--
+
+We've discussed how randomization avoids the pitfalls of selection bias.
+
+--
+
+Randomization can also clarify inference—helping quantify uncertainty.
+
+--
+
+.qa[Q] How?
+
+--
+
+.qa[A] We know exactly how the randomness happened (we assigned it), so we don't need parametric assumptions to derive a distribution under H.sub[o]!
+--
+<br> We use the .hi[experimental design], rather than a probability model.
+---
+name: perm-tea
+## Tea drinkers
+
+.ex[Classic example] Sir R. A. Fisher had a colleague who claimed to be able to tell whether the tea was poured into milk *or* milk was poured into the tea..super[.pink[†]]
+
+.footnote[
+.pink[†] Don't worry, Fisher is known for more than this one experiment.
+]
+
+--
+
+Being the friend he was, Fisher designed an experiment to determine whether his colleague was telling the truth.
+
+--
+
+Fisher randomized the order of 8 cups of tea:
+
+- 4 cups with .hi-purple[m]ilk added first
+- 4 cups with .hi-pink[t]ea added first
+
+--
+
+Vindication! His colleague got all 8 correct.
+--
+<br>.qa[Q] With random guessing, how likely is correctly guessing all 8 cups?
+---
+## Tea drinkers 2
+
+.qa[Q] With random guessing, how likely is correctly guessing all 8 cups?
+
+--
+
+This question reflects our understanding of a .hi-slate[*p*-value].
+
+If Fisher's colleague had no ability and simply guessed (H.sub[o]), what is the probability she would have guessed all 8 cups correctly?
+
+--
+
+Fisher's H.sub[o]: the answers were unrelated to the cups' actual contents.
+
+Under this hypothesis, we can re-randomize the cups and see how many times her answer was perfectly correct.
+
+--
+
+This is the idea behind .attn[permutation testing] and .attn[randomization inference].
+---
+## Tea drinkers with a vengeance
+
+.left10.center[
+.note[Cup.sub[]]
+<br>1
+<br>2
+<br>3
+<br>4
+<br>5
+<br>6
+<br>7
+<br>8
+]
+--
+.left10.center[
+.note[Guess.sub[]]
+<br>.hi-purple[m]
+<br>.hi-pink[t]
+<br>.hi-pink[t]
+<br>.hi-purple[m]
+<br>.hi-purple[m]
+<br>.hi-pink[t]
+<br>.hi-pink[t]
+<br>.hi-purple[m]
+]
+--
+.left10.center[
+.note[Truth.sub[]]
+<br>.hi-purple[m]
+<br>.hi-pink[t]
+<br>.hi-pink[t]
+<br>.hi-purple[m]
+<br>.hi-purple[m]
+<br>.hi-pink[t]
+<br>.hi-pink[t]
+<br>.hi-purple[m]
+<br>.smaller[8/8]
+]
+--
+.left10.center[
+.note[P.sub[1]]
+<br>.hi-purple[m]
+<br>.hi-purple.st[m]
+<br>.hi-purple.st[m]
+<br>.hi-purple[m]
+<br>.hi-pink.st[t]
+<br>.hi-pink[t]
+<br>.hi-pink[t]
+<br>.hi-pink.st[t]
+<br>.smaller[4/8]
+]
+--
+.left10.center[
+.note[P.sub[2]]
+<br>.hi-purple[m]
+<br>.hi-purple.st[m]
+<br>.hi-purple.st[m]
+<br>.hi-pink.st[t]
+<br>.hi-purple[m]
+<br>.hi-pink[t]
+<br>.hi-pink[t]
+<br>.hi-pink.st[t]
+<br>.smaller[4/8]
+]
+--
+.left10.center[
+.note[P.sub[3]]
+<br>.hi-purple[m]
+<br>.hi-purple.st[m]
+<br>.hi-purple.st[m]
+<br>.hi-pink.st[t]
+<br>.hi-pink.st[t]
+<br>.hi-purple.st[m]
+<br>.hi-pink[t]
+<br>.hi-pink.st[t]
+<br>.smaller[2/8]
+]
+--
+.left5.center[
+.note[⋯]
+]
+.left10.center[
+.note[P.sub[70]]
+<br>.hi-pink.st[t]
+<br>.hi-pink[t]
+<br>.hi-pink[t]
+<br>.hi-pink.st[t]
+<br>.hi-purple[m]
+<br>.hi-purple.st[m]
+<br>.hi-purple.st[m]
+<br>.hi-purple[m]
+<br>.smaller[4/8]
+]
+--
+.left30.pad-left[
+<br>
+```{R, graph-tea, echo = F, out.width = '100%', fig.asp = 1.4/1}
+ggplot(
+  data = tibble(x = 2 * (0:4), n = c(1, 16, 36, 16, 1)),
+  aes(x = x, y = n)
+) +
+geom_col() +
+geom_hline(yintercept = 0, size = 2) +
+scale_x_continuous(
+  "N. correct",
+  breaks = 2 * (0:4)
+) +
+scale_y_continuous("Count") +
+theme_pander(base_size = 65, base_family = "Fira Sans Book") +
+theme(
+  panel.grid.major = element_blank(),
+  panel.grid.minor = element_blank()
+)
+```
+]
+
+--
+
+.clear-up[
+So our permutation-test-based *p*-value is 1/70 $\approx$ 0.0143. $\implies$ Reject H.sub[o].
+]
+---
+name: perm-gen
+## Generalization
+
+The procedure for permutation-based hypothesis testing.super[.pink[†]] is the same as our "standard" asymptotic-based hypothesis testing.
+
+.footnote[
+.pink[†] Also called *Fisher's exact test*, as you get exact *p*-values.
+]
+
+--
+
+1. .hi-slate[Define hypotheses], H.sub[o] and H.sub[a].
+1. Choose our .hi-slate[rejection threshold] $\alpha$ (tolerated type-I error rate).
+1. Choose a .hi-slate[test statistic] that is a function of our sample.
+1. Derive/calculate the .hi-slate[test statistic's distribution .it[under H.sub[o]]].
+1. .hi-slate[Compute the *p*-value] by comparing test stat. to its H.sub[o] distribution.
+1. .hi-slate[Conclusions]—reject or fail to reject H.sub[o].
+
+--
+
+.note[The difference:] Permutation tests use the randomization's mechanism to construct the test-statistic's exact distribution under H.sub[o].
+
+---
+## More generally
+
+Fisher focused on testing a .attn[sharp null hypothesis]—no effect *for anyone*, _i.e._,
+.center[
+H.sub[o]: $\text{Y}_{1i} - \text{Y}_{0i} = 0 \enspace \forall i \quad \left( \implies \tau_i = 0 \enspace \forall i \right)$
+]
+against an alternative hypothesis that someone has a non-zero effect
+.center[
+H.sub[a]: $\enspace \text{Y}_{1i} - \text{Y}_{0i} \neq 0$ for some $i$ $\left( \implies \exists i \enspace \text{s.t.} \enspace \tau_i \neq 0\right)$
+]
+
+--
+
+A .attn[sharp null hypothesis] is specified *for all individuals*, *e.g.*,
+.center[
+H.sub[o]: $\text{Y}_{1i} - \text{Y}_{0i} = C \enspace \forall i$
+]
+
+which differs from the ATE-based nulls that we normally consider, *e.g.*,
+.center[
+H.sub[o]: $\mathop{E}\left[\text{Y}_{1i} - \text{Y}_{0i}\right] = C$.
+]
+
+---
+## On average
+
+The sharp null was central to Fisher's interpretation.
+
+[Neyman *et al.* (1935)](https://www-jstor-org.libproxy.uoregon.edu/stable/2983637) extended.super[.pink[†]] this idea of permutation-based tests to the average treatment effect (testing H.sub[o]: $\mathop{E}\left[ \text{Y}_{1i} \right] - \mathop{E}\left[ \text{Y}_{0i} \right] = 0$).
+
+Neyman and others also added standard errors and confidence intervals.
+
+.footnote[
+.pink[†] Fisher, paraphrased: .bigger[🤬]
+<br>.pink[††] *Permutation tests* and *Randomization inference* are not the most strictly defined terms.
+]
+
+--
+
+These extensions have come to be known as .attn[randomization inference]..super[.pink[††]]
+---
+layout: true
+# Randomization inference
+
+---
+class: inverse, middle
+name: random
+---
+name: random-insight
+## Key insight
+
+Our estimate (or test statistic) is a function of
+
+1. individuals' responses $\left( \text{Y}_{i} \right)$
+2. individuals' treatment assignments $\left( \text{D}_{i} \right)$
+---
+layout: false
+# Test statistics
+## (Which?)
+
+We still need to choose a test statistic on which we base the *p*-value.
+
+- The .hi-slate[actual estimate]—difference in means or coefficient
+- .hi-slate[Transformed estimates]
+- .hi-slate[Quantiles] (*e.g.*, the median)
+- .hi-slate[_t_ statistic]
+- .hi-slate[Rank] statistics
+
+
+---
+layout: true
+# Randomization and clustering
+
+---
+class: inverse, middle
+name: clustering
+---
+## The plot thickens
+
+Permutation tests and randomization inference both work because we know.super[.pink[†]] the process through which treatment was randomly assigned.
+
+.footnote[
+.pink[†] Or claim to understand.
+]
+
+--
+
+If treatment is correlated within groups, then our bootstraps, permutations, and re-randomizations need to reflect this dependence.
+
+
+
+---
+layout: false
+# Table of contents
+
+.col-left[
+#### Admin
+.smaller[
+1. [Schedule](#schedule)
+]
+]
+
+.col-right[
+#### Inference and randomization
+.smaller[
+1. [Resampling](#resampling)
+1. [The bootstrap](#boot)
+  - [Basics](#boot)
+  - [Semi-formally](#boot-formal)
+  - [Graphically](#boot-graph)
+1. [Permutation tests](#perm)
+  - [Motivation](#perm-motive)
+  - [Tea tests](#perm-tea)
+  - [Generalization](#perm-gen)
+1. [Randomization inference](#random)
+  - [Basics](#random-insight)
+1. [Clustering](#clustering)
+]
+]
+---
+exclude: true
+
+```{R, generate pdfs, include = F, eval = T}
+source("../../ScriptsR/unpause.R")
+unpause("11Randomization.Rmd", ".", T, T)
+```
