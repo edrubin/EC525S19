@@ -355,15 +355,17 @@
 table {
   color: #000000;
   font-size: 16pt;
+  line-height: 125%;
+  border-top: 1px solid #ffffff !important;
+  border-bottom: 1px solid #ffffff !important;
 }
 th, td {
   background-color: #ffffff;
-  /* color: #314f4f; */
 }
 table th {
   font-weight: 400;
-  /* font-style: italic; */
 }
+
 
 /* Extra left padding */
 .pad-left {

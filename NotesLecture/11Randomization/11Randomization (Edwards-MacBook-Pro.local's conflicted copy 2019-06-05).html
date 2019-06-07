@@ -1,0 +1,832 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <title>Inference and Randomization</title>
+    <meta charset="utf-8">
+    <meta name="author" content="Edward Rubin" />
+    <meta name="date" content="2019-06-04" />
+    <link href="11Randomization_files/remark-css-0.0.1/default.css" rel="stylesheet" />
+    <link href="11Randomization_files/remark-css-0.0.1/metropolis.css" rel="stylesheet" />
+    <link href="11Randomization_files/remark-css-0.0.1/metropolis-fonts.css" rel="stylesheet" />
+    <link rel="stylesheet" href="my-css.css" type="text/css" />
+  </head>
+  <body>
+    <textarea id="source">
+class: center, middle, inverse, title-slide
+
+# Inference and Randomization
+## EC 425/525, Set 11
+### Edward Rubin
+### 04 June 2019
+
+---
+
+class: inverse, middle
+
+
+
+$$
+`\begin{align}
+  \def\ci{\perp\mkern-10mu\perp}
+\end{align}`
+$$
+
+
+# Prologue
+
+---
+name: schedule
+
+# Schedule
+
+## Last time
+
+An analytical solution to cluter-robust inference
+
+## Today
+
+Inference using (re)randomization .super[.pink[†]]
+
+.footnote[
+.pink[†] These notes follow [notes](https://imai.fas.harvard.edu) by Kosuke Imai, *[Field Experiments](https://books.wwnorton.com/books/webad.aspx?id=24003)* by Gerber and Green, and *[Causal Inference for Statistics, Social, and Biomedical Sciences
+](https://www.cambridge.org/core/books/causal-inference-for-statistics-social-and-biomedical-sciences/71126BE90C58F1A431FE9B2DD07938AB)* by Imbens and Rubin.
+]
+
+## Upcoming
+
+The end is near. As is the final.
+---
+layout: true
+# Inference and (re)randomization
+
+---
+class: inverse, middle
+---
+## Inference recap
+
+Our inference techniques have focused on (asymptotic) .attn[analytical methods].
+
+1. Choose (or derive) an estimator
+
+2. Derived the estimator's (asymptotic) distribution.super[.pink[†]]
+
+3. Construct confidence intervals or hypothesis tests
+
+.footnote[
+.pink[†] And, consequently, standard errors.
+]
+---
+name: resampling
+## Resampling
+
+.attn[Resampling methods] offers a different, more computationally intense (less asymptoically intense) approach.
+
+--
+
+A .attn[resampling method] involves repeatedly drawing samples (*resampling*) from a dataset and refitting the model of interest on each sample. We can learn about the behavior of the model through its performance across the many iterations..super[.pink[†]]
+
+.footnote[
+.pink[†] This approach is very similar to our Monte Carlo simulations, except that we will sample *with replacement* from a single dataset.
+]
+
+--
+
+.note[Common implementations:] Bootstrap (and jackknife), cross validation, permutation tests/randomization inference
+
+---
+layout: true
+# The bootstrap
+
+---
+name: boot
+class: inverse, middle
+---
+## Basics
+
+.attn[Bootstrapping] resamples, .it[with replacement], from the original dataset.
+
+--
+
+- In each sample, we apply our estimator.
+- Then, we consider the distribution/properties of these estimates.
+
+This resampling helps us better understand the uncertainty associated with our estimator (within the current data setting).
+
+---
+name: boot-formal
+## More formally
+
+Let's formalize the bootstrap a bit.
+- `\(Z\)` denotes our original dataset (_e.g._, `\(Z = \left[ \text{Y} \mid \text{X} \right]\)` in our standard setup).
+
+--
+- `\(\hat\alpha(Z)\)` refers to the estimate for `\(\alpha\)` derived from our dataset `\(Z\)`.
+
+--
+- We draw `\(B\)` bootstrap samples `\(b\in \left\{ 1,\,\ldots,\, B \right\}\)`.
+
+--
+- `\(Z^{\star 1}\)` represents our first bootstrap sample `\(\left( b=1 \right)\)`.
+
+--
+- `\(\hat{\alpha}^{\star 1} = \hat\alpha(Z^{\star1})\)` is our estimator evaluated on the first bootstrap sample.
+
+--
+
+The .attn[bootstrapped standard error] of `\(\hat\alpha\)` is the standard deviation of the `\(\hat\alpha^{\star b}\)`
+
+$$
+`\begin{align}
+  \mathop{\text{SE}_{B}}\left( \hat\alpha \right) = \sqrt{\dfrac{1}{B} \sum_{b=1}^{B} \left( \hat\alpha^{\star b} - \dfrac{1}{B} \sum_{\ell=1}^{B} \hat\alpha^{\star \ell} \right)^2}
+\end{align}`
+$$
+---
+exclude: true
+
+
+
+---
+name: boot-graph
+## More graphically
+
+.thin-left[
+`$$Z$$`
+&lt;img src="11Randomization_files/figure-html/g1-boot0-1.svg" width="100%" style="display: block; margin: auto;" /&gt;
+
+`$$\hat\beta = 0.653$$`
+
+&lt;img src="11Randomization_files/figure-html/g2-boot0-1.svg" width="100%" style="display: block; margin: auto;" /&gt;
+]
+
+--
+
+.thin-left[
+`$$Z^{\star 1}$$`
+&lt;img src="11Randomization_files/figure-html/g1-boot1-1.svg" width="100%" style="display: block; margin: auto;" /&gt;
+
+`$$\hat\beta = -0.961$$`
+
+&lt;img src="11Randomization_files/figure-html/g2-boot1-1.svg" width="100%" style="display: block; margin: auto;" /&gt;
+]
+
+--
+
+.thin-left[
+`$$Z^{\star 2}$$`
+&lt;img src="11Randomization_files/figure-html/g1-boot2-1.svg" width="100%" style="display: block; margin: auto;" /&gt;
+
+`$$\hat\beta = 0.51$$`
+
+&lt;img src="11Randomization_files/figure-html/g2-boot2-1.svg" width="100%" style="display: block; margin: auto;" /&gt;
+]
+
+--
+
+.left5[
+&lt;br&gt;&lt;br&gt;&lt;br&gt;⋯
+]
+
+.thin-left[
+`$$Z^{\star B}$$`
+&lt;img src="11Randomization_files/figure-html/g1-boot3-1.svg" width="100%" style="display: block; margin: auto;" /&gt;
+
+`$$\hat\beta = 1.338$$`
+
+&lt;img src="11Randomization_files/figure-html/g2-boot3-1.svg" width="100%" style="display: block; margin: auto;" /&gt;
+]
+
+---
+
+Running this bootstrap 10,000 times
+
+
+```r
+plan(multiprocess, workers = 10)
+# Set a seed
+set.seed(123)
+# Run the simulation 1e4 times
+boot_df &lt;- future_map_dfr(
+  # Repeat sample size 100 for 1e4 times
+  rep(n, 1e4),
+  # Our function
+  function(n) {
+    # Estimates via bootstrap
+    est &lt;- lm(y ~ x, data = z[sample(1:n, n, replace = T), ])
+    # Return a tibble
+    data.frame(int = est$coefficients[1], coef = est$coefficients[2])
+  },
+  # Let furrr know we want to set a seed
+  .options = future_options(seed = T)
+)
+```
+---
+layout: false
+class: clear, middle
+
+&lt;img src="11Randomization_files/figure-html/boot-full-graph-1.png" style="display: block; margin: auto;" /&gt;
+
+---
+layout: true
+# The bootstrap
+
+---
+## Comparison
+
+In this 10,000-sample bootstrap, we calculate a standard error for `\(\hat\beta_1\)` of approximately 0.777.
+
+--
+
+If we go the old-fashioned OLS route `\(\left( s^2 \left(\text{X}'\text{X}\right)^2 \right)\)`, we estimate 0.673.
+
+Not bad.
+---
+layout: true
+# Permutation tests
+
+---
+name: perm
+class: inverse, middle
+---
+name: perm-motive
+## Motivation
+
+Consider the null hypothesis of *no average treatment effect*, _i.e._,
+.center[
+H.sub[o]:  `\(\overline{\text{Y}}_{0} = \overline{\text{Y}}_{1}  \quad \left(\implies \overline{\tau}=0 \right)\)`
+]
+
+--
+
+We've discussed how randomization avoids the pitfalls of selection bias.
+
+--
+
+Randomization can also clarify inference—helping quantify uncertainty.
+
+--
+
+.qa[Q] How?
+
+--
+
+.qa[A] We know exactly how the randomness happened (we assigned it), so we don't need parametric assumptions to derive a distribution under H.sub[o]!
+--
+&lt;br&gt; We use the .hi[experimental design], rather than a probability model.
+---
+name: perm-tea
+## Tea drinkers
+
+.ex[Classic example] Sir R. A. Fisher had a colleague who claimed to be able to tell whether the tea was poured into milk *or* milk was poured into the tea..super[.pink[†]]
+
+.footnote[
+.pink[†] Don't worry, Fisher is known for more than this one experiment.
+]
+
+--
+
+Being the friend he was, Fisher designed an experiment to determine whether his colleague was telling the truth.
+
+--
+
+Fisher randomized the order of 8 cups of tea:
+
+- 4 cups with .hi-purple[m]ilk added first
+- 4 cups with .hi-pink[t]ea added first
+
+--
+
+Vindication! His colleague got all 8 correct.
+--
+&lt;br&gt;.qa[Q] With random guessing, how likely is correctly guessing all 8 cups?
+---
+## Tea drinkers 2
+
+.qa[Q] With random guessing, how likely is correctly guessing all 8 cups?
+
+--
+
+This question reflects our understanding of a .hi-slate[*p*-value].
+
+If Fisher's colleague had no ability and simply guessed (H.sub[o]), what is the probability she would have guessed all 8 cups correctly?
+
+--
+
+Fisher's H.sub[o]: the answers were unrelated to the cups' actual contents.
+
+Under this hypothesis, we can re-randomize the cups and see how many times her answer was perfectly correct.
+
+--
+
+This is the idea behind .attn[permutation testing] and .attn[randomization inference].
+---
+## Tea drinkers with a vengeance
+
+.left10.center[
+.note[Cup.sub[]]
+&lt;br&gt;1
+&lt;br&gt;2
+&lt;br&gt;3
+&lt;br&gt;4
+&lt;br&gt;5
+&lt;br&gt;6
+&lt;br&gt;7
+&lt;br&gt;8
+]
+--
+.left10.center[
+.note[Guess.sub[]]
+&lt;br&gt;.hi-purple[m]
+&lt;br&gt;.hi-pink[t]
+&lt;br&gt;.hi-pink[t]
+&lt;br&gt;.hi-purple[m]
+&lt;br&gt;.hi-purple[m]
+&lt;br&gt;.hi-pink[t]
+&lt;br&gt;.hi-pink[t]
+&lt;br&gt;.hi-purple[m]
+]
+--
+.left10.center[
+.note[Truth.sub[]]
+&lt;br&gt;.hi-purple[m]
+&lt;br&gt;.hi-pink[t]
+&lt;br&gt;.hi-pink[t]
+&lt;br&gt;.hi-purple[m]
+&lt;br&gt;.hi-purple[m]
+&lt;br&gt;.hi-pink[t]
+&lt;br&gt;.hi-pink[t]
+&lt;br&gt;.hi-purple[m]
+&lt;br&gt;.smaller[8/8]
+]
+--
+.left10.center[
+.note[P.sub[1]]
+&lt;br&gt;.hi-purple[m]
+&lt;br&gt;.hi-purple.st[m]
+&lt;br&gt;.hi-purple.st[m]
+&lt;br&gt;.hi-purple[m]
+&lt;br&gt;.hi-pink.st[t]
+&lt;br&gt;.hi-pink[t]
+&lt;br&gt;.hi-pink[t]
+&lt;br&gt;.hi-pink.st[t]
+&lt;br&gt;.smaller[4/8]
+]
+--
+.left10.center[
+.note[P.sub[2]]
+&lt;br&gt;.hi-purple[m]
+&lt;br&gt;.hi-purple.st[m]
+&lt;br&gt;.hi-purple.st[m]
+&lt;br&gt;.hi-pink.st[t]
+&lt;br&gt;.hi-purple[m]
+&lt;br&gt;.hi-pink[t]
+&lt;br&gt;.hi-pink[t]
+&lt;br&gt;.hi-pink.st[t]
+&lt;br&gt;.smaller[4/8]
+]
+--
+.left10.center[
+.note[P.sub[3]]
+&lt;br&gt;.hi-purple[m]
+&lt;br&gt;.hi-purple.st[m]
+&lt;br&gt;.hi-purple.st[m]
+&lt;br&gt;.hi-pink.st[t]
+&lt;br&gt;.hi-pink.st[t]
+&lt;br&gt;.hi-purple.st[m]
+&lt;br&gt;.hi-pink[t]
+&lt;br&gt;.hi-pink.st[t]
+&lt;br&gt;.smaller[2/8]
+]
+--
+.left5.center[
+.note[⋯]
+]
+.left10.center[
+.note[P.sub[70]]
+&lt;br&gt;.hi-pink.st[t]
+&lt;br&gt;.hi-pink[t]
+&lt;br&gt;.hi-pink[t]
+&lt;br&gt;.hi-pink.st[t]
+&lt;br&gt;.hi-purple[m]
+&lt;br&gt;.hi-purple.st[m]
+&lt;br&gt;.hi-purple.st[m]
+&lt;br&gt;.hi-purple[m]
+&lt;br&gt;.smaller[4/8]
+]
+--
+.left30.pad-left[
+&lt;br&gt;
+&lt;img src="11Randomization_files/figure-html/graph-tea-1.svg" width="100%" style="display: block; margin: auto;" /&gt;
+]
+
+--
+
+.clear-up[
+So our permutation-test-based *p*-value is 1/70 `\(\approx\)` 0.0143. `\(\implies\)` Reject H.sub[o].
+]
+---
+name: perm-gen
+## Generalization
+
+The procedure for permutation-based hypothesis testing.super[.pink[†]] is the same as our "standard" asymptotic-based hypothesis testing.
+
+.footnote[
+.pink[†] Also called *Fisher's exact test*, as you get exact *p*-values.
+]
+
+--
+
+1. .hi-slate[Define hypotheses], H.sub[o] and H.sub[a].
+1. Choose our .hi-slate[rejection threshold] `\(\alpha\)` (tolerated type-I error rate).
+1. Choose a .hi-slate[test statistic] that is a function of our sample.
+1. Derive/calculate the .hi-slate[test statistic's distribution .it[under H.sub[o]]].
+1. .hi-slate[Compute the *p*-value] by comparing test stat. to its H.sub[o] distribution.
+1. .hi-slate[Conclusions]—reject or fail to reject H.sub[o].
+
+--
+
+.note[The difference:] Permutation tests use the randomization's mechanism to construct the test-statistic's exact distribution under H.sub[o].
+
+---
+## More generally
+
+Fisher focused on testing a .attn[sharp null hypothesis]—no effect *for anyone*, _i.e._,
+.center[
+H.sub[o]: `\(\text{Y}_{1i} - \text{Y}_{0i} = 0 \enspace \forall i \quad \left( \implies \tau_i = 0 \enspace \forall i \right)\)`
+]
+against an alternative hypothesis that someone has a non-zero effect
+.center[
+H.sub[a]: `\(\enspace \text{Y}_{1i} - \text{Y}_{0i} \neq 0\)` for some `\(i\)` `\(\left( \implies \exists i \enspace \text{s.t.} \enspace \tau_i \neq 0\right)\)`
+]
+
+--
+
+A .attn[sharp null hypothesis] is specified *for all individuals*, *e.g.*,
+.center[
+H.sub[o]: `\(\text{Y}_{1i} - \text{Y}_{0i} = C \enspace \forall i\)`
+]
+
+which differs from the ATE-based nulls that we normally consider, *e.g.*,
+.center[
+H.sub[o]: `\(\mathop{E}\left[\text{Y}_{1i} - \text{Y}_{0i}\right] = C\)`.
+]
+---
+name: perm-insight
+## Key insight
+
+Our estimate (or test statistic) is a function of
+
+1. individuals' responses `\(\left( \text{Y}_{i} \right)\)`
+2. individuals' treatment assignments `\(\left( \text{D}_{i} \right)\)`
+
+--
+
+.hi-slate[Under the sharp null] H.sub[o]: `\(\tau_i=0\)` `\(\left( \forall i \right)\)`
+
+- `\(\text{Y}_{0i} = \text{Y}_{1i} = \text{Y}_{i} \enspace \forall i\)` (*i.e.*, changing `\(\text{D}_{i}\)` will not affect observed `\(\text{Y}_{i}\)`)
+
+--
+
+- Permutations of `\(\text{D}\)` construct the *exact* null distribution (unchanged `\(\text{Y}\)`).
+
+--
+
+The number of possible permutations can get big
+--
+—*e.g.*, 500 treated and 500 control has 2.7 `\(\times\)` 10.super[299] options.
+--
+ Approximate the distribution by sampling.
+
+---
+## On average
+
+The sharp null was central to Fisher's interpretation.
+
+[Neyman *et al.* (1935)](https://www-jstor-org.libproxy.uoregon.edu/stable/2983637) extended.super[.pink[†]] this idea of permutation-based tests to the average treatment effect (testing H.sub[o]: `\(\mathop{E}\left[ \text{Y}_{1i} \right] - \mathop{E}\left[ \text{Y}_{0i} \right] = 0\)`).
+
+Neyman and others also added standard errors and confidence intervals.
+
+.footnote[
+.pink[†] Fisher, paraphrased: .bigger[🤬]
+&lt;br&gt;.pink[††] *Permutation tests* and *Randomization inference* are not the most strictly defined terms.
+]
+
+--
+
+These extensions have come to be known as .attn[randomization inference]..super[.pink[††]]
+---
+layout: true
+# Randomization inference
+
+---
+class: inverse, middle
+name: random
+---
+name: random-setup
+## Setup
+
+In order to .hi-slate[generalize our null hypothesis to the average treatment effect],
+
+.center[
+H.sub[o]: `\(\overline{\tau} = 0 \implies \mathop{E}\left[ \text{Y}_{1i} - \text{Y}_{0i} \right] = 0\)`
+]
+
+we have to give up something.
+
+1. If we want an exact null distribution, then we must .hi-pink[assume a uniform treatment effect].
+--
+ (Assuming our way back to a sharp null.)
+
+--
+
+2. If we want to avoid assuming `\(\tau_i = \overline{\tau} \enspace \forall i\)`, then we have to .hi-purple[accept a non-exact null distribution]. (We don't observe `\(\text{Y}_{0i}\)` for `\(\text{D}_{i}=1\)`.)
+
+--
+
+If we don't like either option, then we need to go back to deriving asymptotic properties via probability modeling assumptions.
+---
+## Implementation
+
+Once we decide which simplification we're willing to accept, we proceed similarly to permutation tests:
+
+- shuffle `\(\text{D}\)` in a way that mimics treatment assignment
+
+- collect test statistics from each iteration
+
+--
+
+.note[Note] Monte Carlo simulations, bootstrap, permutation tests, and randomization all apply very similar processes.
+
+---
+## (Which) Test statistics
+
+We still need to choose a test statistic on which we base the *p*-value.
+
+- The .hi-slate[actual estimate]—difference in means or coefficient
+- .hi-slate[Transformed estimates]
+- .hi-slate[Quantiles], *e.g.*, the median
+- .hi-slate[_t_ statistic]
+- .hi-slate[Rank] statistics
+
+--
+
+We can also extend this idea to .hi-pink[confidence intervals].
+
+.ex[*E.g.*,] Use the point estimates associated with the 2.5.super[th] and 95.super[th] percentiles to construct a 95% confidence interval.
+
+---
+name: random-example
+## Example
+
+Back to the LaLonde NSW dataset. We previously estimated
+
+
+
+- the NSW increased real earnings by `\(\color{#e64173}{\hat{\beta}_1}\approx\)` .pink[$886.30]
+- (het.-robust) standard error of .pink[$488.20]
+- _t_ statistic `\(\color{#e64173}{t_\text{stat}}\approx\)` .pink[1.82] with *p*-value `\(\approx\)` .pink[0.0699]
+
+--
+
+Let's re-randomize treatment 10,000 times. In each .hi-purple[iteration] `\(\color{#6A5ACD}{r}\)`, calculate
+
+1. `\(\color{#6A5ACD}{\hat{\beta}_{1}^{r}}\)`, the .hi-purple[point estimate] (the regression coefficient)
+1. `\(\color{#6A5ACD}{t_\text{stat}^{r}}\)`, the .hi-purple[_t_ statistic]
+
+--
+
+Then calculate the implied *p*-values using the location of `\(\color{#e64173}{\hat\beta_1}\)` and `\(\color{#e64173}{t_\text{stat}}\)` in the distributions of `\(\color{#6A5ACD}{\hat{\beta}_1^r}\)` and `\(\color{#6A5ACD}{t_\text{stat}^r}\)`, respectively..super[.pink[†]]
+
+.footnote[
+.pink[†] Very similar exercise for confience intervals.
+]
+
+---
+## Example: Re-randomization
+
+The main decision is how to generate treatment.
+
+.qa[Q] Should we permute `\(\text{D}\)` or draw `\(\text{D}_{i}\)` for each individual?.super[.pink[†]]
+
+.footnote[
+.pink[†] The difference is in whether we hold the number of treated individuals constant.
+]
+
+
+--
+
+.qa[A] How was the original randomization conducted?
+
+--
+
+We'll assume the NSW started with a set number of treatments to disperse.
+
+---
+layout: true
+class: clear
+
+---
+
+First, we'll write a function that performs one iteration.
+
+```r
+# Arguments: 'i' (iteration), 'n_t' (# of trt)
+fun_randomization &lt;- function(i) {
+  # Sample the treatment vector. NOTE: Sampling WITHOUT replacement
+  t_i &lt;- sample(nsw_df$treat, size = nrow(nsw_df), replace = F)
+  # Regression using our re-randomized treatment
+  est_i &lt;- lm_robust(re78 ~ t_i, data = nsw_df) %&gt;% tidy()
+  # Return tibble with iteration, point estimate, and test statistic
+  tibble(i, est = est_i[2,"estimate"], t_stat = est_i[2,"statistic"])
+}
+```
+
+--
+
+And now run the re-randomization function 10,000 times.
+
+```r
+# Set up parallelization and seed
+plan(multiprocess, workers = 4); set.seed(1234)
+# Run the simulation 1e4 times
+random_df &lt;- future_map_dfr(
+  1:1e4,
+  fun_randomization,
+  .options = future_options(seed = T)
+)
+```
+---
+
+.note[Result 1] Share `\(\color{#6A5ACD}{\big|\hat{\beta}_1^r\big|} &gt; \color{#e64173}{\hat{\beta}_1} =\)` 0.0624. (Original *p*-value `\(=\)` .pink[0.0699])
+
+&lt;img src="11Randomization_files/figure-html/random-dist1-1.svg" style="display: block; margin: auto;" /&gt;
+---
+
+.note[Result 2] Share `\(\color{#6A5ACD}{\big| t_\text{stat}^r\big|} &gt; \color{#e64173}{t_\text{stat}} =\)` 0.0718. (Original *p*-value `\(=\)` .pink[0.0699])
+
+&lt;img src="11Randomization_files/figure-html/random-dist2-1.svg" style="display: block; margin: auto;" /&gt;
+
+---
+class: middle
+
+To construct confidence intervals, we invert each `\(\color{#6A5ACD}{r}\)`'s hypothesis tests.
+
+.ex[E.g.,] To construct a 95% C.I. for `\(\color{#e64173}{\hat{\beta}_1}\)`, we find all randomization iterations `\(\color{#6A5ACD}{\hat{\beta}_1^r}\)` that do not reject H.sub[o]: `\(\beta_1 = \hat{\beta}_1\)` at the 5% level.
+
+---
+
+
+
+
+.note[Constructing a 95% confidence interval:] 95% of `\(\color{#6A5ACD}{\hat{\beta}_1^r}\)` lie between $-918.20
+&lt;img src="11Randomization_files/figure-html/random-ci1-1.svg" style="display: block; margin: auto;" /&gt;
+
+
+
+---
+layout: true
+# Randomization and clustering
+
+---
+class: inverse, middle
+name: clustering
+---
+## The plot thickens
+
+Permutation tests and randomization inference both work because we know.super[.pink[†]] the process through which treatment was randomly assigned.
+
+.footnote[
+.pink[†] Or claim to understand.
+]
+
+--
+
+If treatment is correlated within groups, then our bootstraps, permutations, and re-randomizations need to reflect this dependence.
+
+
+
+---
+layout: false
+name: reading
+# Further reading
+## Papers
+
+
+[Bootstrap-Based Improvements for Inference with Clustered Errors](https://www.mitpressjournals.org/doi/abs/10.1162/rest.90.3.414)
+&lt;br&gt;
+Cameron, Gelbach, and Miller (2008)
+
+[Channeling Fisher: Randomization Tests and the Statistical Insignificance of Seemingly Significant Experimental Results](https://academic.oup.com/qje/article/134/2/557/5195544)
+&lt;br&gt;
+Young (2019)
+
+[Randomization Inference With Natural Experiments](https://www.tandfonline.com/doi/abs/10.1198/016214505000001258)
+&lt;br&gt;
+Ho and Imai (2012)
+&lt;br&gt;
+.note[Also:] [Notes](https://imai.fas.harvard.edu) by Kosuke Imai
+
+---
+# Further reading
+
+### Books: Resampling methods and the bootstrap
+
+*[An Introduction to Statistical Learning](http://www-bcf.usc.edu/~gareth/ISL/)*
+&lt;br&gt;
+James, Witten, Hastie, and Tibshirani
+
+*[Elements of Statistical Learning](https://web.stanford.edu/~hastie/ElemStatLearn/)*
+&lt;br&gt;
+Hastie, Tibshirani, and Friedman
+
+### Books: Permutation tests and randomization inference
+
+*[Causal Inference for Statistics, Social, and Biomedical Sciences
+](https://www.cambridge.org/core/books/causal-inference-for-statistics-social-and-biomedical-sciences/71126BE90C58F1A431FE9B2DD07938AB)*
+&lt;br&gt;
+Imbens and Rubin
+
+*[Field Experiments](https://books.wwnorton.com/books/webad.aspx?id=24003)*
+&lt;br&gt;
+Gerber and Green
+
+---
+layout: false
+# Table of contents
+
+.col-left[
+#### Admin
+.smaller[
+1. [Schedule](#schedule)
+1. [Further reading](#reading)
+]
+]
+
+.col-right[
+#### Inference and randomization
+.smaller[
+1. [Resampling](#resampling)
+1. [The bootstrap](#boot)
+  - [Basics](#boot)
+  - [Semi-formally](#boot-formal)
+  - [Graphically](#boot-graph)
+1. [Permutation tests](#perm)
+  - [Motivation](#perm-motive)
+  - [Tea tests](#perm-tea)
+  - [Generalization](#perm-gen)
+  - [Basics](#perm-insight)
+1. [Randomization inference](#random)
+  - [Setup](#random-setup)
+  - [Example](#random-example)
+1. [Clustering](#clustering)
+]
+]
+---
+exclude: true
+    </textarea>
+<script src="https://remarkjs.com/downloads/remark-latest.min.js"></script>
+<script>var slideshow = remark.create({
+"highlightStyle": "github",
+"highlightLines": true,
+"countIncrementalSlides": false
+});
+if (window.HTMLWidgets) slideshow.on('afterShowSlide', function (slide) {
+  window.dispatchEvent(new Event('resize'));
+});
+(function() {
+  var d = document, s = d.createElement("style"), r = d.querySelector(".remark-slide-scaler");
+  if (!r) return;
+  s.type = "text/css"; s.innerHTML = "@page {size: " + r.style.width + " " + r.style.height +"; }";
+  d.head.appendChild(s);
+})();</script>
+
+<script>
+(function() {
+  var i, text, code, codes = document.getElementsByTagName('code');
+  for (i = 0; i < codes.length;) {
+    code = codes[i];
+    if (code.parentNode.tagName !== 'PRE' && code.childElementCount === 0) {
+      text = code.textContent;
+      if (/^\\\((.|\s)+\\\)$/.test(text) || /^\\\[(.|\s)+\\\]$/.test(text) ||
+          /^\$\$(.|\s)+\$\$$/.test(text) ||
+          /^\\begin\{([^}]+)\}(.|\s)+\\end\{[^}]+\}$/.test(text)) {
+        code.outerHTML = code.innerHTML;  // remove <code></code>
+        continue;
+      }
+    }
+    i++;
+  }
+})();
+</script>
+<!-- dynamically load mathjax for compatibility with self-contained -->
+<script>
+(function () {
+  var script = document.createElement('script');
+  script.type = 'text/javascript';
+  script.src  = 'https://mathjax.rstudio.com/latest/MathJax.js?config=TeX-MML-AM_CHTML';
+  if (location.protocol !== 'file:' && /^https?:/.test(script.src))
+    script.src  = script.src.replace(/^https?:/, '');
+  document.getElementsByTagName('head')[0].appendChild(script);
+})();
+</script>
+  </body>
+</html>

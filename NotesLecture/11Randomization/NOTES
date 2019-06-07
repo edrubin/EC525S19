@@ -1,0 +1,8 @@
+From "The Econometrics of Randomized Experiments" (Athey and Imbens, 2016):
+https://arxiv.org/pdf/1607.00698.pdf
+
+- Although these methods re-main the most popular way of analyzing data from randomized experiments, we suggest caution in using them.
+- In particular there is a disconnect between the way the conventional assumptions in regression analyses are formulated and the implications of randomization. As a result it is easy for the researcher using regression methods to go beyond analyses that are justified by randomization, and end up with analyses that rely on a difficult-to-assess mix of randomization assumptions, modeling assumptions, and large sample approximation.
+- Ultimately we recommend that researchers wishing to use regression or other model-based methods rather than the randomization-based methods we prefer, do so with care. For example, using only indicator variables based on partitioning the covariate space, rather than using multi-valued variables as covariates in the regression function preserves many of the finite sample properties that simple comparisons of means have, and leads to regression estimates with clear interpretations. In addition, in many cases the potential gains from regression adjustment can also be captured by careful ex ante design, that is, through stratified randomized experiments to be discussed in the next section, without the potential costs associated with ex post regression adjustment.
+
+TODO: Add this paper to the suggested reading.

@@ -230,6 +230,10 @@ Step 2: [**Short proposal**](https://raw.githack.com/edrubin/EC525S19/master/Pro
 1. [Instrumental variables](https://raw.githack.com/edrubin/EC525S19/master/NotesLecture/08IV/08IV_Practice.pdf)
 1. Regression discontinuity
 
+## Exams
+
+[The exam](https://raw.githack.com/edrubin/EC525S19/master/Final/final.pdf)
+
 ## Resources
 
 **Metrics books**

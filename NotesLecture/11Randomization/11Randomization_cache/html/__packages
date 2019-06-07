@@ -29,3 +29,5 @@ here
 magrittr
 future
 furrr
+bindrcpp
+huxtable

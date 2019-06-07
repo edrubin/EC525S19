@@ -1,5 +1,4 @@
 
-- Permutation tests
-- Randomization inference
-- Which test statistic? Both.
+- Randomization inference with confidence intervals
+- Cluster/blocke methods
 - SUTVA/interference (see Design of Observational Experiments)

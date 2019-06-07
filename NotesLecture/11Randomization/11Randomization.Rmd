@@ -24,7 +24,7 @@ p_load(
   kableExtra, snakecase, janitor,
   data.table, dplyr,
   lubridate, knitr, future, furrr,
-  estimatr, here, magrittr
+  estimatr, huxtable, here, magrittr
 )
 # Define pink color
 red_pink <- "#e64173"
@@ -173,7 +173,8 @@ An analytical solution to cluter-robust inference
 Inference using (re)randomization .super[.pink[†]]
 
 .footnote[
-.pink[†] Parts of these notes closely follow notes from [Kosuke Imai](https://imai.fas.harvard.edu).
+.pink[†] These notes follow [notes](https://imai.fas.harvard.edu) by Kosuke Imai, *[Field Experiments](https://books.wwnorton.com/books/webad.aspx?id=24003)* by Gerber and Green, and *[Causal Inference for Statistics, Social, and Biomedical Sciences
+](https://www.cambridge.org/core/books/causal-inference-for-statistics-social-and-biomedical-sciences/71126BE90C58F1A431FE9B2DD07938AB)* by Imbens and Rubin.
 ]
 
 ## Upcoming
@@ -766,6 +767,32 @@ which differs from the ATE-based nulls that we normally consider, *e.g.*,
 .center[
 H.sub[o]: $\mathop{E}\left[\text{Y}_{1i} - \text{Y}_{0i}\right] = C$.
 ]
+---
+name: perm-insight
+## Key insight
+
+Our estimate (or test statistic) is a function of
+
+1. individuals' responses $\left( \text{Y}_{i} \right)$
+2. individuals' treatment assignments $\left( \text{D}_{i} \right)$
+
+--
+
+.hi-slate[Under the sharp null] H.sub[o]: $\tau_i=0$ $\left( \forall i \right)$
+
+- $\text{Y}_{0i} = \text{Y}_{1i} = \text{Y}_{i} \enspace \forall i$ (*i.e.*, changing $\text{D}_{i}$ will not affect observed $\text{Y}_{i}$)
+
+--
+
+- Permutations of $\text{D}$ construct the *exact* null distribution (unchanged $\text{Y}$).
+
+--
+
+The number of possible permutations can get big
+--
+—*e.g.*, 500 treated and 500 control has 2.7 $\times$ 10.super[299] options.
+--
+ Approximate the distribution by sampling.
 
 ---
 ## On average
@@ -792,25 +819,352 @@ layout: true
 class: inverse, middle
 name: random
 ---
-name: random-insight
-## Key insight
+name: random-setup
+## Setup
 
-Our estimate (or test statistic) is a function of
+In order to .hi-slate[generalize our null hypothesis to the average treatment effect],
 
-1. individuals' responses $\left( \text{Y}_{i} \right)$
-2. individuals' treatment assignments $\left( \text{D}_{i} \right)$
+.center[
+H.sub[o]: $\overline{\tau} = 0 \implies \mathop{E}\left[ \text{Y}_{1i} - \text{Y}_{0i} \right] = 0$
+]
+
+we have to give up something.
+
+1. If we want an exact null distribution, then we must .hi-pink[assume a uniform treatment effect].
+--
+ (Assuming our way back to a sharp null.)
+
+--
+
+2. If we want to avoid assuming $\tau_i = \overline{\tau} \enspace \forall i$, then we have to .hi-purple[accept a non-exact null distribution]. (We don't observe $\text{Y}_{0i}$ for $\text{D}_{i}=1$.)
+
+--
+
+If we don't like either option, then we need to go back to deriving asymptotic properties via probability modeling assumptions.
 ---
-layout: false
-# Test statistics
-## (Which?)
+## Implementation
+
+Once we decide which simplification we're willing to accept, we proceed similarly to permutation tests:
+
+- shuffle $\text{D}$ in a way that mimics treatment assignment
+
+- collect test statistics from each iteration
+
+--
+
+.note[Note] Monte Carlo simulations, bootstrap, permutation tests, and randomization all apply very similar processes.
+
+---
+## (Which) Test statistics
 
 We still need to choose a test statistic on which we base the *p*-value.
 
 - The .hi-slate[actual estimate]—difference in means or coefficient
 - .hi-slate[Transformed estimates]
-- .hi-slate[Quantiles] (*e.g.*, the median)
+- .hi-slate[Quantiles], *e.g.*, the median
 - .hi-slate[_t_ statistic]
 - .hi-slate[Rank] statistics
+
+--
+
+We can also extend this idea to .hi-pink[confidence intervals].
+
+.ex[*E.g.*,] Use the point estimates associated with the 2.5.super[th] and 95.super[th] percentiles to construct a 95% confidence interval.
+
+---
+name: random-example
+## Example
+
+Back to the LaLonde NSW dataset. We previously estimated
+
+```{R, read-nsw, echo = F}
+# Read NSW data
+nsw_df <- haven::read_dta("nsw.dta")
+# Estimate
+est_ols <- lm_robust(re78 ~ treat, data = nsw_df) %>% tidy()
+```
+
+- the NSW increased real earnings by $\color{#e64173}{\hat{\beta}_1}\approx$ .pink[`r est_ols[2,"estimate"] %>% scales::dollar()`]
+- (het.-robust) standard error of .pink[`r est_ols[2,"std.error"] %>% scales::dollar()`]
+- _t_ statistic $\color{#e64173}{t_\text{stat}}\approx$ .pink[`r est_ols[2,"statistic"] %>% round(2)`] with *p*-value $\approx$ .pink[`r est_ols[2,"p.value"] %>% round(4)`]
+
+--
+
+Let's re-randomize treatment 10,000 times. In each .hi-purple[iteration] $\color{#6A5ACD}{r}$, calculate
+
+1. $\color{#6A5ACD}{\hat{\beta}_{1}^{r}}$, the .hi-purple[point estimate] (the regression coefficient)
+1. $\color{#6A5ACD}{t_\text{stat}^{r}}$, the .hi-purple[_t_ statistic]
+
+--
+
+Then calculate the implied *p*-values using the location of $\color{#e64173}{\hat\beta_1}$ and $\color{#e64173}{t_\text{stat}}$ in the distributions of $\color{#6A5ACD}{\hat{\beta}_1^r}$ and $\color{#6A5ACD}{t_\text{stat}^r}$, respectively..super[.pink[†]]
+
+.footnote[
+.pink[†] Very similar exercise for confience intervals.
+]
+
+---
+## Example: Re-randomization
+
+The main decision is how to generate treatment.
+
+.qa[Q] Should we permute $\text{D}$ or draw $\text{D}_{i}$ for each individual?.super[.pink[†]]
+
+.footnote[
+.pink[†] The difference is in whether we hold the number of treated individuals constant.
+]
+
+
+--
+
+.qa[A] How was the original randomization conducted?
+
+--
+
+We'll assume the NSW started with a set number of treatments to disperse.
+
+---
+layout: true
+class: clear
+
+---
+
+First, we'll write a function that performs one iteration.
+```{R, random-fun1, eval = T}
+# Arguments: 'i' (iteration), 'n_t' (# of trt)
+fun_randomization <- function(i) {
+  # Sample the treatment vector. NOTE: Sampling WITHOUT replacement
+  t_i <- sample(nsw_df$treat, size = nrow(nsw_df), replace = F)
+  # Regression using our re-randomized treatment
+  est_i <- lm_robust(re78 ~ t_i, data = nsw_df) %>% tidy()
+  # Return tibble with iteration, point estimate, and test statistic
+  tibble(i, est = est_i[2,"estimate"], t_stat = est_i[2,"statistic"])
+}
+```
+
+--
+
+And now run the re-randomization function 10,000 times.
+```{R, random-fun2, cache = T, eval = T}
+# Set up parallelization and seed
+plan(multiprocess, workers = 4); set.seed(1234)
+# Run the simulation 1e4 times
+random_df <- future_map_dfr(
+  1:1e4,
+  fun_randomization,
+  .options = future_options(seed = T)
+)
+```
+---
+
+.note[Result 1] Share $\color{#6A5ACD}{\big|\hat{\beta}_1^r\big|} > \color{#e64173}{\hat{\beta}_1} =$ `r mean(abs(random_df$est)>abs(est_ols[2,"estimate"])) %>% round(4)`. (Original *p*-value $=$ .pink[`r round(est_ols[2,"p.value"], 4)`])
+
+```{R, random-dist1, echo = F, fig.height = 6.75}
+# Calculate density
+gg_df <- density(random_df$est, n = 1e3, kernel = "epanechnikov") %$% tibble(
+  est = x,
+  density = y,
+  reject = abs(est) > est_ols[2,"estimate"]
+)
+ggplot(
+  data = gg_df,
+  aes(x = est, ymin = 0, ymax = density)
+) +
+geom_ribbon(fill = "grey85", alpha = 0.8) +
+geom_ribbon(
+  data = gg_df %>% filter(est > abs(est_ols[2,"estimate"])),
+  fill = purple
+) +
+geom_ribbon(
+  data = gg_df %>% filter(est < -abs(est_ols[2,"estimate"])),
+  fill = purple
+) +
+geom_hline(yintercept = 0) +
+geom_vline(
+  xintercept = est_ols[2,"estimate"],
+  color = red_pink, size = 1, linetype = "longdash"
+) +
+xlab(TeX("$\\widehat{\\beta}_{1}^\\textit{r}$")) +
+theme_pander(base_size = 18, base_family = "Fira Sans Book") +
+theme(
+  axis.text.y = element_blank(),
+  axis.ticks.x = element_blank(),
+  axis.title.x = element_text(family = "TeX Gyre Termes", size = 20),
+  panel.grid.major = element_blank(),
+  panel.grid.minor = element_blank()
+)
+```
+---
+
+.note[Result 2] Share $\color{#6A5ACD}{\big| t_\text{stat}^r\big|} > \color{#e64173}{t_\text{stat}} =$ `r mean(abs(random_df$t_stat)>abs(est_ols[2,"statistic"])) %>% round(4)`. (Original *p*-value $=$ .pink[`r round(est_ols[2,"p.value"], 4)`])
+
+```{R, random-dist2, echo = F, fig.height = 6.75}
+# Calculate density
+gg_df <- density(random_df$t_stat, n = 1e3, kernel = "epanechnikov") %$% tibble(
+  stat = x,
+  density = y,
+  reject = abs(stat) > est_ols[2,"statistic"]
+)
+ggplot(
+  data = gg_df,
+  aes(x = stat, ymin = 0, ymax = density)
+) +
+geom_ribbon(fill = "grey85", alpha = 0.8) +
+geom_ribbon(
+  data = gg_df %>% filter(stat > abs(est_ols[2,"statistic"])),
+  fill = purple
+) +
+geom_ribbon(
+  data = gg_df %>% filter(stat < -abs(est_ols[2,"statistic"])),
+  fill = purple
+) +
+geom_hline(yintercept = 0) +
+geom_vline(
+  xintercept = est_ols[2,"statistic"],
+  color = red_pink, size = 1, linetype = "longdash"
+) +
+xlab(TeX("\\textit{t}$_{stat}^\\textit{r}$")) +
+theme_pander(base_size = 18, base_family = "Fira Sans Book") +
+theme(
+  axis.text.y = element_blank(),
+  axis.ticks.x = element_blank(),
+  axis.title.x = element_text(family = "TeX Gyre Termes", size = 20),
+  panel.grid.major = element_blank(),
+  panel.grid.minor = element_blank()
+)
+```
+
+---
+layout: true
+# Randomization inference
+
+---
+name: random-ci
+## Confidence intervals
+
+To construct confidence intervals, we .hi[invert] randomization-based .hi[hypothesis tests], imposing a range of null hypotheses.
+
+--
+
+.ex[E.g.,] To construct a 95% C.I. for $\color{#e64173}{\hat{\tau}}$
+
+1. Impose the null hypothesis H.sub[o]: $\tau = \tau_o$ for many values of $\tau_o$.
+2. Find all values of $\tau_o$ that do not reject $\color{#e64173}{\hat{\tau}}$ at the 5% level.
+
+--
+
+.note[Note] We must to be able to clearly impose the null in our "model".
+
+---
+layout: true
+class: clear
+
+---
+
+Athey and Imbens ([2016](https://arxiv.org/pdf/1607.00698.pdf)) .hi-slate[on regression and randomization inference]:.super[.pink[†]]
+
+.footnote[
+.pink[†] Specifically in the context of experiments, though the concerns should remain in other contexts.
+]
+
+
+> Although these methods [regression] remain the most popular way of analyzing data from randomized experiments, .purple[we suggest caution in using them].
+
+> ... In particular there is a disconnect between the way the conventional assumptions in regression analyses are formulated and the implications of randomization. As a result it is easy for the researcher using regression methods to go beyond analyses that are justified by randomization, and end up with analyses that rely on a .purple[difficult-to-assess mix of randomization assumptions, modeling assumptions, and large sample approximation].
+---
+
+Athey and Imbens ([2016](https://arxiv.org/pdf/1607.00698.pdf)) .hi-slate[on regression and randomization inference]:.super[.pink[†]]
+
+.footnote[
+.pink[†] Specifically in the context of experiments, though the concerns should remain in other contexts.
+]
+
+> Ultimately .purple[we recommend that researchers wishing to use regression or other model-based methods rather than the randomization-based methods we prefer, do so with care]. For example, using only indicator variables based on partitioning the covariate space, rather than using multi-valued variables as covariates in the regression function preserves many of the finite sample properties that simple comparisons of means have, and leads to regression estimates with clear interpretations. In addition, .purple[in many cases the potential gains from regression adjustment can also be captured by careful ex ante design], that is, through stratified randomized experiments to be discussed in the next section, without the potential costs associated with ex post regression adjustment.
+
+
+---
+exclude: true
+
+```{R, fun-invert-ci, echo = F}
+# Arguments: 'null', the null values
+fun_invert_i <- function(null) {
+  # Sample the treatment vector. NOTE: Sampling WITHOUT replacement
+  t_i <- sample(nsw_df$treat, size = nrow(nsw_df), replace = F)
+  map_dfr(
+    null,
+    function(null_j) {
+      # Impose the null (generate outcomes)
+      y_ij <- nsw_df$re78 + t_i * null_j
+      # Regression using our re-randomized treatment
+      est_ij <- lm_robust(y_ij ~ t_i) %>% tidy()
+      # Return tibble with point estimate, se, test statistic, and null
+      tibble(
+        est = est_ij[2,"estimate"],
+        se = est_ij[2, "std.error"],
+        t_stat = est_ij[2,"statistic"],
+        null = null_j
+      )
+    }
+  ) %>% mutate(null_group = unlist(null) %>% seq_along())
+}
+# Function to run the function a bunch of times
+fun_invert <- function(null, times = 1e3) {
+  plan(multiprocess, workers = 4)
+  future_map_dfr(
+    rep(null, times),
+    fun_invert_i,
+    .options = future_options(seed = T)
+  )
+}
+```
+
+```{R, run-invert-ci, echo = F, cache = T, eval = T}
+ci_df <- fun_invert(
+  # null = list(quantile(random_df$est, seq(0, 1, 0.01))),
+  null = list(seq(from = est_ols[2,"conf.low"], to = est_ols[2,"conf.high"], length.out = 100)),
+  times = 1e4
+)
+```
+
+```{R, summarize-ci, eval = T}
+# Add groups and test
+ci_sum <- ci_df %>% mutate(
+  reject = 2 * pt(abs((est - est_ols[2,"estimate"])/se), df = 720, lower.tail = F) < 0.05
+)
+# Summarize
+ci_sum %<>% group_by(null_group) %>%
+  summarize(
+    reject = mean(reject),
+    null = first(null)
+  )
+```
+
+---
+exclude: true
+
+.note[Constructing a 95% confidence interval]
+```{R, random-ci1, echo = F, fig.height = 6.75, eval = T}
+ggplot(
+  data = ci_sum,
+  aes(x = null, y = reject, color = reject > 0.1)
+) +
+geom_hline(yintercept = 0.10, linetype = "dotted") +
+geom_hline(yintercept = 0) +
+geom_point(size = 2.5) +
+xlab(TeX("$\\widehat{\\beta}_{1}^\\textit{o}$")) +
+ylab("Share rejecting original estimate") +
+scale_y_continuous(breaks = seq(0, 0.5, 0.1)) +
+scale_color_manual("", values = c(purple, "grey85")) +
+theme_pander(base_size = 18, base_family = "Fira Sans Book") +
+theme(
+  legend.position = "none",
+  axis.ticks = element_blank(),
+  axis.title.x = element_text(family = "TeX Gyre Termes", size = 20, angle = 0, vjust = 0.5),
+  panel.grid.major = element_blank(),
+  panel.grid.minor = element_blank()
+)
+```
+
 
 
 ---
@@ -833,7 +1187,53 @@ Permutation tests and randomization inference both work because we know.super[.p
 
 If treatment is correlated within groups, then our bootstraps, permutations, and re-randomizations need to reflect this dependence.
 
+---
+layout: false
+name: reading
+# Further reading
+## Papers
 
+
+[Bootstrap-Based Improvements for Inference with Clustered Errors](https://www.mitpressjournals.org/doi/abs/10.1162/rest.90.3.414)
+<br>
+Cameron, Gelbach, and Miller (2008)
+
+[Channeling Fisher: Randomization Tests and the Statistical Insignificance of Seemingly Significant Experimental Results](https://academic.oup.com/qje/article/134/2/557/5195544)
+<br>
+Young (2019)
+
+[The Econometrics of Randomized Experiments](https://arxiv.org/pdf/1607.00698.pdf)
+Athey and Imbens (2016)
+
+[Randomization Inference With Natural Experiments](https://www.tandfonline.com/doi/abs/10.1198/016214505000001258)
+<br>
+Ho and Imai (2012)
+<br>
+.note[Also:] [Notes](https://imai.fas.harvard.edu) by Kosuke Imai
+
+---
+# Further reading
+
+### Books: Resampling methods and the bootstrap
+
+*[An Introduction to Statistical Learning](http://www-bcf.usc.edu/~gareth/ISL/)*
+<br>
+James, Witten, Hastie, and Tibshirani
+
+*[Elements of Statistical Learning](https://web.stanford.edu/~hastie/ElemStatLearn/)*
+<br>
+Hastie, Tibshirani, and Friedman
+
+### Books: Permutation tests and randomization inference
+
+*[Causal Inference for Statistics, Social, and Biomedical Sciences
+](https://www.cambridge.org/core/books/causal-inference-for-statistics-social-and-biomedical-sciences/71126BE90C58F1A431FE9B2DD07938AB)*
+<br>
+Imbens and Rubin
+
+*[Field Experiments](https://books.wwnorton.com/books/webad.aspx?id=24003)*
+<br>
+Gerber and Green
 
 ---
 layout: false
@@ -843,6 +1243,7 @@ layout: false
 #### Admin
 .smaller[
 1. [Schedule](#schedule)
+1. [Further reading](#reading)
 ]
 ]
 
@@ -858,8 +1259,11 @@ layout: false
   - [Motivation](#perm-motive)
   - [Tea tests](#perm-tea)
   - [Generalization](#perm-gen)
+  - [Basics](#perm-insight)
 1. [Randomization inference](#random)
-  - [Basics](#random-insight)
+  - [Setup](#random-setup)
+  - [Example](#random-example)
+  - [Confidence intervals](#random-ci)
 1. [Clustering](#clustering)
 ]
 ]
