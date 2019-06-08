@@ -1,0 +1,265 @@
+@import url(https://fonts.googleapis.com/css?family=Fira+Mono:100,200,300,400,500,600,700);
+@import url(https://fonts.googleapis.com/css?family=Roboto+Mono:100,200,300,400,500,600,700);
+@import url(https://fonts.googleapis.com/css?family=Source+Code+Pro:100,200,300,400,500,600,700);
+@import url(https://fonts.googleapis.com/css?family=Cousine:100,200,300,400,500,600,700);
+@import url(https://fonts.googleapis.com/css?family=IBM+Plex+Mono:100,200,300,400,500,600,700);
+
+/* Create a highlighted class called 'hi'  */
+.hi {
+  font-weight: 600;
+  color: #e64173 !important;
+}
+.hi-pink {
+  font-weight: 600;
+  color: #e64173 !important;
+}
+.hi-slate {
+  font-weight: 600;
+  color: #314f4f !important;
+}
+.hi-turquoise {
+  font-weight: 600;
+  color: #20B2AA !important;
+}
+.hi-purple {
+  font-weight: 600;
+  color: #6A5ACD !important;
+}
+.hi-orange {
+  font-weight: 600;
+  color: #FFA500 !important;
+}
+.hi-green {
+  font-weight: 600;
+  color: #8bb174 !important;
+}
+.hi-blue {
+  font-weight: 600;
+  color: #2b59c3 !important;
+}
+.hi-red {
+  font-weight: 600;
+  color: #fb6107 !important;
+}
+/* Pink text */
+.pink {
+  color: #e64173 !important;
+}
+/* Slate ("darkslategrey") text */
+.slate {
+  color: #314f4f !important;
+}
+/* Turquoise ("lightseagreen") text */
+.turquoise {
+  color: #20B2AA !important;
+}
+/* Purple-ish ("slateblue") text */
+.purple {
+  color: #6A5ACD !important;
+}
+/* Orange ("orange") text */
+.orange {
+  color: #FFA500 !important;
+}
+.green {
+  color: #8bb174 !important;
+}
+.blue {
+  color: #2b59c3 !important;
+}
+.red {
+  color: #fb6107 !important;
+}
+.white{
+  color: #ffffff !important;
+}
+
+/* Mono-spaced font */
+.mono {
+  font-family: monospace;
+  font-size: 100%
+}
+/* Italic (helpful for tables) */
+.it {
+  font-style: italic;
+}
+/* Bold (helpful for tables) */
+.b {
+  font-weight: 600;
+}
+/* Math font */
+.math {
+  font-family: "MathJax_Math";
+  font-weight: 400;
+}
+/* Underline */
+.ul {
+  text-decoration: underline;
+  display: inline-block;
+}
+
+.title-slide > h2  {
+  color: rgba(249, 38, 114, 0.75);
+  /* color: #afafaf; */
+}
+
+.remark-code-line-highlighted     { background-color: rgba(249, 39, 114, 0.5); }
+
+.remark-slide-content {
+  background-color: #ffffff;
+  font-size: 8px;
+  padding-top: 11%;
+  padding-left: 11%;
+  padding-right: 11%;
+  padding-bottom: 11%;
+  line-height: 1.5;
+}
+
+.remark-slide-number {
+  font-size: 100%;
+  margin-right: 4%;
+  padding-bottom: 5%;
+}
+.remark-slide-content h2 {
+  font-size: 11pt !important;
+  font-weight: bold;
+  line-height: 2;
+}
+.remark-slide-content h3 {
+  font-size: 10pt !important;
+  /* font-weight: bold; */
+  line-height: 2;
+}
+.remark-slide-content h4 {
+  font-size: 9pt !important;
+  /* font-weight: bold; */
+  line-height: 2;
+}
+
+.inverse {
+  background-color: #23373B;
+  text-shadow: 0 0 20px #333;
+  /* text-shadow: none; */
+}
+
+.title-slide {
+  /* background-color: #FAFAFA; */
+  background-color: #ffffff;
+  border-top: #ffffff;
+}
+
+.footnote {
+  bottom: 7%;
+  font-size: 80%;
+}
+.footnote::before {
+  position: absolute;
+  left: 0;
+  top: -5px;
+  height: 1px;
+  background: #e5e5e5;
+  content: "";
+  width: 100%;
+  display: block;
+}
+
+.mjx-chtml{
+  font-size: 100% !important;
+  /* line-height: 2px !important; */
+}
+
+.pseudocode, .pseudocode-small {
+  font-family: monospace;
+  background: #f8f8f8;
+  border-radius: 3px;
+  padding: 10px;
+}
+.pseudocode-small {
+  font-size: 20px;
+}
+
+/* More sizes */
+.biggest {
+  font-size: 150%;
+}
+.bigger {
+  font-size: 125%;
+}
+.smaller {
+  font-size: 95%;
+}
+.smallest {
+  font-size: 85%;
+}
+
+.super{
+  vertical-align: super;
+  font-size: 85%;
+}
+.sub{
+  vertical-align: sub;
+  font-size: 85%;
+}
+
+.title-slide > h1 {
+  font-size: 16pt !important;
+  line-height: 32pt !important;
+}
+.title-slide > h2 {
+  font-size: 11pt !important;
+  line-height: 24pt !important;
+}
+.title-slide > h3 {
+  font-size: 8pt !important;
+  line-height: 16pt !important;
+}
+
+.remark-inline-code {
+  font-size: 85%;
+  background: #F5F5F5; /* lighter */
+  /* background: #e7e8e2; /* darker */
+  border-radius: 2px;
+  padding: 1px;
+}
+
+.remark-code {
+  font-size: 85%;
+}
+
+.remark-code, .remark-inline-code {
+  /* font-family: 'Cousine'; */
+  /* font-family: 'IBM Plex Mono';
+  font-weight: 400; */
+  /* font-family: 'Fira Mono'; */
+  /* font-family: 'Roboto Mono';
+  font-weight: 400; */
+  /* font-family: 'Source Code Pro';
+  font-weight: 500; */
+}
+
+.move-right {
+  /* float: right;
+  width: 93%; */
+  margin-left: 24px;
+  display: block;
+}
+.move-right-short {
+  margin-left: 10px;
+  display: block;
+}
+
+/* Underline */
+.ul {
+  text-decoration: underline;
+  display: inline-block;
+}
+
+/* Format tables */
+table {
+  line-height: 60%;
+  border-top: 1px solid #ffffff !important;
+  border-bottom: 1px solid #ffffff !important;
+}
+th, td {
+  background-color: #ffffff;
+}
